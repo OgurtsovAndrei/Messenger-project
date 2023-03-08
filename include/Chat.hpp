@@ -7,16 +7,16 @@
 namespace database_interface {
 
 struct Chat {
-    int m_id;
+    int m_chat_id;
     std::string m_encryption;
     std::vector<User> m_users;
 
     Status(
-        int id,
+        int chat_id,
         const std::string &encryption,
         const std::vector<User> &users
     )
-        : m_id(id), m_encryption(encryption), m_users(users) {
+        : m_chat_id(chat_id), m_encryption(encryption), m_users(users) {
     }
 };
 
