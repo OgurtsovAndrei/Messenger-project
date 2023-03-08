@@ -6,20 +6,20 @@
 namespace database_interface {
 
 struct User {
-    int m_id;
+    int m_user_id;
     std::string m_name;
     std::string m_surname;
     std::string m_login;
     std::string m_password_hash;
 
     Status(
-        int id,
+        int user_id,
         const std::string &name,
         const std::string &surname,
         const std::string &login,
         const std::string &password_hash
     )
-        : m_id(id),
+        : m_user_id(user_id),
           m_name(name),
           m_surname(surname),
           m_login(login),
