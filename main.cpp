@@ -1,8 +1,16 @@
 #include <sqlite3.h>
 #include <iostream>
 
+#include "include/DataBaseInterface.hpp"
+#include "include/User.hpp"
+
 int main(int argc, char **argv) {
     std::cout << 1;
+    database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
+    database_interface::User usr = database_interface::User("a", "b", "c", "d", 1);
+    bd.open();
+    bd.add_user(usr);
+    bd.close();
     //
     //    std::string sql = "CREATE TABLE PERSON("
     //                    "ID INT PRIMARY KEY  NOT NULL, "
