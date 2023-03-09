@@ -5,12 +5,12 @@
 
 namespace database_interface {
 
-struct Satus {
+struct Status {
     bool m_correct;
     std::string m_message;
 
     Status(bool correct, const std::string &message = "")
-        : m_correct(res), m_message(s) {
+        : m_correct(correct), m_message(message) {
     }
 };
 

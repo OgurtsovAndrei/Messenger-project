@@ -12,7 +12,7 @@ struct Message {
     std::string m_file_path;
     int m_chat_id;
 
-    Status(
+    Message(
         int message_id,
         int date_time,
         const std::string &text,

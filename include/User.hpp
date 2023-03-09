@@ -12,12 +12,12 @@ struct User {
     std::string m_login;
     std::string m_password_hash;
 
-    Status(
-        int user_id = -1,
+    User(
         const std::string &name,
         const std::string &surname,
         const std::string &login,
-        const std::string &password_hash
+        const std::string &password_hash,
+        int user_id = -1
     )
         : m_user_id(user_id),
           m_name(name),
