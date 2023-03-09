@@ -13,7 +13,7 @@ struct User {
     std::string m_password_hash;
 
     Status(
-        int user_id,
+        int user_id = -1,
         const std::string &name,
         const std::string &surname,
         const std::string &login,
