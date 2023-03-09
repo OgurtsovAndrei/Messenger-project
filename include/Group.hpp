@@ -2,6 +2,7 @@
 #define GROUP_HPP
 
 #include <string>
+#include <vector>
 #include "Chat.hpp"
 
 namespace database_interface {
@@ -12,7 +13,7 @@ struct Group : Chat {
     std::string m_owner;
     int m_chat_id;
 
-    Status(
+    Group(
         int group_id,
         const std::string &name,
         const std::string &owner,
@@ -20,7 +21,7 @@ struct Group : Chat {
         const std::vector<User> &users,
         int chat_id
     )
-        : Chat(chat_id, encryption, user),
+        : Chat(chat_id, encryption, users),
           m_group_id(group_id),
           m_name(name),
           m_owner(owner) {

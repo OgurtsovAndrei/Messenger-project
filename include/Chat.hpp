@@ -2,6 +2,7 @@
 #define CHAT_HPP
 
 #include <string>
+#include <vector>
 #include "User.hpp"
 
 namespace database_interface {
@@ -11,7 +12,7 @@ struct Chat {
     std::string m_encryption;
     std::vector<User> m_users;
 
-    Status(
+    Chat(
         int chat_id,
         const std::string &encryption,
         const std::vector<User> &users
