@@ -25,14 +25,17 @@
 // Get user:
 // bd.get_user_log_pas(usr);
 
+// Chang user (class user should be correct, means "id" and others)
+// bd.change_user(usr)
 
 
 int main(int argc, char **argv) {
     database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
-    database_interface::User usr = database_interface::User("antisuper", "antipuper", "mainy", "stop");
+    database_interface::User usr = database_interface::User("antisuper", "antipuper", "mainy", "stop", 0);
     bd.open();
 //    bd.add_user(usr);
 //    bd.get_user_log_pas(usr);
+//    bd.change_user(usr).m_correct;
     bd.close();
     std::cout << usr.m_user_id << ' ' << usr.m_name << ' ' << usr.m_surname << ' ' << usr.m_login << ' ' << usr.m_password_hash << '\n';
     //
