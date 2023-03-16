@@ -36,10 +36,13 @@ Status SQL_BDInterface::add_user(User &user) {
     char *message_error;
     std::string string_message;
     int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
-    return Status(exit == SQLITE_OK, "Problem in ADD Used.\nMessage: " + string_message + "\n SQL command: " + sql + "\n");
+    if (exit == SQLITE_OK){
+        Status select = get_user_log_pas(user);
+        return Status(select.m_correct, "Problem in ADD User in SELECT User.\nMessage: " + select.m_message);
+    }
+    return Status(exit == SQLITE_OK, "Problem in ADD User.\nMessage: " + string_message + "\n SQL command: " + sql + "\n");
 }
 
 //Status SQL_BDInterface::change_user(const User &new_user);
