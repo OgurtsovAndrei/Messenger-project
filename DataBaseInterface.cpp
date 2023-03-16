@@ -12,27 +12,6 @@ void chars_to_string(char *chr, std::string &str){
 }
 
 
-int callback(void *NotUsed, int argc, char **argv, char **azColName){
-
-    // int argc: holds the number of results
-    // (array) azColName: holds each column returned
-    // (array) argv: holds each value
-
-    for(int i = 0; i < argc; i++) {
-
-        // Show column name, value, and newline
-        std::cout << azColName[i] << ": " << argv[i] << '\n';
-        std::cout << "____________________________";
-    }
-
-    // Insert a newline
-    std::cout << '\n';
-
-    // Return successful
-    return 0;
-}
-
-
 Status SQL_BDInterface::open() {
     int exit = 0;
     exit = sqlite3_open("bd/ServerDataBase.db", &m_bd);
@@ -64,16 +43,17 @@ Status SQL_BDInterface::add_user(User &user) {
 }
 
 //Status SQL_BDInterface::change_user(const User &new_user);
-Status SQL_BDInterface::get_user(
-    std::string login,
-    std::string password_hash,
+Status SQL_BDInterface::get_user_log_pas(
     User &user
 ){
     std::string sql =
-        "SELECT id, Name, Surname FROM Users WHERE Login='c' AND  PasswordHash='d'";
+        "SELECT id, Name, Surname FROM Users WHERE Login='";
+    sql += user.m_login + "' AND  PasswordHash='";
+    sql += user.m_password_hash + "'";
     char *message_error;
     std::string string_message;
-    int exit = sqlite3_exec(m_bd, sql.c_str(), user.callback, 0, &message_error);
+    User::m_edit_user = &user;
+    int exit = sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
     return Status(exit == SQLITE_OK, "Problem in ADD Used.\nMessage: " + string_message + "\n SQL command: " + sql + "\n");
