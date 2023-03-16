@@ -7,11 +7,12 @@
 int main(int argc, char **argv) {
     std::cout << 1;
     database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
-    database_interface::User usr = database_interface::User("a", "b", "c", "dasc");
+    database_interface::User usr = database_interface::User("antisupe", "antipuper");
     bd.open();
 //    bd.add_user(usr);
-    bd.get_user("sd", "dsac", usr);
+    bd.get_user_log_pas(usr);
     bd.close();
+    std::cout << usr.m_user_id << ' ' << usr.m_name << ' ' << usr.m_surname << ' ' << usr.m_login << ' ' << usr.m_password_hash << '\n';
     //
     //    std::string sql = "CREATE TABLE PERSON("
     //                    "ID INT PRIMARY KEY  NOT NULL, "

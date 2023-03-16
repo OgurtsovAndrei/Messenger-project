@@ -22,7 +22,7 @@ struct BDInterface {
     virtual Status add_user(User &user) = 0;
 //    virtual Status change_user(const User &new_user) = 0;
     virtual Status
-    get_user(std::string login, std::string password_hash, User &user) = 0;
+    get_user_log_pas(User &user) = 0;
 //    virtual Status del_user(const User &user) = 0;
 //    virtual Status
 //    make_dialog_request(const User &from_user, const User &to_user) = 0;
@@ -65,7 +65,7 @@ struct SQL_BDInterface : BDInterface {
     // User
     Status add_user(User &user);
 //    Status change_user(const User &new_user);
-    Status get_user(std::string login, std::string password_hash, User &user);
+    Status get_user_log_pas(User &user);
 //    Status del_user(const User &user);
 //    Status make_dialog_request(const User &from_user, const User &to_user);
 //    Status close_dilog_request(const User &from_user, const User &to_user);
