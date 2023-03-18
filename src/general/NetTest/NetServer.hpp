@@ -133,65 +133,20 @@ namespace Net::Server {
         }
     };
 
-    void accept_request(boost::asio::ip::tcp::iostream &client, const std::string& rem_endpoint_str) {
-        // TODO Очень плохой код! Починить!
-        // Но оно работает...
-
-        /*std::string s;
-        if (!(client >> s)) {
-            return;
-        }
-        char c;
-        while (c = std::getchar(std::cin, c)) {
-
-        }*/
-        char str[2];
-        std::string true_string;
-        bool flag = true;
-        while (flag) {
-            client.read(str, 1);
-            true_string.push_back(str[0]);
-            if (true_string.find(request_begin) != std::string::npos) {
-                flag = false;
-            }
-            if (true_string.size() >= 20) {
-                true_string = true_string.substr(10, true_string.size()-10);
-            }
-        }
-        assert(true_string.find(request_begin) == true_string.size() - 5);
-        true_string = request_begin;
-        while (true_string.find(request_sep) == std::string::npos) {
-            client.read(str, 1);
-            true_string.push_back(str[0]);
-        }
-        assert(true_string.find(request_sep) == true_string.size() - 5);
-
-        std::string new_part;
-        while (new_part.find(request_sep) == std::string::npos) {
-            client.read(str, 1);
-            new_part.push_back(str[0]);
-        }
-        assert(new_part.find(request_sep) == new_part.size() - 5);
-        true_string += new_part;
-
-        // Careful!
-        int body_size = std::stoi(new_part.substr(0, new_part.size() - 5));
-        char *body_ptr = new char[body_size + 1];
-        client.read(body_ptr, body_size);
-        true_string += body_ptr;
-        delete[] body_ptr;
-
-        char last_request_part[6];
-        client.read(last_request_part, 5);
-        true_string += last_request_part;
-        assert(true_string.find(request_end) == true_string.size() - 5);
-
-        std::cout << "Dot request from" << rem_endpoint_str << ": " << true_string << "\n";
-        Request request(true_string, true);
-        request.parse_request();
-        true_string = request.get_body();
+    void accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string& rem_endpoint_str) {
+        Request request = accept_request(client);
+        std::cout << "Dot request from" << rem_endpoint_str << "\n";
+        auto true_string = request.get_body();
         std::cout << "got from " << rem_endpoint_str << ": " << true_string << "\n";
-        client << "got from you: " << true_string << "\n";
+        send_message_by_connection(RESPONSE_REQUEST_SUCCESS, "got from you: <" + true_string + ">", client);
+    }
+
+    void echo(boost::asio::ip::tcp::iostream &client, const std::string& rem_endpoint_str) {
+        Request request = accept_request(client);
+        std::cout << "Dot request from" << rem_endpoint_str << "\n";
+        auto true_string = request.get_body();
+        std::cout << "Got from " << rem_endpoint_str << ": " << true_string << "\n";
+        send_message_by_connection(RESPONSE_REQUEST_SUCCESS, true_string, client);
     }
 
     void UserConnection::work(boost::asio::ip::tcp::socket &&socket) {
@@ -200,11 +155,10 @@ namespace Net::Server {
         auto rem_endpoint = socket.remote_endpoint();
         boost::asio::ip::tcp::iostream client(std::move(socket));
         while (client) {
-            accept_request(client, rem_endpoint.address().to_string());
-//            accept_request(client, static_cast<std::string>(rem_endpoint.address()));
+            accept_client_request(client, rem_endpoint.address().to_string());
         }
         std::cout << "Completed -> " << rem_endpoint << "\n";
-        // AWARE func calls detach!
+        // AWARE func calls thread detach!
         server.close_connection(connection_number);
     }
 

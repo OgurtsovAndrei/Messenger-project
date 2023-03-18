@@ -31,29 +31,29 @@ namespace Net::Client {
         Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12345") :
                 io_context(ioContext), server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #endif
-
         void make_connection() {
             boost::asio::ip::tcp::socket s(io_context);
             boost::asio::connect(s, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(s));
         }
 
-        void send_text_to_server(const std::string &text) {
-            connection.value() << text << std::endl;
-        }
-
         void send_text_message(std::string message) {
-            Request request(TEXT_MESSAGE, std::move(message));
-            request.make_request();
-            if (request) {
-                send_text_to_server(request.get_text_request());
-//                connection.value() << request.get_text_request() << std::endl;
-                std::string response;
-                std::getline(connection.value(), response);
-                std::cout << response << "\n";
-            }
+            send_message_by_connection(TEXT_MESSAGE, std::move(message), connection.value());
         }
 
+        void send_message(RequestType type, std::string message) {
+            send_message_by_connection(type, std::move(message), connection.value());
+        }
+
+        void print_line_from_connection() {
+            std::cout << get_line_from_connection(connection.value()) << "\n";
+        }
+
+        void get_request_and_out_it() {
+            Request request = accept_request(connection.value());
+            auto true_string = request.get_body();
+            std::cout << "Got from server: " << true_string << "\n";
+        }
     private:
 #ifndef MULTI_CLIENT_TEST
         boost::asio::io_context io_context;

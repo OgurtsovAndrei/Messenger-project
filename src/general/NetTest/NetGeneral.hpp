@@ -14,6 +14,8 @@ namespace Net {
     enum RequestType {
         TEXT_MESSAGE = 1,
         FILE,
+        RESPONSE_REQUEST_SUCCESS,
+        RESPONSE_REQUEST_FAIL,
         UNKNOWN,
     };
 
@@ -24,11 +26,21 @@ namespace Net {
         INVALID
     };
 
-    inline const int NUMBER_OF_BLOCKS_IN_REQUEST = 3;
+    inline constexpr int NUMBER_OF_BLOCKS_IN_REQUEST = 3;
+    inline constexpr int TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
+    inline constexpr int BODY_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
 
     inline constexpr char request_sep[] = "@\1\3\1#";
     inline constexpr char request_begin[] = "^\1\3\1#";
     inline constexpr char request_end[] = "$\1\3\1#";
+
+    std::string convert_to_string_size_n(unsigned int value, unsigned int size = 4) {
+        auto str_value = std::to_string(value);
+        assert(str_value.size() <= size);
+        std::string answer(size, '0');
+        answer += str_value;
+        return answer.substr(answer.size() - size, size);
+    }
 
     struct Request {
         /*
@@ -43,10 +55,16 @@ namespace Net {
          * TODO: добавить проверку хеша
          */
     public:
-        Request(RequestType request_type_, std::string body_) : request_type(request_type_), body(std::move(body_)), request_status(RAW_DATA) {}
+        Request(const Request &con) = delete;
+        Request(Request &&) = default;
+        Request &operator=(const Request &) = delete;
+        Request &operator=(Request &&) = default;
+
+        Request(RequestType request_type_, std::string body_) : request_type(request_type_), body(std::move(body_)),
+                                                                request_status(RAW_DATA) {}
 
         Request(std::string text_request_, bool) :
-        text_request(std::move(text_request_)), request_type(UNKNOWN), request_status(RAW_MESSAGE) {}
+                text_request(std::move(text_request_)), request_type(UNKNOWN), request_status(RAW_MESSAGE) {}
 
         const std::string &get_text_request() {
             if (request_status == CORRECT || request_status == RAW_MESSAGE) {
@@ -61,6 +79,9 @@ namespace Net {
         };
 
         void parse_request() {
+            if (request_status == CORRECT) {
+                return;
+            }
             std::vector<int> separator_indexes;
             int last_index = 0;
             while (true) {
@@ -89,9 +110,10 @@ namespace Net {
 
             try { // TODO: remove exceptions
                 new_request_type = static_cast<RequestType>(std::stoi(
-                        text_request.substr(strlen(request_begin), separator_indexes.at(0)- strlen(request_begin))));
+                        text_request.substr(strlen(request_begin), separator_indexes.at(0) - strlen(request_begin))));
                 new_body_size = text_request.substr(separator_indexes.at(0) + strlen(request_sep),
-                                                    separator_indexes.at(1) - (separator_indexes.at(0) + strlen(request_sep)));
+                                                    separator_indexes.at(1) -
+                                                    (separator_indexes.at(0) + strlen(request_sep)));
                 new_body = text_request.substr(separator_indexes.at(1) + strlen(request_sep),
                                                find_end_index_result - (separator_indexes.at(1) + strlen(request_sep)));
                 if (new_body.size() != std::stoi(new_body_size)) {
@@ -109,10 +131,14 @@ namespace Net {
         }
 
         void make_request() {
+            if (request_status == CORRECT) {
+                return;
+            }
             text_request += request_begin;
-            text_request += std::to_string(static_cast<int>(request_type));
+            text_request += convert_to_string_size_n(static_cast<int>(request_type),
+                                                     TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES);
             text_request += request_sep;
-            text_request += std::to_string(body.size());
+            text_request += convert_to_string_size_n(body.size(), BODY_SIZE_IN_REQUEST_STRING_IN_BYTES);
             text_request += request_sep;
             text_request += body;
             text_request += request_end;
@@ -130,6 +156,82 @@ namespace Net {
         std::string text_request;
     };
 
+    [[nodiscard]] std::string read_n_and_get_string(unsigned int n, boost::asio::ip::tcp::iostream &client) {
+        char *string_ptr = new char[n + 1];
+        string_ptr[n] = '\0';
+        client.read(string_ptr, n);
+        std::string string = string_ptr;
+        delete[] string_ptr;
+        assert(string.size() == n);
+        return std::move(string);
+    }
+
+    Request accept_request(boost::asio::ip::tcp::iostream &client) {
+        // TODO Очень плохой код! Починить!
+        // Но оно работает...
+
+        char str[2];
+        std::string true_string;
+        bool flag = true;
+        while (flag) {
+            client.read(str, 1);
+            true_string.push_back(str[0]);
+            if (true_string.find(request_begin) != std::string::npos) {
+                flag = false;
+            }
+            if (true_string.size() >= 20) {
+                true_string = true_string.substr(10, true_string.size()-10);
+            }
+        }
+        true_string = true_string.substr(true_string.size()-strlen(request_begin), strlen(request_begin));
+        assert(true_string.find(request_begin) == true_string.size() - strlen(request_begin));
+        true_string = request_begin;
+
+        true_string += read_n_and_get_string(TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
+        assert(true_string.find(request_sep) == true_string.size() - strlen(request_sep));
+
+        std::string new_part = read_n_and_get_string(BODY_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
+        assert(new_part.find(request_sep) == new_part.size() - strlen(request_sep));
+        true_string += new_part;
+
+        unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_BYTES));
+        true_string += read_n_and_get_string(body_size, client);
+
+        std::string last_request_part = read_n_and_get_string(strlen(request_end), client);
+        assert(last_request_part == request_end);
+        true_string += last_request_part;
+        Request request(true_string, true);
+        request.parse_request();
+        return std::move(request);
+    }
+
+    void send_text_to_server(const std::string &text, boost::asio::ip::tcp::iostream &connection) {
+        connection << text << std::endl;
+    }
+
+    bool try_send_request(Request& request, boost::asio::ip::tcp::iostream &connection) {
+        request.make_request();
+        if (request) {
+            send_text_to_server(request.get_text_request(), connection);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    std::string get_line_from_connection(boost::asio::ip::tcp::iostream &connection) {
+        std::string response;
+        std::getline(connection, response);
+        return std::move(response);
+    }
+
+    void send_message_by_connection(RequestType type, std::string message, boost::asio::ip::tcp::iostream &connection) {
+        Request request(type, std::move(message));
+        request.make_request();
+        if (!try_send_request(request, connection)) {
+            return;
+        }
+    }
 }
 
 #endif //MESSENGER_PROJECT_NETGENERAL_HPP
