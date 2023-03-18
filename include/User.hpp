@@ -27,16 +27,11 @@ struct User {
           m_password_hash(password_hash) {
     }
 
-    User(
-        const std::string &login,
-        const std::string &password_hash
-    )
-        : m_login(login),
-          m_password_hash(password_hash) {
+    User(const std::string &login, const std::string &password_hash)
+        : m_login(login), m_password_hash(password_hash) {
     }
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
-
 };
 
 }  // namespace database_interface

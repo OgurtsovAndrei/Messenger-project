@@ -1,12 +1,11 @@
 #include <sqlite3.h>
 #include <iostream>
-
 #include "include/DataBaseInterface.hpp"
 #include "include/User.hpp"
 
-
 // Start working with bd:
-//database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
+// database_interface::SQL_BDInterface bd =
+// database_interface::SQL_BDInterface();
 
 // Open bd:
 // bd.open();
@@ -15,9 +14,10 @@
 // bd.close();
 
 // Make user:
-// database_interface::User usr = database_interface::User(string Name, string Surname, string Login, string Password, optional int id);
-// OR you can use this:
-// database_interface::User usr = database_interface::User(string Login, string Password);
+// database_interface::User usr = database_interface::User(string Name, string
+// Surname, string Login, string Password, optional int id); OR you can use
+// this: database_interface::User usr = database_interface::User(string Login,
+// string Password);
 
 // Add user:
 // bd.add_user(usr);
@@ -28,16 +28,18 @@
 // Chang user (class user should be correct, means "id" and others)
 // bd.change_user(usr)
 
-
 int main(int argc, char **argv) {
-    database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
-    database_interface::User usr = database_interface::User("antisuper", "antipuper", "mainy", "stop", 0);
+    database_interface::SQL_BDInterface bd =
+        database_interface::SQL_BDInterface();
+    database_interface::User usr =
+        database_interface::User("antisuper", "antipuper", "mainy", "stop", 0);
     bd.open();
-//    bd.add_user(usr);
-//    bd.get_user_log_pas(usr);
-//    bd.change_user(usr).m_correct;
+    //    bd.add_user(usr);
+    //    bd.get_user_log_pas(usr);
+    //    bd.change_user(usr).m_correct;
     bd.close();
-    std::cout << usr.m_user_id << ' ' << usr.m_name << ' ' << usr.m_surname << ' ' << usr.m_login << ' ' << usr.m_password_hash << '\n';
+    std::cout << usr.m_user_id << ' ' << usr.m_name << ' ' << usr.m_surname
+              << ' ' << usr.m_login << ' ' << usr.m_password_hash << '\n';
     //
     //    std::string sql = "CREATE TABLE PERSON("
     //                    "ID INT PRIMARY KEY  NOT NULL, "
