@@ -172,7 +172,7 @@ struct Mock_BDInterface : BDInterface {
         groups[new_group.m_dialog_id] = new_group;
         return Status(true, "Change group in mock_bd");
     }
-    Status get_n_users_groups_by_time(
+    Status get_n_users_dialogs_by_time(
         const User &user,
         int n = 10,
         int last_group_id = -1
