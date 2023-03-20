@@ -1,29 +1,30 @@
 #ifndef GROUP_HPP
 #define GROUP_HPP
 
-#include <set>
 #include <string>
+#include <vector>
 #include "Chat.hpp"
 
 namespace database_interface {
 
-struct Group : Dialog {
+struct Group : Chat {
+    int m_group_id;
     std::string m_name;
     std::string m_owner;
 
-    std::set<User> m_users
-
     Group(
         int group_id,
+        int date_time,
         const std::string &name,
         const std::string &owner,
         const std::string &encryption,
-        const std::set<User> &users,
+        const std::vector<User> &users,
+        int chat_id
     )
-        : Dialog(group_id, encryption),
+        : Chat(chat_id, date_time, encryption, users),
+          m_group_id(group_id),
           m_name(name),
-          m_owner(owner),
-          m_users(users) {
+          m_owner(owner) {
     }
 };
 

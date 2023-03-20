@@ -40,7 +40,7 @@ struct BDInterface {
     //    virtual Status get_n_users_groups_by_time(
     //        const User &user,
     //        int n = 10,
-    //        int last_group_id = -1
+    //        int last_chat_id = -1
     //    ) = 0;
     //    virtual Status del_group(const Group &group) = 0;
     //
@@ -80,7 +80,7 @@ struct SQL_BDInterface : BDInterface {
     //    Status get_n_users_groups_by_time(
     //        const User &user,
     //        int n = 10,
-    //        int last_group_id = -1
+    //        int last_chat_id = -1
     //    );
     //    Status del_group(const Group &group);
     //
@@ -100,7 +100,6 @@ struct Mock_BDInterface : BDInterface {
     std::map<User, std::set<User>> requests;
     std::map<int, Chat> chats;
     std::map<int, Group> groups;
-    std::map<int, Group> dialogs;
     std::map<int, Message> messages;
 
     // Work with bd connection
@@ -149,39 +148,43 @@ struct Mock_BDInterface : BDInterface {
 
     // Chat
     Status make_chat(const Chat &chat) {
-        chats[chat.m_dialog_id] = chat;
+        chats[chat.m_chat_id] = chat;
         return Status(true, "Make chat in mock_bd");
     }
 
     Status change_chat(const Chat &new_chat) {
-        chats[new_chat.m_dialog_id] = new_chat;
+        chats[new_chat.m_chat_id] = new_chat;
         return Status(true, "Change chat in mock_bd");
     }
 
     Status del_chat(const Chat &chat) {
-        chats.erase(chats.find(chat.m_dialog_id));
+        chats.erase(chats.find(chat.m_chat_id));
         return Status(true, "Delete chat in mock_bd");
     }
 
     // Group
     Status make_group(const Group &group){
-        groups[group.m_dialog_id] = group;
+        groups[group.m_group_id] = group;
         return Status(true, "Make group in mock_bd");
     }
     Status change_group(const Group &new_group){
-        groups[new_group.m_dialog_id] = new_group;
+        groups[new_group.m_group_id] = new_group;
         return Status(true, "Change group in mock_bd");
     }
-    Status get_n_users_dialogs_by_time(
+
+    Status del_group(const Group &group){
+        chats.erase(chats.find(group.m_chat_id));
+        groups.erase(groups.find(group.m_group_id));
+        return Status(true, "Delete group in mock_bd");
+    }
+
+
+    Status get_n_users_groups_by_time(
         const User &user,
         int n = 10,
-        int last_group_id = -1
+        int last_date_time = -1
     ){
 
-    }
-    Status del_group(const Group &group){
-        groups[group.m_dialog_id] = group;
-        return Status(true, "Delete group in mock_bd");
     }
 
     // Message
