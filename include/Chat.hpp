@@ -2,20 +2,23 @@
 #define CHAT_HPP
 
 #include <string>
-#include "Dialog.hpp"
 #include "User.hpp"
 
 namespace database_interface {
 
-struct Chat : Dialog {
-    std::pair<User, User> m_users;
+struct Chat {
+    int m_chat_id;
+    int m_date_time;
+    std::string m_encryption;
+    std::vector<User> m_users;
 
     Chat(
         int chat_id,
+        int date_time,
         const std::string &encryption,
-        const std::pair<User, User> &users
+        const std::vector<User> &users
     )
-        : Dialog(chat_id, encryption), m_users(users) {
+        : m_chat_id(chat_id), m_date_time(date_time), m_encryption(encryption), m_users(users) {
     }
 };
 
