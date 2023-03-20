@@ -5,9 +5,10 @@
 #ifndef MESSENGER_PROJECT_NETSERVER_HPP
 #define MESSENGER_PROJECT_NETSERVER_HPP
 
+#include <utility>
+#include "NetGeneral.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
-#include <utility>
 #include <thread>
 #include <vector>
 #include <string>
@@ -16,8 +17,7 @@
 #include <random>
 #include <mutex>
 #include <optional>
-
-#include "NetGeneral.hpp"
+#include "./../CryptoTest/Cryptographer.hpp"
 
 namespace Net::Server {
 

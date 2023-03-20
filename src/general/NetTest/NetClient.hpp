@@ -5,9 +5,9 @@
 #ifndef MESSENGER_PROJECT_NETCLIENT_HPP
 #define MESSENGER_PROJECT_NETCLIENT_HPP
 
+#include <utility>
 #include <boost/asio.hpp>
 #include <iostream>
-#include <utility>
 #include <thread>
 #include <vector>
 #include <string>
@@ -18,6 +18,7 @@
 #include <optional>
 
 #include "NetGeneral.hpp"
+#include "./../CryptoTest/Cryptographer.hpp"
 
 
 namespace Net::Client {
@@ -25,12 +26,14 @@ namespace Net::Client {
     struct Client {
     public:
 #ifndef MULTI_CLIENT_TEST
+
         Client(std::string server_ip_ = "localhost", std::string port_ = "12345") :
-        server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
+                server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #else
-        Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12345") :
+        Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12346") :
                 io_context(ioContext), server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #endif
+
         void make_connection() {
             boost::asio::ip::tcp::socket s(io_context);
             boost::asio::connect(s, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
@@ -54,6 +57,7 @@ namespace Net::Client {
             auto true_string = request.get_body();
             std::cout << "Got from server: " << true_string << "\n";
         }
+
     private:
 #ifndef MULTI_CLIENT_TEST
         boost::asio::io_context io_context;
@@ -63,6 +67,7 @@ namespace Net::Client {
         std::optional<boost::asio::ip::tcp::iostream> connection;
         std::string server_ip;
         std::string server_port;
+
     };
 
 }

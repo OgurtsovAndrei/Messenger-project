@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int main() {
-    Net::Client::Client client;
+    Net::Client::Client client("localhost", "12345");
     client.make_connection();
     for (int i = 0; i < 10; ++i) {
         client.send_text_message("Hi, that is iteration № " + std::to_string(i) + "!");

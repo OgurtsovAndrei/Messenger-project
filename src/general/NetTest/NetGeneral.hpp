@@ -7,13 +7,19 @@
 
 #include <string>
 #include <iostream>
+#include <cassert>
+#include <cstring>
 #include <vector>
+#include <utility>
+#include <boost/asio.hpp>
+#include "./../TextWorker.hpp"
 
 namespace Net {
 
     enum RequestType {
         TEXT_MESSAGE = 1,
         FILE,
+        PUBLIC_KEY_SHARE,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
         UNKNOWN,
@@ -27,8 +33,8 @@ namespace Net {
     };
 
     inline constexpr int NUMBER_OF_BLOCKS_IN_REQUEST = 3;
-    inline constexpr int TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
-    inline constexpr int BODY_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
+    inline constexpr int TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS = 16;
+    inline constexpr int BODY_SIZE_IN_REQUEST_STRING_IN_CHARS = 16;
 
     inline constexpr char request_sep[] = "@\1\3\1#";
     inline constexpr char request_begin[] = "^\1\3\1#";
@@ -70,12 +76,16 @@ namespace Net {
             if (request_status == CORRECT || request_status == RAW_MESSAGE) {
                 return text_request;
             }
+            make_request();
+            return text_request;
         };
 
         const std::string &get_body() {
             if (request_status == CORRECT || request_status == RAW_DATA) {
                 return body;
             }
+            parse_request();
+            return body;
         };
 
         void parse_request() {
@@ -136,9 +146,9 @@ namespace Net {
             }
             text_request += request_begin;
             text_request += convert_to_string_size_n(static_cast<int>(request_type),
-                                                     TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES);
+                                                     TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS);
             text_request += request_sep;
-            text_request += convert_to_string_size_n(body.size(), BODY_SIZE_IN_REQUEST_STRING_IN_BYTES);
+            text_request += convert_to_string_size_n(body.size(), BODY_SIZE_IN_REQUEST_STRING_IN_CHARS);
             text_request += request_sep;
             text_request += body;
             text_request += request_end;
@@ -187,14 +197,14 @@ namespace Net {
         assert(true_string.find(request_begin) == true_string.size() - strlen(request_begin));
         true_string = request_begin;
 
-        true_string += read_n_and_get_string(TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
+        true_string += read_n_and_get_string(TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS + strlen(request_sep), client);
         assert(true_string.find(request_sep) == true_string.size() - strlen(request_sep));
 
-        std::string new_part = read_n_and_get_string(BODY_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
+        std::string new_part = read_n_and_get_string(BODY_SIZE_IN_REQUEST_STRING_IN_CHARS + strlen(request_sep), client);
         assert(new_part.find(request_sep) == new_part.size() - strlen(request_sep));
         true_string += new_part;
 
-        unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_BYTES));
+        unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_CHARS));
         true_string += read_n_and_get_string(body_size, client);
 
         std::string last_request_part = read_n_and_get_string(strlen(request_end), client);
