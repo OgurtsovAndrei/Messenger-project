@@ -18,10 +18,14 @@ namespace Net {
 
     enum RequestType {
         TEXT_MESSAGE = 1,
+        SECURED_MESSAGE,
         FILE,
-        PUBLIC_KEY_SHARE,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
+        MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY,
+        MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
+        MAKE_SECURE_CONNECTION_SUCCESS,
+        MAKE_SECURE_CONNECTION_FAIL,
         UNKNOWN,
     };
 
@@ -85,8 +89,15 @@ namespace Net {
                 return body;
             }
             parse_request();
+            text_request.clear();
             return body;
         };
+
+        void set_body(std::string new_body) {
+            request_status = RAW_DATA;
+            request_type = TEXT_MESSAGE;
+            body = std::move(new_body);
+        }
 
         void parse_request() {
             if (request_status == CORRECT) {
@@ -140,6 +151,10 @@ namespace Net {
             request_status = CORRECT;
         }
 
+        RequestType get_type() {
+            return request_type;
+        }
+
         void make_request() {
             if (request_status == CORRECT) {
                 return;
@@ -170,7 +185,10 @@ namespace Net {
         char *string_ptr = new char[n + 1];
         string_ptr[n] = '\0';
         client.read(string_ptr, n);
-        std::string string = string_ptr;
+        std::string string;
+        for (int i = 0; i < n; ++i) {
+            string += string_ptr[i];
+        }
         delete[] string_ptr;
         assert(string.size() == n);
         return std::move(string);

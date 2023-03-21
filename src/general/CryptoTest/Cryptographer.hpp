@@ -23,6 +23,9 @@
 #include "./../TextWorker.hpp"
 
 namespace Cryptographer {
+
+
+
     template<typename Out, typename In>
     Out as(const In &data) {
         return Out(data.data(), data.data() + data.size());
@@ -66,7 +69,7 @@ namespace Cryptographer {
 
 
     EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
-                          std::unique_ptr<Botan::Public_Key> pubkey,
+                          Botan::Public_Key *pubkey,
                           Botan::RandomNumberGenerator &rng) {
         auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
 
@@ -87,6 +90,12 @@ namespace Cryptographer {
         d.encryptedKey = asym_cipher.encrypt(key, rng);
 
         return d;
+    }
+
+    EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
+                          std::unique_ptr<Botan::Public_Key> pubkey,
+                          Botan::RandomNumberGenerator &rng) {
+        return encrypt(data, &*pubkey, rng);
     }
 
 
@@ -112,12 +121,26 @@ namespace Cryptographer {
 
     struct Decrypter;
 
+    struct Encrypter;
+
     struct Cryptographer {
-        static Botan::AutoSeeded_RNG rng;
+    public:
+        static Botan::AutoSeeded_RNG& get_rng() {
+            static Botan::AutoSeeded_RNG rng;
+            return rng;
+        }
     };
 
     struct Decrypter {
     public:
+        Decrypter(const Decrypter &con) = delete;
+        Decrypter(Decrypter &&) = default;
+        Decrypter &operator=(const Decrypter &) = delete;
+        Decrypter &operator=(Decrypter &&other)  noexcept {
+            key_pair = std::move(other.key_pair);
+            return *this;
+        };
+        
         explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
                                                           key_pair(generate_keypair(2048 /*  bits */, rng_)) {};
 
@@ -125,7 +148,7 @@ namespace Cryptographer {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
         };
 
-        [[nodiscard]] auto get_public_key() const {
+        [[nodiscard]] std::unique_ptr<Botan::Public_Key> get_public_key() const {
             return key_pair->public_key();
         }
 
@@ -147,12 +170,46 @@ namespace Cryptographer {
 
 
     private:
-
         Botan::AutoSeeded_RNG &rng;
 
-        const std::unique_ptr<Botan::Private_Key> key_pair;
+        std::unique_ptr<Botan::Private_Key> key_pair;
+    };
 
-        std::string privateKey() { return Botan::base64_encode(Botan::PKCS8::BER_encode(*key_pair)); };
+    struct Encrypter {
+    public:
+        Encrypter(const Encrypter &con) = delete;
+        Encrypter(Encrypter &&) = default;
+        Encrypter &operator=(const Encrypter &) = delete;
+        Encrypter &operator=(Encrypter &&other)  noexcept {
+            public_key = std::move(other.public_key);
+            return *this;
+        };
+        
+        explicit Encrypter(const std::string &public_key_str, Botan::AutoSeeded_RNG &rng_) : rng(rng_) {
+            Botan::SecureVector<uint8_t> publicKeyBytes(Botan::base64_decode(public_key_str));
+            public_key = std::unique_ptr<Botan::Public_Key>(
+                    Botan::X509::load_key(std::vector(publicKeyBytes.begin(), publicKeyBytes.end())));
+        };
+
+        [[nodiscard]] std::string get_str_publicKey() const {
+            return Botan::base64_encode(Botan::X509::BER_encode(*public_key));
+        };
+
+        [[nodiscard]] Botan::Public_Key *get_public_key() const {
+            return &*public_key;
+        }
+
+        [[nodiscard]] EncryptedData encrypt_text_to_encrypted_data_block(const std::string &plaintext) const {
+            return encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), get_public_key(), rng);
+        }
+
+        [[nodiscard]] std::string encrypt_text_to_text(const std::string &plaintext) const {
+            return std::move(convert_encrypted_data_to_text(encrypt_text_to_encrypted_data_block(plaintext)));
+        }
+
+    private:
+        Botan::AutoSeeded_RNG &rng;
+        std::unique_ptr<Botan::Public_Key> public_key;
     };
 
 
