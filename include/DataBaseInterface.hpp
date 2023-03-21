@@ -4,8 +4,9 @@
 #include <sqlite3.h>
 #include <iostream>
 #include <map>
-#include "Chat.hpp"
-#include "Group.hpp"
+#include <set>
+#include <list>
+#include "Dialog.hpp"
 #include "Message.hpp"
 #include "Status.hpp"
 #include "User.hpp"
@@ -27,30 +28,26 @@ struct BDInterface {
     //    virtual Status
     //    make_dialog_request(const User &from_user, const User &to_user) = 0;
     //    virtual Status
-    //    close_dilog_request(const User &from_user, const User &to_user) = 0;
+    //    close_dialog_request(const User &from_user, const User &to_user) = 0;
     //
-    //    // Chat
-    //    virtual Status make_chat(const Chat &chat) = 0;
-    //    virtual Status change_chat(const Chat &new_chat) = 0;
-    //    virtual Status del_chat(const Chat &chat) = 0;
-    //
-    //    // Group
-    //    virtual Status make_group(const Group &group) = 0;
-    //    virtual Status change_group(const Group &new_group) = 0;
-    //    virtual Status get_n_users_groups_by_time(
+    //    // Dialog
+    //    virtual Status make_dialog(const Dialog &dialog) = 0;
+    //    virtual Status change_dialog(const Dialog &new_dialog) = 0;
+    //    virtual Status get_n_users_dialogs_by_time(
     //        const User &user,
     //        int n = 10,
-    //        int last_chat_id = -1
+    //        int last_dialog_date_time = 2121283574
     //    ) = 0;
-    //    virtual Status del_group(const Group &group) = 0;
+    //    virtual Status del_dialog(const Dialog &dialog) = 0;
     //
     //    // Message
     //    virtual Status make_message(const Message &message) = 0;
-    //    virtual Status change_message(const Group &new_message) = 0;
-    //    virtual Status get_n_chats_messages_by_time(
-    //        const Chat &chat,
+    //    virtual Status change_message(const Message &new_message) = 0;
+    //    virtual Status get_n_dialogs_messages_by_time(
+    //        const Dialog &dialog,
+    //        std::vector<Dialog> next_dialogs,
     //        int n = 10,
-    //        int last_message_id = -1
+    //        int last_message_date_time = 2121283574
     //    ) = 0;
     //    virtual Status del_message(const Message &Message) = 0;
 };
@@ -69,37 +66,32 @@ struct SQL_BDInterface : BDInterface {
     //    &to_user); Status close_dilog_request(const User &from_user, const
     //    User &to_user);
     //
-    //    // Chat
-    //    Status make_chat(const Chat &chat);
-    //    Status change_chat(const Chat &new_chat);
-    //    Status del_chat(const Chat &chat);
-    //
-    //    // Group
-    //    Status make_group(const Group &group);
-    //    Status change_group(const Group &new_group);
-    //    Status get_n_users_groups_by_time(
+    //    // Dialog
+    //    virtual Status make_dialog(const Dialog &dialog) = 0;
+    //    virtual Status change_dialog(const Dialog &new_dialog) = 0;
+    //    virtual Status get_n_users_dialogs_by_time(
     //        const User &user,
+    //        std::vector<Dialog> next_dialogs,
     //        int n = 10,
-    //        int last_chat_id = -1
-    //    );
-    //    Status del_group(const Group &group);
+    //        int last_dialog_date_time = 2121283574
+    //    ) = 0;
+    //    virtual Status del_dialog(const Dialog &dialog) = 0;
     //
     //    // Message
-    //    Status make_message(const Message &message);
-    //    Status change_message(const Group &new_message);
-    //    Status get_n_chats_messages_by_time(
-    //        const Chat &chat,
+    //    virtual Status make_message(const Message &message) = 0;
+    //    virtual Status change_message(const Message &new_message) = 0;
+    //    virtual Status get_n_dialogs_messages_by_time(
+    //        const Dialog &dialog,
     //        int n = 10,
-    //        int last_message_id = -1
-    //    );
-    //    Status del_message(const Message &Message);
+    //        int last_message_date_time = 2121283574
+    //    ) = 0;
+    //    virtual Status del_message(const Message &Message) = 0;
 };
 
 struct Mock_BDInterface : BDInterface {
     std::map<std::string, User> users;
     std::map<User, std::set<User>> requests;
-    std::map<int, Chat> chats;
-    std::map<int, Group> groups;
+    std::list<Dialog> dialogs;
     std::map<int, Message> messages;
 
     // Work with bd connection
@@ -127,7 +119,7 @@ struct Mock_BDInterface : BDInterface {
             user = user[user.m_name];
             return Status(true, "Get user in mock_bd");
         }
-        return Status(false, "Can not change user in mock_bd");
+        return Status(false, "Can not get user in mock_bd");
     }
 
     Status del_user(const User &user) {
@@ -140,62 +132,70 @@ struct Mock_BDInterface : BDInterface {
         return Status(true, "Make dialog request in mock_bd");
     }
 
-    Status close_dilog_request(const User &from_user, const User &to_user) {
+    Status close_dialog_request(const User &from_user, const User &to_user) {
         requests[from_user.m_name].erase(requests[from_user.m_name].find(to_user
         ));
         return Status(true, "Close dialog request in mock_bd");
     }
 
-    // Chat
-    Status make_chat(const Chat &chat) {
-        chats[chat.m_chat_id] = chat;
-        return Status(true, "Make chat in mock_bd");
+    // Dialog
+    Status make_dialog(Dialog &dialog){
+        dialog.m_dialog_id = dialogs.size();
+        dialogs.push_back(dialog);
+        return Status(true, "Make dialog in mock_bd");
     }
-
-    Status change_chat(const Chat &new_chat) {
-        chats[new_chat.m_chat_id] = new_chat;
-        return Status(true, "Change chat in mock_bd");
+    Status change_dialog(const Dialog &new_dialog) {
+        for (auto it = dialogs.begin(); it != dialogs.end(); it++)
+        {
+            if (it->id == new_dialog.m_dialog_id){
+                *it = new_dialog;
+                return Status(true, "Change dialog in mock_bd");
+            }
+        }
+        return Status(false, "Can not change dialog in mock_bd");
     }
-
-    Status del_chat(const Chat &chat) {
-        chats.erase(chats.find(chat.m_chat_id));
-        return Status(true, "Delete chat in mock_bd");
-    }
-
-    // Group
-    Status make_group(const Group &group){
-        groups[group.m_group_id] = group;
-        return Status(true, "Make group in mock_bd");
-    }
-    Status change_group(const Group &new_group){
-        groups[new_group.m_group_id] = new_group;
-        return Status(true, "Change group in mock_bd");
-    }
-
-    Status del_group(const Group &group){
-        chats.erase(chats.find(group.m_chat_id));
-        groups.erase(groups.find(group.m_group_id));
-        return Status(true, "Delete group in mock_bd");
-    }
-
-
-    Status get_n_users_groups_by_time(
+    Status get_n_users_dialogs_by_time(
         const User &user,
+        std::list<Dialog> &next_dialogs,
         int n = 10,
-        int last_date_time = -1
-    ){
-
+        int last_dialog_date_time = 2121283574
+    ) {
+        for (auto it = dialogs.begin(); it != dialogs.end(); it++)
+        {
+            next_dialogs.clear();
+            if (std::find(it->m_users.begin(), it->m_users.end(), user) != it->m_users.end() && it->m_date_time < last_dialog_date_time) {
+                for (auto k = next_dialogs.begin(); k != next_dialogs.end(); k++){
+                    if (k->m_date_time < it->m_date_time){
+                        next_dialogs.insert(*it, k);
+                        break;
+                    }
+                }
+                if (next_dialogs.size() >= n) {
+                    next_dialogs.pop_back();
+                }
+            }
+        }
+        return Status(true, "Get n dialogs in mock_bd");
+    }
+    virtual Status del_dialog(const Dialog &dialog) {
+        for (auto it = dialogs.begin(); it != dialogs.end(); it++) {
+            if (it->id == dialog.m_dialog_id){
+                dialogs.erase(it);
+                return Status(true, "Delete dialogs in mock_bd");
+            }
+        }
+        return Status(false, "Can not delete dialogs in mock_bd");
     }
 
     // Message
-    Status make_message(const Message &message);
-    Status change_message(const Group &new_message);
-    Status get_n_chats_messages_by_time(
-        const Chat &chat,
+    virtual Status make_message(const Message &message) = 0;
+    virtual Status change_message(const Message &new_message) = 0;
+    virtual Status get_n_dialogs_messages_by_time(
+        const Dialog &dialog,
         int n = 10,
-        int last_message_id = -1
-    );
-    Status del_message(const Message &Message);
+        int last_message_date_time = 2121283574
+    ) = 0;
+    virtual Status del_message(const Message &Message) = 0;
 };
 }  // namespace database_interface
 
