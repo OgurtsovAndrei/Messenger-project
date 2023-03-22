@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <string>
 
 #include <botan/aead.h>
 #include <botan/rsa.h>
@@ -12,72 +11,113 @@
 #include <botan/secmem.h>
 #include <botan/cipher_mode.h>
 #include <botan/pubkey.h>
+#include <string>
 #include <botan/base64.h>
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
 #include <botan/data_src.h>
 //#include <botan/vector>
 
-#include "Cryptographer.hpp"
 
-using namespace Cryptographer;
+struct EncryptedData {
+    Botan::secure_vector<uint8_t> ciphertext;
+    std::vector<uint8_t>          nonce;
+    std::vector<uint8_t>          encryptedKey;
+};
+
+
+std::unique_ptr<Botan::Private_Key>
+generate_keypair(const size_t                  bits,
+                 Botan::RandomNumberGenerator& rng)
+{
+    return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
+}
+
+
+EncryptedData encrypt(const Botan::secure_vector<uint8_t>& data,
+                      std::unique_ptr<Botan::Public_Key>   pubkey,
+                      Botan::RandomNumberGenerator&        rng)
+{
+    auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
+
+    EncryptedData d;
+
+    // prepare random key material for the symmetric encryption/authentication
+    rng.random_vec(d.nonce, sym_cipher->default_nonce_length());
+    const auto key = rng.random_vec(sym_cipher->minimum_keylength());
+    d.ciphertext = data;
+
+    // encrypt/authenticate the data symmetrically
+    sym_cipher->set_key(key);
+    sym_cipher->start(d.nonce);
+    sym_cipher->finish(d.ciphertext);
+
+    // encrypt the symmetric key using RSA
+    Botan::PK_Encryptor_EME asym_cipher(*pubkey, rng, "EME-OAEP(SHA-256,MGF1)");
+    d.encryptedKey = asym_cipher.encrypt(key, rng);
+
+    return d;
+}
+
+
+Botan::secure_vector<uint8_t>
+decrypt(const EncryptedData&          encdata,
+        const Botan::Private_Key&     privkey,
+        Botan::RandomNumberGenerator& rng)
+{
+    // prepare random key material for the symmetric encryption/authentication
+    Botan::secure_vector<uint8_t> plaintext = encdata.ciphertext;
+
+    // decrypt the symmetric key
+    Botan::PK_Decryptor_EME asym_cipher(privkey, rng, "EME-OAEP(SHA-256,MGF1)");
+    const auto key = asym_cipher.decrypt(encdata.encryptedKey);
+
+    // decrypt the data symmetrically
+    auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Decryption);
+    sym_cipher->set_key(key);
+    sym_cipher->start(encdata.nonce);
+    sym_cipher->finish(plaintext);
+
+    return plaintext;
+}
+
+
+template <typename Out, typename In>
+Out as(const In& data)
+{
+    return Out(data.data(), data.data() + data.size());
+}
+
 
 int main()
 {
     Botan::AutoSeeded_RNG rng;
 
-    Decrypter decrypter(rng);
+    const auto privkey = generate_keypair(2048 /*  bits */, rng);
 
-    std::string publicKey = decrypter.get_str_publicKey();
+    std::string privateKey = Botan::base64_encode(Botan::PKCS8::BER_encode(*privkey));
+    std::string publicKey = Botan::base64_encode(Botan::X509::BER_encode(*privkey->public_key()));
 
-    std::cout << "Public Key = " << publicKey << "\n";
+    std::cout << "Private Key = " <<privateKey << "\n";
+    std::cout << "Public Key = " << privateKey << "\n";
 
     const std::string plaintext = "The quick brown fox jumps over the lazy dog.";
-    const std::string plaintext2 = "The quick brown fox jumps over the lazy dog.The quick brown fox jumps over the lazy dog.";
+    const auto ciphertext       = encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), privkey->public_key(), rng);
+    const auto new_plaintext    = decrypt(ciphertext, *privkey, rng);
 
-    /*const EncryptedData ciphertext       = encrypter.encrypt_text_to_encrypted_data_block(plaintext);
-
-    const auto new_plaintext    = decrypt(ciphertext, *key_pair, rng);
-    std::cout << "Ciphertext: " << as<std::string>(ciphertext.ciphertext) << std::endl;
-    std::cout << as<std::string>(new_plaintext) << std::endl;*//*
-
-    auto text = as<std::string>(ciphertext.ciphertext);
-    auto nonce = as<std::string>(ciphertext.nonce);
-    auto key = as<std::string>(ciphertext.encryptedKey);
-
-
-    std::cout << nonce << "\n\n" << key << "\n\n";
-    std::cout << "DONE1\n";
-//    Botan::secure_vector<uint8_t> text_1(Botan::base64_decode(text));
-    auto text_1 = as<Botan::secure_vector<uint8_t>>(text);
-    std::cout << "DONE2\n";
-    auto nonce_1 = as<std::vector<uint8_t>>(nonce);
-    std::cout << "DONE3\n";
-    auto key_1 = as<std::vector<uint8_t>>(key);
-    std::cout << "DONE4\n";
-
-
-//    EncryptedData ciphertext1{ciphertext.ciphertext, nonce_1, key_1};
-    EncryptedData ciphertext1{text_1, nonce_1, key_1};*/
+    std::cout << as<std::string>(new_plaintext) << std::endl;
 
     //Loading the public key
     Botan::SecureVector<uint8_t> publicKeyBytes(Botan::base64_decode(publicKey));
     std::unique_ptr<Botan::Public_Key> pbk(Botan::X509::load_key(std::vector(publicKeyBytes.begin(), publicKeyBytes.end())));
 
-   /* //Loading the private key
-//    Botan::SecureVector<uint8_t> privateKeyBytes(Botan::base64_decode(privateKey));
-//    Botan::DataSource_Memory source(privateKeyBytes);
-//    std::unique_ptr<Botan::Private_Key> pvk(Botan::PKCS8::load_key(source));
+    //Loading the private key
+    Botan::SecureVector<uint8_t> privateKeyBytes(Botan::base64_decode(privateKey));
+    Botan::DataSource_Memory source(privateKeyBytes);
+    std::unique_ptr<Botan::Private_Key> pvk(Botan::PKCS8::load_key(source));
 
-//    const auto new_plaintext_after_save_key = decrypt(ciphertext, *pvk, rng);
-//    std::cout << as<std::string>(new_plaintext_after_save_key) << std::endl;*/
-
-    std::cout << as<std::string>(decrypter.decrypt_data(decrypter.encrypt_text_to_encrypted_data_block(plaintext))) << std::endl;
-
-    std::string text_to_send = decrypter.encrypt_text_to_text(plaintext);
-
-    std::cout << as<std::string>(decrypter.decrypt_data(text_to_send)) << std::endl;
+    const auto new_plaintext_after_save_key = decrypt(ciphertext, *pvk, rng);
+    std::cout << as<std::string>(new_plaintext_after_save_key) << std::endl;
 
     return 0;
-
 }

@@ -7,25 +7,15 @@
 
 #include <string>
 #include <iostream>
-#include <cassert>
-#include <cstring>
 #include <vector>
-#include <utility>
-#include <boost/asio.hpp>
-#include "./../TextWorker.hpp"
 
 namespace Net {
 
     enum RequestType {
         TEXT_MESSAGE = 1,
-        SECURED_MESSAGE,
         FILE,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
-        MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY,
-        MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
-        MAKE_SECURE_CONNECTION_SUCCESS,
-        MAKE_SECURE_CONNECTION_FAIL,
         UNKNOWN,
     };
 
@@ -37,8 +27,8 @@ namespace Net {
     };
 
     inline constexpr int NUMBER_OF_BLOCKS_IN_REQUEST = 3;
-    inline constexpr int TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS = 16;
-    inline constexpr int BODY_SIZE_IN_REQUEST_STRING_IN_CHARS = 16;
+    inline constexpr int TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
+    inline constexpr int BODY_SIZE_IN_REQUEST_STRING_IN_BYTES = 4;
 
     inline constexpr char request_sep[] = "@\1\3\1#";
     inline constexpr char request_begin[] = "^\1\3\1#";
@@ -80,24 +70,13 @@ namespace Net {
             if (request_status == CORRECT || request_status == RAW_MESSAGE) {
                 return text_request;
             }
-            make_request();
-            return text_request;
         };
 
         const std::string &get_body() {
             if (request_status == CORRECT || request_status == RAW_DATA) {
                 return body;
             }
-            parse_request();
-            text_request.clear();
-            return body;
         };
-
-        void set_body(std::string new_body) {
-            request_status = RAW_DATA;
-            request_type = TEXT_MESSAGE;
-            body = std::move(new_body);
-        }
 
         void parse_request() {
             if (request_status == CORRECT) {
@@ -151,19 +130,15 @@ namespace Net {
             request_status = CORRECT;
         }
 
-        RequestType get_type() {
-            return request_type;
-        }
-
         void make_request() {
             if (request_status == CORRECT) {
                 return;
             }
             text_request += request_begin;
             text_request += convert_to_string_size_n(static_cast<int>(request_type),
-                                                     TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS);
+                                                     TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES);
             text_request += request_sep;
-            text_request += convert_to_string_size_n(body.size(), BODY_SIZE_IN_REQUEST_STRING_IN_CHARS);
+            text_request += convert_to_string_size_n(body.size(), BODY_SIZE_IN_REQUEST_STRING_IN_BYTES);
             text_request += request_sep;
             text_request += body;
             text_request += request_end;
@@ -185,10 +160,7 @@ namespace Net {
         char *string_ptr = new char[n + 1];
         string_ptr[n] = '\0';
         client.read(string_ptr, n);
-        std::string string;
-        for (int i = 0; i < n; ++i) {
-            string += string_ptr[i];
-        }
+        std::string string = string_ptr;
         delete[] string_ptr;
         assert(string.size() == n);
         return std::move(string);
@@ -215,14 +187,14 @@ namespace Net {
         assert(true_string.find(request_begin) == true_string.size() - strlen(request_begin));
         true_string = request_begin;
 
-        true_string += read_n_and_get_string(TYPE_SIZE_IN_REQUEST_STRING_IN_CHARS + strlen(request_sep), client);
+        true_string += read_n_and_get_string(TYPE_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
         assert(true_string.find(request_sep) == true_string.size() - strlen(request_sep));
 
-        std::string new_part = read_n_and_get_string(BODY_SIZE_IN_REQUEST_STRING_IN_CHARS + strlen(request_sep), client);
+        std::string new_part = read_n_and_get_string(BODY_SIZE_IN_REQUEST_STRING_IN_BYTES + strlen(request_sep), client);
         assert(new_part.find(request_sep) == new_part.size() - strlen(request_sep));
         true_string += new_part;
 
-        unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_CHARS));
+        unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_BYTES));
         true_string += read_n_and_get_string(body_size, client);
 
         std::string last_request_part = read_n_and_get_string(strlen(request_end), client);
