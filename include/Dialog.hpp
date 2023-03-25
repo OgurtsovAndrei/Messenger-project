@@ -30,6 +30,15 @@ struct Dialog {
           m_users(users),
           m_dialog_id(dialog_id) {
     }
+
+    bool find(const User &user){
+        for (int i = 0; i < m_users.size(); i++){
+            if (m_users[i].m_login == user.m_login){
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 }  // namespace database_interface
