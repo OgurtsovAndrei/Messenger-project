@@ -30,9 +30,11 @@ struct BDInterface {
 
     virtual Status del_user(const User &user) = 0;
 
-    virtual Status make_dialog_request(const User &from_user, const User &to_user) = 0;
+    virtual Status
+    make_dialog_request(const User &from_user, const User &to_user) = 0;
 
-    virtual Status close_dialog_request(const User &from_user, const User &to_user) = 0;
+    virtual Status
+    close_dialog_request(const User &from_user, const User &to_user) = 0;
 
     // Dialog
     virtual Status make_dialog(Dialog &dialog) = 0;
@@ -40,10 +42,10 @@ struct BDInterface {
     virtual Status change_dialog(const Dialog &new_dialog) = 0;
 
     virtual Status get_n_users_dialogs_by_time(
-            const User &user,
-            std::list<Dialog> &next_dialogs,
-            int n = 10,
-            int last_dialog_date_time = 2121283574
+        const User &user,
+        std::list<Dialog> &next_dialogs,
+        int n = 10,
+        int last_dialog_date_time = 2121283574
     ) = 0;
 
     virtual Status del_dialog(const Dialog &dialog) = 0;
@@ -54,62 +56,62 @@ struct BDInterface {
     virtual Status change_message(const Message &new_message) = 0;
 
     virtual Status get_n_dialogs_messages_by_time(
-            const Dialog &dialog,
-            std::list<Message> &next_messages,
-            int n = 10,
-            int last_message_date_time = 2121283574
+        const Dialog &dialog,
+        std::list<Message> &next_messages,
+        int n = 10,
+        int last_message_date_time = 2121283574
     ) = 0;
 
     virtual Status del_message(const Message &message) = 0;
 };
 
-    struct SQL_BDInterface : BDInterface {
-        // Work with bd connection
-        Status open();
+struct SQL_BDInterface : BDInterface {
+    // Work with bd connection
+    Status open();
 
-        Status close();
+    Status close();
 
-        // User
-        Status add_user(User &user);
+    // User
+    Status add_user(User &user);
 
-        Status change_user(const User &new_user);
+    Status change_user(const User &new_user);
 
-        Status get_user_log_pas(User &user);
+    Status get_user_log_pas(User &user);
 
-        Status del_user(const User &user);
+    Status del_user(const User &user);
 
-        Status make_dialog_request(const User &from_user, const User &to_user);
+    Status make_dialog_request(const User &from_user, const User &to_user);
 
-        Status close_dialog_request(const User &from_user, const User &to_user);
+    Status close_dialog_request(const User &from_user, const User &to_user);
 
-        // Dialog
-        Status make_dialog(Dialog &dialog);
+    // Dialog
+    Status make_dialog(Dialog &dialog);
 
-        Status change_dialog(const Dialog &new_dialog);
+    Status change_dialog(const Dialog &new_dialog);
 
-        Status get_n_users_dialogs_by_time(
-                const User &user,
-                std::list<Dialog> &next_dialogs,
-                int n = 10,
-                int last_dialog_date_time = 2121283574
-        );
+    Status get_n_users_dialogs_by_time(
+        const User &user,
+        std::list<Dialog> &next_dialogs,
+        int n = 10,
+        int last_dialog_date_time = 2121283574
+    );
 
-        Status del_dialog(const Dialog &dialog);
+    Status del_dialog(const Dialog &dialog);
 
-        // Message
-        Status make_message(Message &message);
+    // Message
+    Status make_message(Message &message);
 
-        Status change_message(const Message &new_message);
+    Status change_message(const Message &new_message);
 
-        Status get_n_dialogs_messages_by_time(
-                const Dialog &dialog,
-                std::list<Message> &next_messages,
-                int n = 10,
-                int last_message_date_time = 2121283574
-        );
+    Status get_n_dialogs_messages_by_time(
+        const Dialog &dialog,
+        std::list<Message> &next_messages,
+        int n = 10,
+        int last_message_date_time = 2121283574
+    );
 
-        Status del_message(const Message &message);
-    };
+    Status del_message(const Message &message);
+};
 
 struct Mock_BDInterface : BDInterface {
     int last_user_id = 0;
