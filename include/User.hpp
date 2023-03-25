@@ -34,8 +34,6 @@ struct User {
     }
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
-
-
 };
 
 }  // namespace database_interface
