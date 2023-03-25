@@ -13,6 +13,8 @@ struct User {
     std::string m_password_hash;
     static User *m_edit_user;
 
+    User() = default;
+
     User(
         const std::string &name,
         const std::string &surname,
@@ -32,6 +34,8 @@ struct User {
     }
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
+
+
 };
 
 }  // namespace database_interface
