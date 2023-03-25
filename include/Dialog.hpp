@@ -24,16 +24,16 @@ struct Dialog {
         int dialog_id = -1
     )
         : m_name(name),
-          m_encryption(encryption), 
+          m_encryption(encryption),
           m_date_time(date_time),
           m_owner_id(owner),
           m_users(users),
           m_dialog_id(dialog_id) {
     }
 
-    bool find(const User &user){
-        for (int i = 0; i < m_users.size(); i++){
-            if (m_users[i].m_login == user.m_login){
+    bool find(const User &user) {
+        for (int i = 0; i < m_users.size(); i++) {
+            if (m_users[i].m_login == user.m_login) {
                 return true;
             }
         }
