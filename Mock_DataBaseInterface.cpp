@@ -18,12 +18,20 @@ Status Mock_BDInterface::change_user(const User &new_user) {
     return Status(true, "Change user in mock_bd");
 }
 
-Status Mock_BDInterface::get_user_log_pas(User &user) {
+Status Mock_BDInterface::get_user_by_log_pas(User &user) {
     if (users[user.m_login].m_password_hash == user.m_password_hash) {
         user = users[user.m_login];
         return Status(true, "Get user in mock_bd");
     }
     return Status(false, "Can not get user in mock_bd");
+}
+
+Status Mock_BDInterface::get_user_id_by_log(User &user){
+    if (users[user.m_login].m_user_id != -1) {
+        user.m_user_id = users[user.m_login].m_user_id;
+        return Status(true, "Get user id in mock_bd");
+    }
+    return Status(false, "Can not get user id in mock_bd");
 }
 
 Status Mock_BDInterface::del_user(const User &user) {

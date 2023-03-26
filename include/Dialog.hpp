@@ -13,6 +13,7 @@ struct Dialog {
     std::string m_encryption;
     int m_date_time;
     int m_owner_id;
+    bool m_is_group;
     std::vector<User> m_users;
 
     Dialog(
@@ -20,6 +21,7 @@ struct Dialog {
         const std::string &encryption,
         int date_time,
         int owner,
+        bool is_group,
         const std::vector<User> &users,
         int dialog_id = -1
     )
@@ -27,6 +29,7 @@ struct Dialog {
           m_encryption(encryption),
           m_date_time(date_time),
           m_owner_id(owner),
+          m_is_group(is_group),
           m_users(users),
           m_dialog_id(dialog_id) {
     }
