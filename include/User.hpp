@@ -6,11 +6,11 @@
 namespace database_interface {
 
 struct User {
-    int m_user_id;
-    std::string m_name;
-    std::string m_surname;
-    std::string m_login;
-    std::string m_password_hash;
+    int m_user_id = -1;
+    std::string m_name = "";
+    std::string m_surname = "";
+    std::string m_login = "";
+    std::string m_password_hash = "";
     static User *m_edit_user;
 
     User() = default;

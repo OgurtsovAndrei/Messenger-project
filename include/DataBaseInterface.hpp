@@ -26,7 +26,9 @@ struct BDInterface {
 
     virtual Status change_user(const User &new_user) = 0;
 
-    virtual Status get_user_log_pas(User &user) = 0;
+    virtual Status get_user_by_log_pas(User &user) = 0;
+
+    virtual Status get_user_id_by_log(User &user) = 0;
 
     virtual Status del_user(const User &user) = 0;
 
@@ -76,7 +78,7 @@ struct SQL_BDInterface : BDInterface {
 
     Status change_user(const User &new_user);
 
-    Status get_user_log_pas(User &user);
+    Status get_user_by_log_pas(User &user);
 
     Status del_user(const User &user);
 
@@ -136,7 +138,9 @@ struct Mock_BDInterface : BDInterface {
 
     Status change_user(const User &new_user);
 
-    Status get_user_log_pas(User &user);
+    Status get_user_by_log_pas(User &user);
+
+    Status get_user_id_by_log(User &user);
 
     Status del_user(const User &user);
 
