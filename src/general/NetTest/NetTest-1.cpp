@@ -6,5 +6,5 @@
 
 int main() {
     Net::Server::Server server(12345);
-    server.run_server();
+    server.run_server(4);
 }

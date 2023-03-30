@@ -95,7 +95,6 @@ namespace Net {
 
         void set_body(std::string new_body) {
             request_status = RAW_DATA;
-            request_type = TEXT_MESSAGE;
             body = std::move(new_body);
         }
 
@@ -153,6 +152,10 @@ namespace Net {
 
         RequestType get_type() {
             return request_type;
+        }
+
+        RequestStatus get_status() {
+            return request_status;
         }
 
         void make_request() {
@@ -260,6 +263,7 @@ namespace Net {
             return;
         }
     }
+
 }
 
 #endif //MESSENGER_PROJECT_NETGENERAL_HPP
