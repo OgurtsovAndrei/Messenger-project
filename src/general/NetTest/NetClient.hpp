@@ -30,7 +30,7 @@ namespace Net::Client {
         Client(std::string server_ip_ = "localhost", std::string port_ = "12345") :
                 server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #else
-        Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12346") :
+        Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12345") :
                 io_context(ioContext), server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #endif
 
@@ -79,6 +79,14 @@ namespace Net::Client {
             Request request = accept_request(connection.value());
             auto true_string = request.get_body();
             std::cout << "Got from server: " << true_string << "\n";
+        }
+
+        void get_secret_request_and_out_it() {
+            Request request = accept_request(connection.value());
+            auto decrypted_body = Cryptographer::as<std::string>(
+                    decrypter.value().decrypt_data(request.get_body()));
+            request.set_body(decrypted_body);
+            std::cout << "Got from server: " << decrypted_body << "\n";
         }
 
     private:

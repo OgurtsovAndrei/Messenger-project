@@ -17,6 +17,8 @@
 #include <random>
 #include <mutex>
 #include <optional>
+#include <queue>
+#include <condition_variable>
 #include "./../CryptoTest/Cryptographer.hpp"
 
 namespace Net::Server {
@@ -26,6 +28,9 @@ namespace Net::Server {
     struct UserConnection {
 
     public:
+        explicit UserConnection(boost::asio::ip::tcp::socket &&socket_, Server &server_, int connection_number_) :
+        server(server_), connection_number(connection_number_), current_socket(std::move(socket_)) {};
+
         UserConnection(const UserConnection &con) = delete;
 
         UserConnection(UserConnection &&) = default;
@@ -33,9 +38,6 @@ namespace Net::Server {
         UserConnection &operator=(const UserConnection &) = delete;
 
         UserConnection &operator=(UserConnection &&) = delete;
-
-        explicit UserConnection(boost::asio::ip::tcp::socket &&socket_, Server &server_, int connection_number_) :
-                server(server_), connection_number(connection_number_), current_socket(std::move(socket_)) {};
 
         void work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection);
 
@@ -45,19 +47,31 @@ namespace Net::Server {
             }));
         }
 
+        [[nodiscard]] bool is_protected() const{
+            return connection_is_protected;
+        }
+
+        [[nodiscard]] boost::asio::ip::tcp::iostream &get_client_ref() {
+            return client.value();
+        }
+
         ~UserConnection() {
             if (session_thread) {
-//                session_thread.value().join();
+                //  session_thread.value().join();
                 session_thread->detach();
             }
         }
 
     private:
+        friend struct Server;
+        // Must be initialized
         int connection_number;
-        std::optional<std::thread> session_thread;
         boost::asio::ip::tcp::socket current_socket;
         Server &server;
+        // Not necessary to init
         std::vector<Request> connection_requests;
+        std::optional<boost::asio::ip::tcp::iostream> client;
+        std::optional<std::thread> session_thread;
         bool connection_is_protected = false;
         Cryptographer::Cryptographer cryptographer;
         std::optional<Cryptographer::Encrypter> encrypter;
@@ -65,6 +79,38 @@ namespace Net::Server {
 
         static void accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection);
+    };
+
+    struct RequestQueue {
+    public:
+        RequestQueue() = default;
+
+        [[nodiscard]] std::pair<int, Request> get_last_or_wait() {
+            std::unique_lock queue_lock(queue_mutex);
+            while (request_queue.empty()) {
+                cond_var.wait(queue_lock);
+            }
+            auto value = std::move(request_queue.front());
+            request_queue.pop();
+            return std::move(value);
+        }
+
+        void push_to_queue(int number, Request value) {
+            std::unique_lock queue_lock(queue_mutex);
+            request_queue.emplace(number, std::move(value));
+            cond_var.notify_one();
+        }
+
+        void push_to_queue(std::pair<int, Request> value) {
+            std::unique_lock queue_lock(queue_mutex);
+            request_queue.push(std::move(value));
+            cond_var.notify_one();
+        }
+
+    private:
+        std::mutex queue_mutex;
+        std::queue<std::pair<int, Request>> request_queue;
+        std::condition_variable cond_var; // FIXME: Как лучше назвать? Пока что пусть будет такая заглушка.
     };
 
     struct Server {
@@ -80,7 +126,27 @@ namespace Net::Server {
             return port;
         }
 
-        [[noreturn]] void run_server() {
+        [[noreturn]] void run_server(int number_of_thread_in_pool = 1) {
+            for (int consumer_id = 0; consumer_id < number_of_thread_in_pool; ++consumer_id) {
+                consumers.push_back(std::move(std::thread([&, this]() mutable {
+                    while (true) {
+                        auto [connection_id, request] = request_queue.get_last_or_wait();
+                        assert(request || request.get_status() == RAW_DATA); // В очереди должны храниться только расшифрованные requests
+                        std::cout << "Got from user with --> " << connection_id << " connection id: " << request.get_body() << "\n";
+                        std::unique_lock sessions_lock(sessions_mutex);
+                        auto iter = sessions.find(connection_id);
+                        assert(iter != sessions.end());
+                        UserConnection &user_connection = iter->second;
+                        if (request.get_type() == TEXT_MESSAGE) {
+                            send_message_by_connection(RESPONSE_REQUEST_SUCCESS,
+                                                       "Got from you: <" + request.get_body() + ">", user_connection.get_client_ref());
+                        } else if (request.get_type() == SECURED_MESSAGE) {
+                            send_secured_message_to_user(RESPONSE_REQUEST_SUCCESS,
+                                                         "Got from you: <" + request.get_body() + ">", user_connection);
+                        }
+                    }
+                })));
+            }
             while (true) {
                 make_connection();
             }
@@ -110,9 +176,9 @@ namespace Net::Server {
 
         void make_connection() {
             boost::asio::ip::tcp::socket socket = connection_acceptor.accept();
-            Server &us = *this;
+            Server &server_ref = *this;
             int empty_number = find_empty_connection_number();
-            sessions.emplace(empty_number, UserConnection(std::move(socket), us, empty_number));
+            sessions.emplace(empty_number, UserConnection(std::move(socket), server_ref, empty_number));
             UserConnection &connection = sessions.find(empty_number)->second;
             connection.run_connection();
         }
@@ -130,8 +196,11 @@ namespace Net::Server {
         const int port;
         std::mutex sessions_mutex;
         std::unordered_map<int, UserConnection> sessions;
+        RequestQueue request_queue;
+        std::vector<std::thread> consumers;
 
         int find_empty_connection_number() {
+            std::cout << "Searching for empty connection number\n";
             std::mt19937 rng((uint32_t) std::chrono::steady_clock::now().time_since_epoch().count());
             int val;
             std::unique_lock lock(sessions_mutex);
@@ -143,6 +212,15 @@ namespace Net::Server {
                 }
             }
             return val;
+        }
+
+        static void send_secured_message_to_user(RequestType type, const std::string& message,
+                                                 UserConnection &user_connection) {
+            assert(user_connection.is_protected());
+            std::string encrypted_message = user_connection.encrypter.value().encrypt_text_to_text(message);
+            Request request(type, std::move(encrypted_message));
+            request.make_request();
+            assert(try_send_request(request, user_connection.get_client_ref()));
         }
     };
 
@@ -158,10 +236,8 @@ namespace Net::Server {
                     connection.decrypter.value().decrypt_data(request.get_body()));
             request.set_body(decrypted_body);
         }
-        std::cout << "Dot request from" << rem_endpoint_str << "\n";
-        auto true_string = request.get_body();
-        std::cout << "got from " << rem_endpoint_str << ": " << true_string << "\n";
-        send_message_by_connection(RESPONSE_REQUEST_SUCCESS, "got from you: <" + true_string + ">", client);
+        std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
+        connection.server.request_queue.push_to_queue(connection.connection_number, std::move(request));
     }
 
     void echo(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str) {
@@ -176,8 +252,8 @@ namespace Net::Server {
         auto rem_endpoint = socket.remote_endpoint();
         std::cout << "Accepted connection " << rem_endpoint << " --> "
                   << socket.local_endpoint() << "\n";
-        boost::asio::ip::tcp::iostream client(std::move(socket));
-        Request request = accept_request(client);
+        client = boost::asio::ip::tcp::iostream(std::move(socket));
+        Request request = accept_request(client.value());
         request.parse_request();
         assert(request);
         if (request.get_type() == MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
@@ -186,17 +262,20 @@ namespace Net::Server {
             connection.encrypter = Cryptographer::Encrypter(request.get_body(),
                                                             Cryptographer::Cryptographer::get_rng());
             send_message_by_connection(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
-                                       connection.decrypter.value().get_str_publicKey(), client);
-            Request response = accept_request(client);
+                                       connection.decrypter.value().get_str_publicKey(), client.value());
+            Request response = accept_request(client.value());
             response.parse_request();
             assert(response);
             assert(response.get_type() == MAKE_SECURE_CONNECTION_SUCCESS);
             connection.connection_is_protected = true;
             std::cout << "Secured connection with " << rem_endpoint << " was established!\n";
+        } else {
+            connection.server.request_queue.push_to_queue(connection.connection_number, std::move(request));
         }
+
         std::cout << "Start accepting requests!\n";
         while (client) {
-            accept_client_request(client, rem_endpoint.address().to_string(), connection);
+            accept_client_request(client.value(), rem_endpoint.address().to_string(), connection);
         }
         std::cout << "Completed -> " << rem_endpoint << "\n";
         // AWARE func calls thread detach!
