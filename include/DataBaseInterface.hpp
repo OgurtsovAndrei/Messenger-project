@@ -13,6 +13,8 @@
 
 namespace database_interface {
 
+void chars_to_string(char *chr, std::string &str);
+
 struct BDInterface {
     sqlite3 *m_bd;
 
@@ -111,7 +113,7 @@ struct SQL_BDInterface : BDInterface {
                 sqlite3_exec(m_bd, sql.c_str(), Dialog::callback, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
-        Dialog::dialog_list = nullptr;
+        Dialog::m_dialog_list = nullptr;
         return Status(
                 exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
                                    "\n SQL command: " + sql + "\n"
@@ -137,13 +139,13 @@ struct SQL_BDInterface : BDInterface {
         sql += std::to_string(n) + ";";
         char *message_error;
         std::string string_message;
-        next_dialogs.clear();
-        Message::m_dialog_list = &next_messages;
+        next_messages.clear();
+        Message::m_message_list = &next_messages;
         int exit =
                 sqlite3_exec(m_bd, sql.c_str(), Message::callback, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
-        Message::dialog_list = nullptr;
+        Message::m_message_list = nullptr;
         for (auto it = next_messages.begin(); it != next_messages.end(); it++){
             it->m_dialog_id = dialog.m_dialog_id;
         }
