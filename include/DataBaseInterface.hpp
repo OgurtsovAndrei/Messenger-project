@@ -22,7 +22,7 @@ struct BDInterface {
     virtual Status close() = 0;
 
     // User
-    virtual Status add_user(User &user) = 0;
+    virtual Status make_user(User &user) = 0;
 
     virtual Status change_user(const User &new_user) = 0;
 
@@ -57,12 +57,12 @@ struct BDInterface {
 
     virtual Status change_message(const Message &new_message) = 0;
 
-    virtual Status get_n_dialogs_messages_by_time(
-        const Dialog &dialog,
-        std::list<Message> &next_messages,
-        int n = 10,
-        int last_message_date_time = 2121283574
-    ) = 0;
+//    virtual Status get_n_dialogs_messages_by_time(
+//        const Dialog &dialog,
+//        std::list<Message> &next_messages,
+//        int n = 10,
+//        int last_message_date_time = 2121283574
+//    ) = 0;
 
     virtual Status del_message(const Message &message) = 0;
 };
@@ -74,11 +74,13 @@ struct SQL_BDInterface : BDInterface {
     Status close();
 
     // User
-    Status add_user(User &user);
+    Status make_user(User &user);
 
     Status change_user(const User &new_user);
 
     Status get_user_by_log_pas(User &user);
+
+    Status get_user_id_by_log(User &user);
 
     Status del_user(const User &user);
 
@@ -96,7 +98,25 @@ struct SQL_BDInterface : BDInterface {
         std::list<Dialog> &next_dialogs,
         int n = 10,
         int last_dialog_date_time = 2121283574
-    );
+    ) {
+        std::string sql = "SELECT Dialogs.id, Name, Encryption, DateTime, OwnerId, IsGroup FROM UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE UserId=";
+        sql += std::to_string(user.m_user_id) + ", AND DateTime < ";
+        sql += std::to_string(last_dialog_date_time) + " ORDER BY DateTime DESC LIMIT ";
+        sql += std::to_string(n) + ";";
+        char *message_error;
+        std::string string_message;
+        next_dialogs.clear();
+        Dialog::m_dialog_list = &next_dialogs;
+        int exit =
+                sqlite3_exec(m_bd, sql.c_str(), Dialog::callback, 0, &message_error);
+        chars_to_string(message_error, string_message);
+        sqlite3_free(message_error);
+        Dialog::dialog_list = nullptr;
+        return Status(
+                exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
+                                   "\n SQL command: " + sql + "\n"
+        );
+    }
 
     Status del_dialog(const Dialog &dialog);
 
@@ -110,7 +130,28 @@ struct SQL_BDInterface : BDInterface {
         std::list<Message> &next_messages,
         int n = 10,
         int last_message_date_time = 2121283574
-    );
+    ){
+        std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE DialogId=";
+        sql += std::to_string(dialog.m_dialog_id) + " AND DateTime<";
+        sql += std::to_string(last_message_date_time) + " ORDER BY DateTime DESC LIMIT ";
+        sql += std::to_string(n) + ";";
+        char *message_error;
+        std::string string_message;
+        next_dialogs.clear();
+        Message::m_dialog_list = &next_messages;
+        int exit =
+                sqlite3_exec(m_bd, sql.c_str(), Message::callback, 0, &message_error);
+        chars_to_string(message_error, string_message);
+        sqlite3_free(message_error);
+        Message::dialog_list = nullptr;
+        for (auto it = next_messages.begin(); it != next_messages.end(); it++){
+            it->m_dialog_id = dialog.m_dialog_id;
+        }
+        return Status(
+                exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
+                                   "\n SQL command: " + sql + "\n"
+        );
+    }
 
     Status del_message(const Message &message);
 };
@@ -134,7 +175,7 @@ struct Mock_BDInterface : BDInterface {
     }
 
     // User
-    Status add_user(User &user);
+    Status make_user(User &user);
 
     Status change_user(const User &new_user);
 

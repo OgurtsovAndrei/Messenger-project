@@ -11,20 +11,42 @@ struct Message {
     std::string m_text;
     std::string m_file_path;
     int m_dialog_id;
+    int m_user_id;
+
+    static std::list<Message> *m_Message_list;
 
     Message(
         int message_id,
         int date_time,
         const std::string &text,
         const std::string &file_path,
-        int dialog_id
+        int dialog_id,
+        int user_id
     )
         : m_message_id(message_id),
           m_date_time(date_time),
           m_text(text),
           m_file_path(file_path),
-          m_dialog_id(dialog_id) {
+          m_dialog_id(dialog_id),
+          m_user_id(user_id) {
     }
+
+    Message(
+            int message_id,
+            int date_time,
+            const std::string &text,
+            const std::string &file_path,
+            int user_id
+    )
+            : m_message_id(message_id),
+              m_date_time(date_time),
+              m_text(text),
+              m_file_path(file_path),
+              m_dialog_id(dialog_id),
+              m_user_id(user_id) {
+    }
+
+    static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 };
 
 }  // namespace database_interface

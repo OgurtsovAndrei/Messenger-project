@@ -5,12 +5,12 @@
 namespace database_interface {
 
 // User
-Status Mock_BDInterface::add_user(User &user) {
+Status Mock_BDInterface::make_user(User &user) {
     if (user.m_user_id == -1) {
         user.m_user_id = last_user_id++;
     }
     users[user.m_login] = user;
-    return Status(true, "Add user in mock_bd");
+    return Status(true, "Make user in mock_bd");
 }
 
 Status Mock_BDInterface::change_user(const User &new_user) {
