@@ -2,6 +2,7 @@
 #define MESSAGE_HPP
 
 #include <string>
+#include <list>
 
 namespace database_interface {
 
@@ -13,7 +14,7 @@ struct Message {
     int m_dialog_id;
     int m_user_id;
 
-    static std::list<Message> *m_Message_list;
+    static std::list<Message> *m_message_list;
 
     Message(
         int message_id,
@@ -42,7 +43,6 @@ struct Message {
               m_date_time(date_time),
               m_text(text),
               m_file_path(file_path),
-              m_dialog_id(dialog_id),
               m_user_id(user_id) {
     }
 

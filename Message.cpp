@@ -4,8 +4,7 @@ namespace database_interface {
 
 int Message::callback(void *NotUsed, int argc, char **argv, char **azColName) {
     for (int i = 0; i < argc; i+=5){
-        m_message_list->insert(m_Message_list.end(),
-                              Message(std::stoi(argv[i]),
+        m_message_list->push_back(Message(std::stoi(argv[i]),
                                       std::stoi(argv[i+1]),
                                      argv[i+2],
                                      argv[i+3],
