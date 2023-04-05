@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Threads REQUIRED)
-set(CMAKE_AUTOUIC ON)
+#[[set(CMAKE_AUTOUIC ON)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -46,7 +46,7 @@ else()
 endif()
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)]]
 
 
 include_directories(/usr/local/include/botan-3)
@@ -65,6 +65,7 @@ add_executable(DB-Test src/server/database/DB-Test.cpp)
 target_link_libraries(Messenger_project libbotan-3)
 #target_link_libraries(19_230228 PRIVATE Threads::Threads)
 
+#[[
 target_link_libraries(Messenger_project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 set_target_properties(Messenger_project PROPERTIES
@@ -82,3 +83,4 @@ install(TARGETS Messenger_project
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Messenger_project)
 endif()
+]]
