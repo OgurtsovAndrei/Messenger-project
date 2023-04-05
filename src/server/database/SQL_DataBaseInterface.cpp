@@ -269,4 +269,23 @@ Status SQL_BDInterface::del_message(const Message &message){
 }
 
 
+Status SQL_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests){
+    std::string sql = "SELECT Users.id, Users.Name, Users.Surname FROM RequestForDialog INNER JOIN Users ON FromUserId = Users.id WHERE ToUserId=";
+    sql += std::to_string(user.m_user_id) + ";";
+    char *message_error;
+    std::string string_message;
+    requests.clear();
+    User::m_requests = &requests;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), User::request_callback, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    User::m_requests = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET n user requests.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
+
 }  // namespace database_interface
