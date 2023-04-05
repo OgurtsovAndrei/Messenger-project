@@ -20,6 +20,8 @@
 #include <queue>
 #include <condition_variable>
 #include "./../CryptoTest/Cryptographer.hpp"
+"./../../../include/database/Status.hpp"
+"./../../../include/database/DataBaseInterface.hpp"
 
 namespace Net::Server {
 
@@ -188,11 +190,11 @@ namespace Net::Server {
             sessions.erase(connection_number);
         }
 
-        void open_database(){
+        Status open_database(){
             return bd_connection.open();
         }
 
-        void close_database(){
+        Status close_database(){
             return bd_connection.close();
         }
 
