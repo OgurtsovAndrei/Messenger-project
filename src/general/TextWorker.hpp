@@ -29,7 +29,7 @@ std::string convert_to_string_size_n(unsigned int value, unsigned int size = 4) 
     return std::move(answer);
 };
 
-[[nodiscard]] std::vector<std::string> get_text_vector_from_text(const std::string& text) {
+[[nodiscard]] std::vector<std::string> convert_to_text_vector_from_text(const std::string& text) {
     std::vector<std::string> answer;
     unsigned int vector_size = std::stoi(text.substr(0, TEXT_VECTOR_SIZE_SIZE_IN_CHARS));
     unsigned int covered_len = TEXT_VECTOR_SIZE_SIZE_IN_CHARS;

@@ -54,7 +54,7 @@ namespace Cryptographer {
     }
 
     [[nodiscard]] EncryptedData make_encrypted_data_from_text(const std::string &text) {
-        return make_encrypted_data_from_text_vector(get_text_vector_from_text(text));
+        return make_encrypted_data_from_text_vector(convert_to_text_vector_from_text(text));
     }
 
     [[nodiscard]] std::string convert_encrypted_data_to_text(const EncryptedData &data_block) {
