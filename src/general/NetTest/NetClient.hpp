@@ -19,6 +19,8 @@
 
 #include "NetGeneral.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
+//#include "./../../../include/database"
+
 
 
 namespace Net::Client {
@@ -40,7 +42,7 @@ namespace Net::Client {
             boost::asio::connect(s, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(s));
             // Ensure that connection in unsecure
-            send_message(MAKE_UNSECURE_CONNECTION, "");
+            send_request(MAKE_UNSECURE_CONNECTION, "");
             Request request = accept_request(connection.value());
             request.parse_request();
             assert(request);
@@ -55,34 +57,30 @@ namespace Net::Client {
             connection = boost::asio::ip::tcp::iostream(std::move(client_socket));
             // Create decrypter and send public key
             decrypter = Cryptographer::Decrypter(cryptographer.get_rng());
-            send_message(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, decrypter.value().get_str_publicKey());
+            send_request(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, decrypter.value().get_str_publicKey());
             // Get other public key
             Request request = accept_request(connection.value());
             request.parse_request();
             assert(request);
             assert(request.get_type() == MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY);
             encrypter = Cryptographer::Encrypter(request.get_body(), cryptographer.get_rng());
-            send_message(MAKE_SECURE_CONNECTION_SUCCESS, "");
+            send_request(MAKE_SECURE_CONNECTION_SUCCESS, "");
             connection_is_secured = true;
             std::cout << "Secured connection was established!\n";
         }
 
-        void send_message(RequestType type, std::string message) {
+        void send_request(RequestType type, std::string message) {
             send_message_by_connection(type, std::move(message), connection.value());
         }
 
-        void send_text_message(std::string message) {
-            send_message(TEXT_MESSAGE, std::move(message));
+        void send_text_request(std::string message) {
+            send_request(TEXT_REQUEST, std::move(message));
         }
 
-        void send_secured_text_message(const std::string& message) {
+        void send_secured_text_request(const std::string& message) {
             assert(connection_is_secured);
             std::string encrypted_message = encrypter.value().encrypt_text_to_text(message);
-            send_message(SECURED_MESSAGE, std::move(encrypted_message));
-        }
-
-        void print_line_from_connection() {
-            std::cout << get_line_from_connection(connection.value()) << "\n";
+            send_request(SECURED_REQUEST, std::move(encrypted_message));
         }
 
         void get_request_and_out_it() {
@@ -103,6 +101,10 @@ namespace Net::Client {
             request.set_body(decrypted_body);
             std::cout << "Got from server: " << decrypted_body << "\n";
         }
+
+
+
+
 
     private:
 #ifndef MULTI_CLIENT_TEST

@@ -20,7 +20,7 @@ int main() {
 
             client.make_unsecure_connection();
             for (int i = 0; i < 10; ++i) {
-                client.send_text_message("Hi, that is iteration № " + std::to_string(i) + "!");
+                client.send_text_request("Hi, that is iteration № " + std::to_string(i) + "!");
                 client.get_request_and_out_it();
                 usleep(100'000);
             }
@@ -37,9 +37,9 @@ int main() {
             client.make_secure_connection();
             for (int i = 0; i < 10; ++i) {
                 std::cout << "Iteration #" << i << "\n";
-                client.send_text_message("Hi, that is iteration № " + std::to_string(i) + "!");
+                client.send_text_request("Hi, that is iteration № " + std::to_string(i) + "!");
                 client.get_request_and_out_it();
-                client.send_secured_text_message("SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!");
+                client.send_secured_text_request("SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!");
                 client.get_secret_request_and_out_it();
                 usleep(100'000);
             }

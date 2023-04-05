@@ -8,7 +8,7 @@
 #include <set>
 #include "Dialog.hpp"
 #include "Message.hpp"
-#include "Status.hpp"
+#include "../Status.hpp"
 #include "User.hpp"
 
 namespace database_interface {

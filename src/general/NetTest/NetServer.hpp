@@ -21,7 +21,7 @@
 #include <condition_variable>
 #include "./../TextWorker.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
-#include "./../../../include/database/Status.hpp"
+#include "../../../include/Status.hpp"
 #include "./../../../include/database/User.hpp"
 #include "./../../../include/database/DataBaseInterface.hpp"
 
@@ -145,14 +145,75 @@ namespace Net::Server {
                         assert(iter != sessions.end());
                         UserConnection &user_connection = iter->second;
                         switch (request.get_type()) {
-                            case TEXT_MESSAGE:
+                            case TEXT_REQUEST:
                                 send_message_by_connection(RESPONSE_REQUEST_SUCCESS,
                                                            "Got from you: <" + request.get_body() + ">",
                                                            user_connection.get_client_ref());
                                 break;
-                            case SECURED_MESSAGE:
+                            case SECURED_REQUEST:
                                 send_secured_message_to_user(RESPONSE_REQUEST_SUCCESS,
-                                                             "Got from you: <" + request.get_body() + ">", user_connection);
+                                                             "Got from you: <" + request.get_body() + ">",
+                                                             user_connection);
+                                break;
+                            case FILE:
+                                break;
+                            case RESPONSE_REQUEST_SUCCESS:
+                                break;
+                            case RESPONSE_REQUEST_FAIL:
+                                break;
+                            case MAKE_UNSECURE_CONNECTION:
+                                break;
+                            case MAKE_UNSECURE_CONNECTION_SUCCESS:
+                                break;
+                            case MAKE_UNSECURE_CONNECTION_FAIL:
+                                break;
+                            case MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY:
+                                break;
+                            case MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY:
+                                break;
+                            case MAKE_SECURE_CONNECTION_SUCCESS:
+                                break;
+                            case MAKE_SECURE_CONNECTION_FAIL:
+                                break;
+                            case LOG_IN_REQUEST:
+                                break;
+                            case LOG_IN_SUCCESS:
+                                break;
+                            case LOG_IN_FAIL:
+                                break;
+                            case GET_100_CHATS:
+                                break;
+                            case GET_USER_BY_LOG_AND_PASSWORD:
+                                break;
+                            case SEND_DIALOG_REQUEST:
+                                break;
+                            case GET_ALL_DIALOG_REQUESTS:
+                                break;
+                            case DENY_DIALOG_REQUEST:
+                                break;
+                            case ACCEPT_DIALOG_REQUEST:
+                                break;
+                            case MAKE_GROPE:
+                                break;
+                            case DELETE_DIALOG:
+                                break;
+                            case SEND_MESSAGE:
+
+
+
+
+                                break;
+                            case CHANGE_MESSAGE:
+                                break;
+                            case DELETE_MESSAGE:
+                                break;
+                            case GET_100_MESSAGES:
+                                break;
+                            case SIGN_UP_REQUEST:
+                                break;
+                            case SIGN_UP_SUCCESS:
+                                break;
+                            case UNKNOWN:
                                 break;
                         }
                     }
@@ -199,11 +260,11 @@ namespace Net::Server {
             sessions.erase(connection_number);
         }
 
-        database_interface::Status open_database() {
+        Status open_database() {
             return bd_connection.open();
         }
 
-        database_interface::Status close_database() {
+        Status close_database() {
             return bd_connection.close();
         }
 
@@ -261,7 +322,7 @@ namespace Net::Server {
         Request request = accept_request(client);
         request.parse_request();
         assert(request);
-        if (request.get_type() == SECURED_MESSAGE) {
+        if (request.get_type() == SECURED_REQUEST) {
             assert(connection.connection_is_protected);
             auto decrypted_body = Cryptographer::as<std::string>(
                     connection.decrypter.value().decrypt_data(request.get_body()));
