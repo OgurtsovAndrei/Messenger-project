@@ -1,4 +1,4 @@
-#include "../../include/Message.hpp"
+#include "../../../include/database/Message.hpp"
 
 namespace database_interface {
 

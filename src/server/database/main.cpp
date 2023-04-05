@@ -1,7 +1,7 @@
 #include <sqlite3.h>
 #include <iostream>
-#include "../../include/DataBaseInterface.hpp"
-#include "../../include/User.hpp"
+#include "../../../include/database/DataBaseInterface.hpp"
+#include "../../../include/database/User.hpp"
 
 // Start working with bd:
 // database_interface::SQL_BDInterface bd =

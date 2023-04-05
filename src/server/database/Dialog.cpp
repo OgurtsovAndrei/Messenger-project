@@ -1,4 +1,4 @@
-#include "../../include/Dialog.hpp"
+#include "../../../include/database/Dialog.hpp"
 
 namespace database_interface {
 
