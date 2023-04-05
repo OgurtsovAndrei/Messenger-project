@@ -1,7 +1,7 @@
-#include "welcWindow.h"
-#include "./ui_welcWindow.h"
-#include "register.h"
+#include "../../include/interface/welcWindow.h"
 #include <QDesktopServices>
+#include "../../include/interface/register.h"
+#include "./ui_welcWindow.h"
 
 WelcWindow::WelcWindow(QWidget *parent) :
     QWidget(parent),

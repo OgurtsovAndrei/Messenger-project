@@ -1,5 +1,5 @@
-#include "welcWindow.h"
-#include "register.h"
+#include "../../include/interface/register.h"
+#include "../../include/interface/welcWindow.h"
 #include "./ui_register.h"
 
 Register::Register(QWidget *parent) :
