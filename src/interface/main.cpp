@@ -1,7 +1,6 @@
 //#include "mainwindow.h"
-#include "welcWindow.h"
-
 #include <QApplication>
+#include "../../include/interface/welcWindow.h"
 
 int main(int argc, char *argv[])
 {
