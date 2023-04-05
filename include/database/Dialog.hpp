@@ -2,6 +2,7 @@
 #define DIALOG_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 #include <list>
 #include "User.hpp"
@@ -20,16 +21,16 @@ struct Dialog {
     static std::list<Dialog> *m_dialog_list;
 
     Dialog(
-        const std::string &name,
-        const std::string &encryption,
+        std::string name,
+        std::string encryption,
         int date_time,
         int owner,
         bool is_group,
         const std::vector<User> &users,
         int dialog_id = -1
     )
-        : m_name(name),
-          m_encryption(encryption),
+        : m_name(std::move(name)),
+          m_encryption(std::move(encryption)),
           m_date_time(date_time),
           m_owner_id(owner),
           m_is_group(is_group),
@@ -39,22 +40,23 @@ struct Dialog {
 
     Dialog(
             int dialog_id,
-            const std::string &name,
-            const std::string &encryption,
+            std::string name,
+            std::string encryption,
             int date_time,
             int owner,
             bool is_group) :
             m_dialog_id(dialog_id),
-            m_name(name),
-            m_encryption(encryption),
+            m_name(std::move(name)),
+            m_encryption(std::move(encryption)),
             m_date_time(date_time),
             m_owner_id(owner),
             m_is_group(is_group){
     }
 
     bool find(const User &user) {
-        for (int i = 0; i < m_users.size(); i++) {
-            if (m_users[i].m_login == user.m_login) {
+        // NOLINTNEXTLINE
+        for (auto & m_user : m_users) {
+            if (m_user.m_login == user.m_login) {
                 return true;
             }
         }

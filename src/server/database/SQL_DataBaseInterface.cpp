@@ -13,7 +13,7 @@ void chars_to_string(char *chr, std::string &str) {
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("./../../../bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 
@@ -39,8 +39,8 @@ Status SQL_BDInterface::make_user(User &user) {
     if (exit == SQLITE_OK) {
         Status select = get_user_by_log_pas(user);
         return Status(
-            select.m_correct,
-            "Problem in MAKE User in SELECT User.\nMessage: " + select.m_message
+            select.correct(),
+            "Problem in MAKE User in SELECT User.\nMessage: " + select.message()
         );
     }
     return Status(

@@ -2,27 +2,27 @@
 #define STATUS_HPP
 
 #include <string>
+#include <utility>
 
 namespace database_interface {
 
-struct Status {
-private:
-    bool m_correct;
-    std::string m_message;
+    struct Status {
+    private:
+        bool m_correct;
+        std::string m_message;
 
-public:
-    Status(bool correct, const std::string &message = "")
-        : m_correct(correct), m_message(message) {
-    }
+    public:
+        explicit Status(bool correct, std::string message = "")
+                : m_correct(correct), m_message(std::move(message)) {}
 
-    bool correct(){
-        return m_correct;
-    }
+         [[nodiscard]] bool correct() const {
+            return m_correct;
+        }
 
-    std::string message(){
-        return m_message;
-    }
-};
+        [[nodiscard]] std::string message() const {
+            return m_message;
+        }
+    };
 
 }  // namespace database_interface
 #endif  // STATUS_HPP

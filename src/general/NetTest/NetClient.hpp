@@ -34,16 +34,26 @@ namespace Net::Client {
                 io_context(ioContext), server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #endif
 
-        void make_connection() {
+        void make_unsecure_connection() {
+            // Establish connection
             boost::asio::ip::tcp::socket s(io_context);
             boost::asio::connect(s, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(s));
+            // Ensure that connection in unsecure
+            send_message(MAKE_UNSECURE_CONNECTION, "");
+            Request request = accept_request(connection.value());
+            request.parse_request();
+            assert(request);
+            assert(request.get_type() == MAKE_UNSECURE_CONNECTION_SUCCESS);
+            std::cout << "Unsecure connection wa established!\n";
         }
 
         void make_secure_connection() {
+            // Establish connection
             boost::asio::ip::tcp::socket client_socket(io_context);
             boost::asio::connect(client_socket, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(client_socket));
+            // Create decrypter and send public key
             decrypter = Cryptographer::Decrypter(cryptographer.get_rng());
             send_message(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, decrypter.value().get_str_publicKey());
             // Get other public key
@@ -54,7 +64,7 @@ namespace Net::Client {
             encrypter = Cryptographer::Encrypter(request.get_body(), cryptographer.get_rng());
             send_message(MAKE_SECURE_CONNECTION_SUCCESS, "");
             connection_is_secured = true;
-            std::cout << "Secured connection was established!";
+            std::cout << "Secured connection was established!\n";
         }
 
         void send_message(RequestType type, std::string message) {
@@ -79,6 +89,11 @@ namespace Net::Client {
             Request request = accept_request(connection.value());
             auto true_string = request.get_body();
             std::cout << "Got from server: " << true_string << "\n";
+        }
+
+        Request get_request() {
+            Request request = accept_request(connection.value());
+            return std::move(request);
         }
 
         void get_secret_request_and_out_it() {

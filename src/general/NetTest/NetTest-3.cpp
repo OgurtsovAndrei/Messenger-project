@@ -18,7 +18,7 @@ int main() {
         ts.emplace_back([&io_context]() {
             Net::Client::Client client(io_context);
 
-            client.make_connection();
+            client.make_unsecure_connection();
             for (int i = 0; i < 10; ++i) {
                 client.send_text_message("Hi, that is iteration № " + std::to_string(i) + "!");
                 client.get_request_and_out_it();

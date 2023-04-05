@@ -45,7 +45,7 @@ struct BDInterface {
 
     virtual Status change_dialog(const Dialog &new_dialog) = 0;
 
-    virtual Status get_n_users_dialogs_by_time(
+    [[maybe_unused]] virtual Status get_n_users_dialogs_by_time(
         const User &user,
         std::list<Dialog> &next_dialogs,
         int n = 10,
@@ -71,36 +71,36 @@ struct BDInterface {
 
 struct SQL_BDInterface : BDInterface {
     // Work with bd connection
-    Status open();
+    Status open() override;
 
-    Status close();
+    Status close() override;
 
     // User
-    Status make_user(User &user);
+    Status make_user(User &user) override;
 
-    Status change_user(const User &new_user);
+    Status change_user(const User &new_user) override;
 
-    Status get_user_by_log_pas(User &user);
+    Status get_user_by_log_pas(User &user) override;
 
-    Status get_user_id_by_log(User &user);
+    Status get_user_id_by_log(User &user) override;
 
-    Status del_user(const User &user);
+    Status del_user(const User &user) override;
 
-    Status make_dialog_request(const User &from_user, const User &to_user);
+    Status make_dialog_request(const User &from_user, const User &to_user) override;
 
-    Status close_dialog_request(const User &from_user, const User &to_user);
+    Status close_dialog_request(const User &from_user, const User &to_user) override;
 
     // Dialog
-    Status make_dialog(Dialog &dialog);
+    Status make_dialog(Dialog &dialog) override;
 
-    Status change_dialog(const Dialog &new_dialog);
+    Status change_dialog(const Dialog &new_dialog) override;
 
     Status get_n_users_dialogs_by_time(
         const User &user,
         std::list<Dialog> &next_dialogs,
         int n = 10,
         int last_dialog_date_time = 2121283574
-    ) {
+    ) override {
         std::string sql = "SELECT Dialogs.id, Name, Encryption, DateTime, OwnerId, IsGroup FROM UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE UserId=";
         sql += std::to_string(user.m_user_id) + ", AND DateTime < ";
         sql += std::to_string(last_dialog_date_time) + " ORDER BY DateTime DESC LIMIT ";
@@ -120,12 +120,12 @@ struct SQL_BDInterface : BDInterface {
         );
     }
 
-    Status del_dialog(const Dialog &dialog);
+    Status del_dialog(const Dialog &dialog) override;
 
     // Message
-    Status make_message(Message &message);
+    Status make_message(Message &message) override;
 
-    Status change_message(const Message &new_message);
+    Status change_message(const Message &new_message) override;
 
     Status get_n_dialogs_messages_by_time(
         const Dialog &dialog,
