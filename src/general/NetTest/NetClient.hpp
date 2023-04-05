@@ -19,7 +19,7 @@
 
 #include "NetGeneral.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
-//#include "./../../../include/database"
+#include "./../../../include/Status.hpp"
 
 
 
@@ -102,9 +102,9 @@ namespace Net::Client {
             std::cout << "Got from server: " << decrypted_body << "\n";
         }
 
+        Status send_message_to_another_user() {
 
-
-
+        }
 
     private:
 #ifndef MULTI_CLIENT_TEST
