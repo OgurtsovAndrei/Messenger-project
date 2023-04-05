@@ -9,8 +9,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Threads REQUIRED)
+#[[set(CMAKE_AUTOUIC ON)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -50,7 +50,8 @@ else()
     endif()
 endif()
 
-target_link_libraries(Ui_messendger PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)]]
 
 set_target_properties(Ui_messendger PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
@@ -60,10 +61,38 @@ set_target_properties(Ui_messendger PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-install(TARGETS Ui_messendger
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+include_directories(/usr/local/include/botan-3)
+include_directories(src/install-lib/botan-install)
+include_directories(src/general)
+
+add_executable(Messenger_project src/general/CryptoTest/Botan-Test-1.cpp)
+add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
+add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
+add_executable(DB-Test src/server/database/DB-Test.cpp)
+#add_executable(NetG src/general/NetTest/NetGeneral.hpp)
+#add_executable(Messenger_project src/general/NetTest/NetTest-2.cpp)
+#add_executable(Messenger_project src/general/NetTest/NetTest-3.cpp)
+
+
+target_link_libraries(Messenger_project libbotan-3)
+#target_link_libraries(19_230228 PRIVATE Threads::Threads)
+
+#[[
+target_link_libraries(Messenger_project PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+set_target_properties(Messenger_project PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+        MACOSX_BUNDLE TRUE
+        WIN32_EXECUTABLE TRUE
+        )
+
+install(TARGETS Messenger_project
+        BUNDLE DESTINATION .
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 if(QT_VERSION_MAJOR EQUAL 6)
     qt_finalize_executable(Ui_messendger)
 endif()
+]]
