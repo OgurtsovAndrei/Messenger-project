@@ -17,8 +17,8 @@
 namespace Net {
 
     enum RequestType {
-        TEXT_MESSAGE = 1,
-        SECURED_MESSAGE,
+        TEXT_REQUEST = 1,
+        SECURED_REQUEST,
         FILE,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
