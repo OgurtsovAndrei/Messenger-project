@@ -21,7 +21,7 @@
 #include <condition_variable>
 #include "./../CryptoTest/Cryptographer.hpp"
 #include "./../../../include/database/Status.hpp"
-#include "./../../../include/database/Usert.hpp"
+#include "./../../../include/database/User.hpp"
 #include "./../../../include/database/DataBaseInterface.hpp"
 
 namespace Net::Server {
