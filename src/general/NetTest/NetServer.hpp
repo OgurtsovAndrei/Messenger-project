@@ -190,11 +190,11 @@ namespace Net::Server {
             sessions.erase(connection_number);
         }
 
-        Status open_database(){
+        database_interface::Status open_database(){
             return bd_connection.open();
         }
 
-        Status close_database(){
+        database_interface::Status close_database(){
             return bd_connection.close();
         }
 
