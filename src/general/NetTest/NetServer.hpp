@@ -188,6 +188,14 @@ namespace Net::Server {
             sessions.erase(connection_number);
         }
 
+        void open_database(){
+            return bd_connection.open();
+        }
+
+        void close_database(){
+            return bd_connection.close();
+        }
+
     private:
         std::optional<std::thread> server_thread;
         friend struct UserConnection;
@@ -198,6 +206,7 @@ namespace Net::Server {
         std::unordered_map<int, UserConnection> sessions;
         RequestQueue request_queue;
         std::vector<std::thread> consumers;
+        database_interface::SQL_BDInterface bd_connection;
 
         int find_empty_connection_number() {
             std::cout << "Searching for empty connection number\n";
