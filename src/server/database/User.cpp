@@ -1,4 +1,5 @@
 #include "../../../include/database/User.hpp"
+#include <vector>
 
 namespace database_interface {
 
@@ -13,5 +14,13 @@ int User::callback(void *NotUsed, int argc, char **argv, char **azColName) {
     return 0;
 }
 
+int User::request_callback(void *NotUsed, int argc, char **argv, char **azColName) {
+    for (int i = 0; i < argc; i+=3){
+        m_requests->push_back(User(std::stoi(argv[i]), argv[i+1], argv[i+2]));
+    }
+    return 0;
+}
+
 User *User::m_edit_user = nullptr;
+std::vector<User> *User::m_requests = nullptr;
 }  // namespace database_interface
