@@ -20,6 +20,8 @@ struct Dialog {
 
     static std::list<Dialog> *m_dialog_list;
 
+    explicit Dialog(int dialog_id) : m_dialog_id(dialog_id) {}
+
     explicit Dialog(
         std::string name,
         std::string encryption,

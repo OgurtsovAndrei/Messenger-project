@@ -19,9 +19,9 @@
 #include <optional>
 #include <queue>
 #include <condition_variable>
-#include "./../TextWorker.hpp"
+#include "Status.hpp"
+#include "../../../include/TextWorker.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
-#include "../../../include/Status.hpp"
 #include "./../../../include/database/User.hpp"
 #include "./../../../include/database/DataBaseInterface.hpp"
 
@@ -59,7 +59,7 @@ namespace Net::Server {
             return client.value();
         }
 
-        std::optional<database_interface::User>& get_user_in_db_ref() {
+        std::optional<database_interface::User> &get_user_in_db_ref() {
             return user_in_db;
         }
 
@@ -141,7 +141,7 @@ namespace Net::Server {
                     while (true) {
                         // В очереди хранятся уже расшифрованные request-ы
                         auto [connection_id, request] = request_queue.get_last_or_wait();
-                        assert(request || request.get_status() ==RAW_DATA);
+                        assert(request || request.get_status() == RAW_DATA);
                         std::cout << "Got from user with --> " << connection_id << " connection id: "
                                   << request.get_body() << "\n";
                         std::unique_lock sessions_lock(sessions_mutex);
@@ -206,11 +206,13 @@ namespace Net::Server {
                                 process_send_message_request(user_connection, std::move(request));
                                 break;
                             case CHANGE_MESSAGE:
-
+                                change_old_message(user_connection, std::move(request));
                                 break;
                             case DELETE_MESSAGE:
+                                delete_message(user_connection, std::move(request));
                                 break;
                             case GET_100_MESSAGES:
+                                get_n_messages(user_connection, std::move(request));
                                 break;
                             case SIGN_UP_REQUEST:
                                 break;
@@ -303,20 +305,21 @@ namespace Net::Server {
             int dialog_id = std::stoi(data_vector[0]);
             int current_time = std::stoi(data_vector[1]);
             std::string message_text = data_vector[2];
-            auto & user_in_db = user_connection.get_user_in_db_ref();
+            auto &user_in_db = user_connection.get_user_in_db_ref();
             assert(user_in_db.has_value());
-            database_interface::Message new_message(current_time, message_text, "", dialog_id, user_in_db.value().m_user_id);
+            database_interface::Message new_message(current_time, message_text, "", dialog_id,
+                                                    user_in_db.value().m_user_id);
             bd_connection.make_message(new_message);
         }
 
         void change_old_message(UserConnection &user_connection, Request request) {
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             assert(data_vector.size() == 2);
-            // TODO: Check firs is correct message id.
+            // TODO
             assert(is_number(data_vector[0]));
             int old_message_id = std::stoi(data_vector[0]);
             std::string new_body = data_vector[1];
-            // TODO remove comments;
+            // TODO
             database_interface::Message old_message(old_message_id);
             Status current_status = bd_connection.get_message_by_id(old_message);
             assert(current_status.correct());
@@ -324,6 +327,64 @@ namespace Net::Server {
             current_status = bd_connection.change_message(old_message);
             assert(current_status.correct());
             send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+        }
+
+        void delete_message(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 1);
+            // TODO
+            assert(is_number(data_vector[0]));
+            int message_id = std::stoi(data_vector[0]);
+
+            Status current_status = bd_connection.del_message(database_interface::Message(message_id));
+            assert(current_status.correct());
+            send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+        }
+
+        void get_n_messages(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 3);
+            // TODO
+            assert(is_number(data_vector[0]));
+            assert(is_number(data_vector[1]));
+            assert(is_number(data_vector[2]));
+            int number_of_messages = std::stoi(data_vector[0]);
+            int dialog_id = std::stoi(data_vector[1]);
+            int last_message_time = std::stoi(data_vector[2]);
+
+            database_interface::Dialog current_dialog(dialog_id);
+            Status current_status;
+            std::list<database_interface::Message> messages_list;
+
+            current_status = bd_connection.get_n_dialogs_messages_by_time(current_dialog, messages_list,
+                                                                          number_of_messages, last_message_time);
+            assert(current_status);
+            std::vector<std::string> message_vec;
+            message_vec.resize(number_of_messages);
+            for (auto &message : messages_list) {
+                message_vec.push_back(message.to_strint());
+            }
+            send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec), user_connection);
+        }
+
+        void make_grope(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 5);
+
+            // TODO: Check that vec[4] is correct int vec
+            assert(is_number(data_vector[2]));
+            assert(is_number(data_vector[3]));
+
+            std::string dialog_name = data_vector[0];
+            std::string encryption = data_vector[1];
+            int current_time = std::stoi(data_vector[2]);
+            int is_grope = std::stoi(data_vector[3]);
+            std::vector<unsigned int> user_ids = convert_to_int_vector_from_text(data_vector[4]);
+
+            auto &user_in_db = user_connection.get_user_in_db_ref();
+            assert(user_in_db.has_value());
+
+            // TODO !!! Use method in db to create dialog (now there is no such method)
         }
 
         int find_empty_connection_number() {

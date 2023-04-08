@@ -19,8 +19,8 @@
 
 #include "NetGeneral.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
-#include "./../../../include/Status.hpp"
-
+#include "./../../../Status.hpp"
+#include "./../../../include/database/Message.hpp"
 
 
 namespace Net::Client {
@@ -53,7 +53,8 @@ namespace Net::Client {
         void make_secure_connection() {
             // Establish connection
             boost::asio::ip::tcp::socket client_socket(io_context);
-            boost::asio::connect(client_socket, boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
+            boost::asio::connect(client_socket,
+                                 boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(client_socket));
             // Create decrypter and send public key
             decrypter = Cryptographer::Decrypter(cryptographer.get_rng());
@@ -73,7 +74,7 @@ namespace Net::Client {
             send_message_by_connection(type, std::move(message), connection.value());
         }
 
-        void send_secured_request(RequestType type, const std::string& message) {
+        void send_secured_request(RequestType type, const std::string &message) {
             assert(connection_is_secured);
             std::string encrypted_message = encrypter.value().encrypt_text_to_text(message);
             send_message_by_connection(type, std::move(encrypted_message), connection.value());
@@ -83,7 +84,7 @@ namespace Net::Client {
             send_request(TEXT_REQUEST, std::move(message));
         }
 
-        void send_secured_text_request(const std::string& message) {
+        void send_secured_text_request(const std::string &message) {
             assert(connection_is_secured);
             std::string encrypted_message = encrypter.value().encrypt_text_to_text(message);
             send_request(SECURED_REQUEST, std::move(encrypted_message));
@@ -116,7 +117,8 @@ namespace Net::Client {
         }
 
         Status send_message_to_another_user(int dialog_id, int current_time, std::string text) {
-            std::vector<std::string> data_vector {std::to_string(dialog_id), std::to_string(current_time), std::move(text)};
+            std::vector<std::string> data_vector{std::to_string(dialog_id), std::to_string(current_time),
+                                                 std::move(text)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);
             if (connection_is_secured) {
                 send_secured_request(SEND_MESSAGE, data_to_send);
@@ -138,7 +140,7 @@ namespace Net::Client {
 
         Status change_sent_message(int old_message_id, std::string new_text) {
             // We change text (message body) in old message, we get by id, to new_text.
-            std::vector<std::string> data_vector {std::to_string(old_message_id), std::move(new_text)};
+            std::vector<std::string> data_vector{std::to_string(old_message_id), std::move(new_text)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);
             if (connection_is_secured) {
                 send_secured_request(CHANGE_MESSAGE, data_to_send);
@@ -157,8 +159,82 @@ namespace Net::Client {
             }
         }
 
+        Status delete_message(int message_id) {
+            // We change text (message body) in old message, we get by id, to new_text.
+            std::vector<std::string> data_vector{std::to_string(message_id)};
+            std::string data_to_send = convert_text_vector_to_text(data_vector);
+            if (connection_is_secured) {
+                send_secured_request(DELETE_MESSAGE, data_to_send);
+            } else {
+                send_request(DELETE_MESSAGE, data_to_send);
+            }
+            Request response = get_request();
+            if (response && response.get_type() == DELETE_MESSAGE_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == DELETE_MESSAGE_FAIL);
+                if (connection_is_secured) {
+                    response = decrypt_request(std::move(response));
+                }
+                return Status(false, response.get_body());
+            }
+        }
 
+        std::pair<Status, std::vector<database_interface::Message>>
 
+        get_n_messages(int n, int dialog_id, int last_message_time = -1) {
+            // We change text (message body) in old message, we get by id, to new_text.
+            std::vector<std::string> data_vector{std::to_string(n), std::to_string(dialog_id),
+                                                 std::to_string(last_message_time)};
+            std::string data_to_send = convert_text_vector_to_text(data_vector);
+            if (connection_is_secured) {
+                send_secured_request(CHANGE_MESSAGE, data_to_send);
+            } else {
+                send_request(GET_100_MESSAGES, data_to_send);
+            }
+            Request response = get_request();
+            if (response && response.get_type() == GET_100_MESSAGES_SUCCESS) {
+                std::vector<database_interface::Message> messages_vector;
+                for (const std::string &text_message: convert_to_text_vector_from_text(response.get_body())) {
+                    database_interface::Message new_message;
+                    Status current_status = database_interface::Message::parse_to_message(text_message, new_message);
+                    if (!current_status) {
+                        return {Status(false, "Can not convert message from:\t\t <" + text_message + ">"),
+                                std::move(messages_vector)};
+                    }
+                    messages_vector.push_back(new_message);
+                }
+                return {Status(true), {}};
+            } else {
+                assert(response.get_type() == GET_100_MESSAGES_FAIL);
+                if (connection_is_secured) {
+                    response = decrypt_request(std::move(response));
+                }
+                return {Status(false, response.get_body()), {}};
+            }
+        }
+
+        Status make_dialog(std::string dialog_name, std::string encryption, int current_time, int is_grope, const std::vector<unsigned int>& user_ids) {
+            std::vector<std::string> data_vector{std::move(dialog_name), std::move(encryption), std::to_string(current_time), std::to_string(is_grope),
+                                                 convert_int_vector_to_text(user_ids)};
+            std::string data_to_send = convert_text_vector_to_text(data_vector);
+            if (connection_is_secured) {
+                send_secured_request(MAKE_GROPE, data_to_send);
+            } else {
+                send_request(MAKE_GROPE, data_to_send);
+            }
+            Request response = get_request();
+            response.parse_request();
+            if (response && response.get_type() == MAKE_GROPE_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == MAKE_GROPE_FAIL);
+                if (connection_is_secured) {
+                    response = decrypt_request(std::move(response));
+                }
+                return Status(false, response.get_body());
+            }
+        }
 
     private:
 #ifndef MULTI_CLIENT_TEST
