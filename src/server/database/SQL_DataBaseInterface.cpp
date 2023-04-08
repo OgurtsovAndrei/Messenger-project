@@ -140,6 +140,24 @@ Status SQL_BDInterface::make_dialog_request(
     );
 }
 
+Status SQL_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests){
+    std::string sql = "SELECT Users.id, Users.Name, Users.Surname FROM RequestForDialog INNER JOIN Users ON FromUserId = Users.id WHERE ToUserId=";
+    sql += std::to_string(user.m_user_id) + ";";
+    char *message_error;
+    std::string string_message;
+    requests.clear();
+    User::m_requests = &requests;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), User::request_callback, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    User::m_requests = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET n user requests.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::close_dialog_request(
     const User &from_user,
     const User &to_user
@@ -254,6 +272,23 @@ Status SQL_BDInterface::change_message(const Message &new_message){
     );
 }
 
+Status SQL_BDInterface::get_message_by_id(Message &message) {
+    std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE id=";
+    sql += std::to_string(message.m_message_id) + ";";
+    char *message_error;
+    std::string string_message;
+    Message::m_edit_message = &message;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), Message::callback_get_message_by_id, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    Message::m_edit_message = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET Message by id.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::del_message(const Message &message){
     std::string sql = "DELETE FROM Messages WHERE ";
     sql += "id=" + std::to_string(message.m_message_id) + ";";
@@ -264,25 +299,6 @@ Status SQL_BDInterface::del_message(const Message &message){
     sqlite3_free(message_error);
     return Status(
             exit == SQLITE_OK, "Problem in DEL Message.\nMessage: " + string_message +
-                               "\n SQL command: " + sql + "\n"
-    );
-}
-
-
-Status SQL_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests){
-    std::string sql = "SELECT Users.id, Users.Name, Users.Surname FROM RequestForDialog INNER JOIN Users ON FromUserId = Users.id WHERE ToUserId=";
-    sql += std::to_string(user.m_user_id) + ";";
-    char *message_error;
-    std::string string_message;
-    requests.clear();
-    User::m_requests = &requests;
-    int exit =
-            sqlite3_exec(m_bd, sql.c_str(), User::request_callback, 0, &message_error);
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
-    User::m_requests = nullptr;
-    return Status(
-            exit == SQLITE_OK, "Problem in GET n user requests.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
     );
 }
