@@ -11,7 +11,7 @@ int Message::callback_get_message_by_id(void *NotUsed, int argc, char **argv, ch
                               argv[2],
                               argv[3],
                               std::stoi(argv[4]),
-                              std::stoi(argv[5])));
+                              std::stoi(argv[5]));
     return 0;
 }
 
