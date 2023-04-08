@@ -20,7 +20,7 @@ struct Dialog {
 
     static std::list<Dialog> *m_dialog_list;
 
-    Dialog(
+    explicit Dialog(
         std::string name,
         std::string encryption,
         int date_time,
@@ -38,7 +38,7 @@ struct Dialog {
           m_dialog_id(dialog_id) {
     }
 
-    Dialog(
+    explicit Dialog(
             int dialog_id,
             std::string name,
             std::string encryption,
@@ -53,7 +53,7 @@ struct Dialog {
             m_is_group(is_group){
     }
 
-    bool find(const User &user) {
+    [[nodiscard]] bool find(const User &user) {
         // NOLINTNEXTLINE
         for (auto & m_user : m_users) {
             if (m_user.m_login == user.m_login) {

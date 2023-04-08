@@ -38,6 +38,9 @@ struct BDInterface {
     make_dialog_request(const User &from_user, const User &to_user) = 0;
 
     virtual Status
+    get_user_dialog_requests(const User &user) = 0;
+
+    virtual Status
     close_dialog_request(const User &from_user, const User &to_user) = 0;
 
     // Dialog
@@ -59,12 +62,12 @@ struct BDInterface {
 
     virtual Status change_message(const Message &new_message) = 0;
 
-//    virtual Status get_n_dialogs_messages_by_time(
-//        const Dialog &dialog,
-//        std::list<Message> &next_messages,
-//        int n = 10,
-//        int last_message_date_time = 2121283574
-//    ) = 0;
+    virtual Status get_n_dialogs_messages_by_time(
+        const Dialog &dialog,
+        std::list<Message> &next_messages,
+        int n = 10,
+        int last_message_date_time = 2121283574
+    ) = 0;
 
     virtual Status del_message(const Message &message) = 0;
 };
@@ -89,6 +92,8 @@ struct SQL_BDInterface : BDInterface {
     Status make_dialog_request(const User &from_user, const User &to_user) override;
 
     Status close_dialog_request(const User &from_user, const User &to_user) override;
+
+    Status get_user_dialog_requests(const User &user, std::vector<User> &requests);
 
     // Dialog
     Status make_dialog(Dialog &dialog) override;
@@ -127,6 +132,8 @@ struct SQL_BDInterface : BDInterface {
 
     Status change_message(const Message &new_message) override;
 
+    Status get_message_by_id(Message &new_message);
+
     Status get_n_dialogs_messages_by_time(
         const Dialog &dialog,
         std::list<Message> &next_messages,
@@ -142,7 +149,7 @@ struct SQL_BDInterface : BDInterface {
         next_messages.clear();
         Message::m_message_list = &next_messages;
         int exit =
-                sqlite3_exec(m_bd, sql.c_str(), Message::callback, 0, &message_error);
+                sqlite3_exec(m_bd, sql.c_str(), Message::callback_get_message_list, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
         Message::m_message_list = nullptr;
@@ -163,7 +170,7 @@ struct Mock_BDInterface : BDInterface {
     int last_dialog_id = 0;
     int last_message_id = 0;
     std::map<std::string, User> users;
-    std::map<std::string, std::list<User>> requests;
+    std::map<std::string, std::list<User>> all_requests;
     std::list<Dialog> dialogs;
     std::list<Message> messages;
 
@@ -188,6 +195,8 @@ struct Mock_BDInterface : BDInterface {
     Status del_user(const User &user);
 
     Status make_dialog_request(const User &from_user, const User &to_user);
+
+    Status get_user_dialog_requests(const User &user, std::vector<User> &requests);
 
     Status close_dialog_request(const User &from_user, const User &to_user);
 

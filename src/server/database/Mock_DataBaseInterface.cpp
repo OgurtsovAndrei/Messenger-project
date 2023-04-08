@@ -43,26 +43,35 @@ Status Mock_BDInterface::make_dialog_request(
     const User &from_user,
     const User &to_user
 ) {
-    for (auto it = requests[to_user.m_login].begin();
-         it != requests[to_user.m_login].end(); it++) {
+    for (auto it = all_requests[to_user.m_login].begin();
+         it != all_requests[to_user.m_login].end(); it++) {
         if (it->m_user_id == from_user.m_user_id) {
             return Status(true, "Make dialog request in mock_bd");
         }
     }
-    requests[to_user.m_login].insert(
-        requests[to_user.m_login].end(), from_user
+    all_requests[to_user.m_login].insert(
+        all_requests[to_user.m_login].end(), from_user
     );
     return Status(true, "Make dialog request in mock_bd");
+}
+
+Status Mock_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests) {
+    requests.clear();
+    for (auto it = all_requests[user.m_login].begin();
+         it != all_requests[user.m_login].end(); it++) {
+        requests.push_back(*it);
+    }
+    return Status(true, "Get dialog request in mock_bd");
 }
 
 Status Mock_BDInterface::close_dialog_request(
     const User &from_user,
     const User &to_user
 ) {
-    for (auto it = requests[to_user.m_login].begin();
-         it != requests[to_user.m_login].end(); it++) {
+    for (auto it = all_requests[to_user.m_login].begin();
+         it != all_requests[to_user.m_login].end(); it++) {
         if (it->m_user_id == from_user.m_user_id) {
-            requests[to_user.m_login].erase(it);
+            all_requests[to_user.m_login].erase(it);
             return Status(true, "Close dialog request in mock_bd");
         }
     }
