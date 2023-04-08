@@ -130,7 +130,9 @@ struct SQL_BDInterface : BDInterface {
     // Message
     Status make_message(Message &message) override;
 
-    Status change_message(const Message &new_message) override;
+    Status get_message_by_id(Message &new_message);
+
+    Status change_message(const Message &new_message);
 
     Status get_n_dialogs_messages_by_time(
         const Dialog &dialog,
@@ -147,7 +149,7 @@ struct SQL_BDInterface : BDInterface {
         next_messages.clear();
         Message::m_message_list = &next_messages;
         int exit =
-                sqlite3_exec(m_bd, sql.c_str(), Message::callback, 0, &message_error);
+                sqlite3_exec(m_bd, sql.c_str(), Message::callback_get_message_list, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
         Message::m_message_list = nullptr;
