@@ -20,6 +20,8 @@ struct Dialog {
     static std::vector<User> *m_users;
     static std::list<Dialog> *m_dialogs;
 
+    explicit Dialog(int dialog_id) : m_dialog_id(dialog_id) {}
+
     explicit Dialog(
         const std::string &name,
         const std::string &encryption,

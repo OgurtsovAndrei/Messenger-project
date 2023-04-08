@@ -20,7 +20,7 @@
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
 #include <botan/data_src.h>
-#include "./../TextWorker.hpp"
+#include "../../../include/TextWorker.hpp"
 
 namespace Cryptographer {
 

@@ -61,6 +61,7 @@ set_target_properties(Ui_messendger PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
+include_directories(include)
 include_directories(/usr/local/include/botan-3)
 include_directories(src/install-lib/botan-install)
 include_directories(src/general)
