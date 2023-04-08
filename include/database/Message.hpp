@@ -17,7 +17,7 @@ struct Message {
     static Message *m_edit_message;
     static std::list<Message> *m_message_list;
 
-    Message(
+    explicit Message(
         int message_id,
         int date_time,
         const std::string &text,
@@ -33,7 +33,7 @@ struct Message {
           m_user_id(user_id) {
     }
 
-    Message(
+    explicit Message(
             int message_id,
             int date_time,
             const std::string &text,
@@ -47,7 +47,7 @@ struct Message {
               m_user_id(user_id) {
     }
 
-    Message(int message_id) : m_message_id(message_id){
+    explicit Message(int message_id) : m_message_id(message_id){
     }
 
     static int callback_get_message_by_id(void *NotUsed, int argc, char **argv, char **azColName);

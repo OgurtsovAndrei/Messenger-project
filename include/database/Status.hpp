@@ -9,7 +9,7 @@ struct Status {
     bool m_correct;
     std::string m_message;
 
-    Status(bool correct, const std::string &message = "")
+    explicit Status(bool correct, const std::string &message = "")
         : m_correct(correct), m_message(message) {
     }
 };
