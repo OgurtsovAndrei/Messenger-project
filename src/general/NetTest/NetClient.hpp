@@ -73,6 +73,12 @@ namespace Net::Client {
             send_message_by_connection(type, std::move(message), connection.value());
         }
 
+        void send_secured_request(RequestType type, const std::string& message) {
+            assert(connection_is_secured);
+            std::string encrypted_message = encrypter.value().encrypt_text_to_text(message);
+            send_message_by_connection(type, std::move(encrypted_message), connection.value());
+        }
+
         void send_text_request(std::string message) {
             send_request(TEXT_REQUEST, std::move(message));
         }
@@ -94,6 +100,13 @@ namespace Net::Client {
             return std::move(request);
         }
 
+        Request decrypt_request(Request request) { //NOLINT [static_method]
+            auto decrypted_body = Cryptographer::as<std::string>(
+                    decrypter.value().decrypt_data(request.get_body()));
+            request.set_body(decrypted_body);
+            return std::move(request);
+        }
+
         void get_secret_request_and_out_it() {
             Request request = accept_request(connection.value());
             auto decrypted_body = Cryptographer::as<std::string>(
@@ -102,9 +115,50 @@ namespace Net::Client {
             std::cout << "Got from server: " << decrypted_body << "\n";
         }
 
-        Status send_message_to_another_user() {
-
+        Status send_message_to_another_user(int dialog_id, int current_time, std::string text) {
+            std::vector<std::string> data_vector {std::to_string(dialog_id), std::to_string(current_time), std::move(text)};
+            std::string data_to_send = convert_text_vector_to_text(data_vector);
+            if (connection_is_secured) {
+                send_secured_request(SEND_MESSAGE, data_to_send);
+            } else {
+                send_request(SEND_MESSAGE, data_to_send);
+            }
+            Request response = get_request();
+            response.parse_request();
+            if (response && response.get_type() == SEND_MESSAGE_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == SEND_MESSAGE_FAIL);
+                if (connection_is_secured) {
+                    response = decrypt_request(std::move(response));
+                }
+                return Status(false, response.get_body());
+            }
         }
+
+        Status change_sent_message(int old_message_id, std::string new_text) {
+            // We change text (message body) in old message, we get by id, to new_text.
+            std::vector<std::string> data_vector {std::to_string(old_message_id), std::move(new_text)};
+            std::string data_to_send = convert_text_vector_to_text(data_vector);
+            if (connection_is_secured) {
+                send_secured_request(CHANGE_MESSAGE, data_to_send);
+            } else {
+                send_request(CHANGE_MESSAGE, data_to_send);
+            }
+            Request response = get_request();
+            if (response && response.get_type() == CHANGE_MESSAGE_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == CHANGE_MESSAGE_FAIL);
+                if (connection_is_secured) {
+                    response = decrypt_request(std::move(response));
+                }
+                return Status(false, response.get_body());
+            }
+        }
+
+
+
 
     private:
 #ifndef MULTI_CLIENT_TEST
