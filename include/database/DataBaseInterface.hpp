@@ -38,7 +38,7 @@ struct BDInterface {
     make_dialog_request(const User &from_user, const User &to_user) = 0;
 
     virtual Status
-    get_user_dialog_requests(const User &user) = 0;
+    get_user_dialog_requests(const User &user, std::vector<User> &requests) = 0;
 
     virtual Status
     close_dialog_request(const User &from_user, const User &to_user) = 0;
@@ -91,7 +91,9 @@ struct SQL_BDInterface : BDInterface {
 
     Status make_dialog_request(const User &from_user, const User &to_user) override;
 
-    Status get_user_dialog_requests(const User &user, std::vector<User> &requests);
+    Status close_dialog_request(const User &from_user, const User &to_user) override;
+
+    Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
 
     Status close_dialog_request(const User &from_user, const User &to_user);
 
@@ -139,7 +141,7 @@ struct SQL_BDInterface : BDInterface {
         std::list<Message> &next_messages,
         int n = 10,
         int last_message_date_time = 2121283574
-    ){
+    ) override {
         std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE DialogId=";
         sql += std::to_string(dialog.m_dialog_id) + " AND DateTime<";
         sql += std::to_string(last_message_date_time) + " ORDER BY DateTime DESC LIMIT ";
@@ -162,7 +164,7 @@ struct SQL_BDInterface : BDInterface {
         );
     }
 
-    Status del_message(const Message &message);
+    Status del_message(const Message &message) override;
 };
 
 struct Mock_BDInterface : BDInterface {
@@ -175,42 +177,42 @@ struct Mock_BDInterface : BDInterface {
     std::list<Message> messages;
 
     // Work with bd connection
-    Status open() {
+    Status open() override {
         return Status(true, "Open mock_bd");
     }
 
-    Status close() {
+    Status close() override {
         return Status(true, "Close mock_bd");
     }
 
     // User
-    Status make_user(User &user);
+    Status make_user(User &user) override;
 
-    Status change_user(const User &new_user);
+    Status change_user(const User &new_user) override;
 
-    Status get_user_by_log_pas(User &user);
+    Status get_user_by_log_pas(User &user) override;
 
-    Status get_user_id_by_log(User &user);
+    Status get_user_id_by_log(User &user) override;
 
-    Status del_user(const User &user);
+    Status del_user(const User &user) override;
 
-    Status make_dialog_request(const User &from_user, const User &to_user);
+    Status make_dialog_request(const User &from_user, const User &to_user) override;
 
-    Status get_user_dialog_requests(const User &user, std::vector<User> &requests);
+    Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
 
-    Status close_dialog_request(const User &from_user, const User &to_user);
+    Status close_dialog_request(const User &from_user, const User &to_user) override;
 
     // Dialog
-    Status make_dialog(Dialog &dialog);
+    Status make_dialog(Dialog &dialog) override;
 
-    Status change_dialog(const Dialog &new_dialog);
+    Status change_dialog(const Dialog &new_dialog) override;
 
     Status get_n_users_dialogs_by_time(
         const User &user,
         std::list<Dialog> &next_dialogs,
         int n = 10,
         int last_dialog_date_time = 2121283574
-    ) {
+    ) override {
         for (auto it = dialogs.begin(); it != dialogs.end(); it++) {
             next_dialogs.clear();
             if (it->find(user) && it->m_date_time < last_dialog_date_time) {
@@ -229,19 +231,19 @@ struct Mock_BDInterface : BDInterface {
         return Status(true, "Get n dialogs in mock_bd");
     }
 
-    Status del_dialog(const Dialog &dialog);
+    Status del_dialog(const Dialog &dialog) override;
 
     // Message
-    Status make_message(Message &message);
+    Status make_message(Message &message) override;
 
-    Status change_message(const Message &new_message);
+    Status change_message(const Message &new_message) override;
 
     Status get_n_dialogs_messages_by_time(
         const Dialog &dialog,
         std::list<Message> &next_messages,
         int n = 10,
         int last_message_date_time = 2121283574
-    ) {
+    ) override {
         for (auto it = messages.begin(); it != messages.end(); it++) {
             next_messages.clear();
             if (it->m_dialog_id == dialog.m_dialog_id &&
@@ -261,7 +263,7 @@ struct Mock_BDInterface : BDInterface {
         return Status(true, "Get n messages in mock_bd");
     }
 
-    Status del_message(const Message &message);
+    Status del_message(const Message &message) override;
 };
 }  // namespace database_interface
 
