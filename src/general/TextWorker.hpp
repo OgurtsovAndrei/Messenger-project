@@ -19,17 +19,17 @@ std::string convert_to_string_size_n(unsigned int value, unsigned int size = 4) 
     return answer.substr(answer.size() - size, size);
 }
 
-[[nodiscard]] std::string convert_text_vector_to_text(const std::vector<std::string>& text_vec) {
+[[nodiscard]] std::string convert_text_vector_to_text(const std::vector<std::string> &text_vec) {
     std::string answer;
     answer += convert_to_string_size_n(text_vec.size(), TEXT_VECTOR_SIZE_SIZE_IN_CHARS);
-    for (const std::string &element : text_vec) {
+    for (const std::string &element: text_vec) {
         answer += convert_to_string_size_n(element.size(), TEXT_VECTOR_ELEMENT_SIZE_IN_CHARS);
         answer += element;
     }
     return std::move(answer);
 };
 
-[[nodiscard]] std::vector<std::string> convert_to_text_vector_from_text(const std::string& text) {
+[[nodiscard]] std::vector<std::string> convert_to_text_vector_from_text(const std::string &text) {
     std::vector<std::string> answer;
     unsigned int vector_size = std::stoi(text.substr(0, TEXT_VECTOR_SIZE_SIZE_IN_CHARS));
     unsigned int covered_len = TEXT_VECTOR_SIZE_SIZE_IN_CHARS;
@@ -42,5 +42,9 @@ std::string convert_to_string_size_n(unsigned int value, unsigned int size = 4) 
     }
     return std::move(answer);
 };
+
+[[nodiscard]] bool is_number(const std::string &s) {
+    return !s.empty() && std::find_if(s.begin(), s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
 
 #endif //MESSENGER_PROJECT_TEXTWORKER_HPP

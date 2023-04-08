@@ -59,6 +59,10 @@ namespace Net::Server {
             return client.value();
         }
 
+        std::optional<database_interface::User>& get_user_in_db_ref() {
+            return user_in_db;
+        }
+
         ~UserConnection() {
             if (session_thread) {
                 //  session_thread.value().join();
@@ -135,15 +139,16 @@ namespace Net::Server {
             for (int consumer_id = 0; consumer_id < number_of_thread_in_pool; ++consumer_id) {
                 consumers.push_back(std::move(std::thread([&, this]() mutable {
                     while (true) {
+                        // В очереди хранятся уже расшифрованные request-ы
                         auto [connection_id, request] = request_queue.get_last_or_wait();
-                        assert(request || request.get_status() ==
-                                          RAW_DATA); // В очереди должны храниться только расшифрованные requests
+                        assert(request || request.get_status() ==RAW_DATA);
                         std::cout << "Got from user with --> " << connection_id << " connection id: "
                                   << request.get_body() << "\n";
                         std::unique_lock sessions_lock(sessions_mutex);
                         auto iter = sessions.find(connection_id);
                         assert(iter != sessions.end());
                         UserConnection &user_connection = iter->second;
+                        sessions_lock.unlock();
                         switch (request.get_type()) {
                             case TEXT_REQUEST:
                                 send_message_by_connection(RESPONSE_REQUEST_SUCCESS,
@@ -151,7 +156,7 @@ namespace Net::Server {
                                                            user_connection.get_client_ref());
                                 break;
                             case SECURED_REQUEST:
-                                send_secured_message_to_user(RESPONSE_REQUEST_SUCCESS,
+                                send_secured_request_to_user(RESPONSE_REQUEST_SUCCESS,
                                                              "Got from you: <" + request.get_body() + ">",
                                                              user_connection);
                                 break;
@@ -198,12 +203,10 @@ namespace Net::Server {
                             case DELETE_DIALOG:
                                 break;
                             case SEND_MESSAGE:
-
-
-
-
+                                process_send_message_request(user_connection, std::move(request));
                                 break;
                             case CHANGE_MESSAGE:
+
                                 break;
                             case DELETE_MESSAGE:
                                 break;
@@ -291,6 +294,38 @@ namespace Net::Server {
         std::vector<std::thread> consumers;
         database_interface::SQL_BDInterface bd_connection;
 
+        void process_send_message_request(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 3);
+            //TODO: check first two are ints
+            assert(is_number(data_vector[0]));
+            assert(is_number(data_vector[1]));
+            int dialog_id = std::stoi(data_vector[0]);
+            int current_time = std::stoi(data_vector[1]);
+            std::string message_text = data_vector[2];
+            auto & user_in_db = user_connection.get_user_in_db_ref();
+            assert(user_in_db.has_value());
+            database_interface::Message new_message(current_time, message_text, "", dialog_id, user_in_db.value().m_user_id);
+            bd_connection.make_message(new_message);
+        }
+
+        void change_old_message(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 2);
+            // TODO: Check firs is correct message id.
+            assert(is_number(data_vector[0]));
+            int old_message_id = std::stoi(data_vector[0]);
+            std::string new_body = data_vector[1];
+            // TODO remove comments;
+            database_interface::Message old_message(old_message_id);
+            Status current_status = bd_connection.get_message_by_id(old_message);
+            assert(current_status.correct());
+            old_message.m_text = new_body;
+            current_status = bd_connection.change_message(old_message);
+            assert(current_status.correct());
+            send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+        }
+
         int find_empty_connection_number() {
             std::cout << "Searching for empty connection number\n";
             std::mt19937 rng((uint32_t) std::chrono::steady_clock::now().time_since_epoch().count());
@@ -306,10 +341,10 @@ namespace Net::Server {
             return val;
         }
 
-        static void send_secured_message_to_user(RequestType type, const std::string &message,
+        static void send_secured_request_to_user(RequestType type, const std::string &request_body,
                                                  UserConnection &user_connection) {
             assert(user_connection.is_protected());
-            std::string encrypted_message = user_connection.encrypter.value().encrypt_text_to_text(message);
+            std::string encrypted_message = user_connection.encrypter.value().encrypt_text_to_text(request_body);
             Request request(type, std::move(encrypted_message));
             request.make_request();
             assert(try_send_request(request, user_connection.get_client_ref()));
@@ -330,14 +365,6 @@ namespace Net::Server {
         }
         std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
         connection.server.push_request_to_queue(connection.connection_number, std::move(request));
-    }
-
-    void echo(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str) {
-        Request request = accept_request(client);
-        std::cout << "Dot request from" << rem_endpoint_str << "\n";
-        auto true_string = request.get_body();
-        std::cout << "Got from " << rem_endpoint_str << ": " << true_string << "\n";
-        send_message_by_connection(RESPONSE_REQUEST_SUCCESS, true_string, client);
     }
 
     void UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection) {
