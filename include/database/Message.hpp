@@ -48,6 +48,20 @@ struct Message {
               m_user_id(user_id) {
     }
 
+    explicit Message(
+            int date_time,
+            std::string text,
+            std::string file_path,
+            int dialog_id,
+            int user_id
+    )
+            : m_date_time(date_time),
+              m_text(std::move(text)),
+              m_file_path(std::move(file_path)),
+              m_dialog_id(dialog_id),
+              m_user_id(user_id) {
+    }
+
     explicit Message(int message_id) : m_message_id(message_id){
     }
 
