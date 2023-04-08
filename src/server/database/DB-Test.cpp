@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
     bd.open();
     bd.close();
-    */
+*/
 /*
         database_interface::Mock_BDInterface bd =
         database_interface::Mock_BDInterface(); std::cout <<
@@ -103,4 +103,5 @@ int main(int argc, char **argv) {
 
 
     return (0);
-}*/
+}
+*/
