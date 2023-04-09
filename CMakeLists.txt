@@ -60,6 +60,9 @@ include_directories(src/general)
 
 link_directories(/usr/local/lib)
 
+include_directories(/opt/homebrew/opt/sqlite/include)  # -I
+link_directories(/opt/homebrew/opt/sqlite/lib)  # -L
+
 add_executable(Messenger_project src/general/CryptoTest/Botan-Test-1.cpp)
 add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
 add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
@@ -71,6 +74,8 @@ add_executable(DB-Test src/server/database/DB-Test.cpp)
 
 target_link_libraries(Messenger_project botan-3)
 target_link_libraries(Net2 botan-3)
+target_link_libraries(Net1 botan-3)
+target_link_libraries(Net1 sqlite3)
 #target_link_libraries(19_230228 PRIVATE Threads::Threads)
 
 #[[

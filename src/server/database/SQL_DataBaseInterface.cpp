@@ -13,7 +13,7 @@ void chars_to_string(char *chr, std::string &str) {
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("./../../../bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("/Users/arina/hse/project/Messenger-project/bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 
