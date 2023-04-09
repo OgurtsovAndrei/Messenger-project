@@ -63,6 +63,14 @@ namespace Net::Server {
             return user_in_db;
         }
 
+        void send_secured_request(RequestType type, const std::string &request_body) {
+            assert(is_protected());
+            std::string encrypted_message = encrypter.value().encrypt_text_to_text(request_body);
+            Request request(type, std::move(encrypted_message));
+            request.make_request();
+            assert(try_send_request(request, get_client_ref()));
+        }
+
         ~UserConnection() {
             if (session_thread) {
                 //  session_thread.value().join();
@@ -88,6 +96,16 @@ namespace Net::Server {
 
         static void accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection);
+
+        Request decrypt_request(Request request) { //NOLINT [static_method]
+            if (!request.is_encrypted) {return std::move(request);}
+            assert(connection_is_protected);
+            auto decrypted_body = Cryptographer::as<std::string>(
+                    decrypter.value().decrypt_data(request.get_encrypted_body()));
+            request.set_body(decrypted_body);
+            request.is_encrypted = false;
+            return std::move(request);
+        }
     };
 
     struct RequestQueue {
@@ -173,6 +191,7 @@ namespace Net::Server {
                             case MAKE_UNSECURE_CONNECTION_FAIL:
                                 break;
                             case MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY:
+
                                 break;
                             case MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY:
                                 break;
@@ -187,6 +206,7 @@ namespace Net::Server {
                             case LOG_IN_FAIL:
                                 break;
                             case GET_100_CHATS:
+                                get_n_dialogs(user_connection, std::move(request));
                                 break;
                             case GET_USER_BY_LOG_AND_PASSWORD:
                                 break;
@@ -199,6 +219,7 @@ namespace Net::Server {
                             case ACCEPT_DIALOG_REQUEST:
                                 break;
                             case MAKE_GROPE:
+                                make_grope(user_connection, std::move(request));
                                 break;
                             case DELETE_DIALOG:
                                 break;
@@ -285,6 +306,25 @@ namespace Net::Server {
             return bd_connection;
         }
 
+        void sign_up(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 4);
+            std::string name = data_vector[0];
+            std::string surname = data_vector[1];
+            std::string login = data_vector[2];
+            std::string password = data_vector[3];
+
+            assert(login.find_first_not_of("\t\n ") == std::string::npos);
+
+            database_interface::User new_user(name, surname, login, password);
+            auto status = bd_connection.make_user(new_user);
+            if (status) {
+                send_secured_request_to_user(SIGN_UP_SUCCESS, std::to_string(new_user.m_user_id), user_connection);
+            } else {
+                send_secured_request_to_user(SIGN_UP_FAIL, status.message(), user_connection);
+            }
+        }
+
     private:
         std::optional<std::thread> server_thread;
         boost::asio::io_context io_context;
@@ -367,6 +407,25 @@ namespace Net::Server {
             send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec), user_connection);
         }
 
+        void get_n_dialogs(UserConnection &user_connection, Request request) {
+            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+            assert(data_vector.size() == 2);
+            assert(is_number(data_vector[0]));
+            assert(is_number(data_vector[1]));
+            int n_dialogs = std::stoi(data_vector[0]);
+            int last_dialog_time = std::stoi(data_vector[1]);
+
+            database_interface::User &user = user_connection.user_in_db.value();
+            std::list<database_interface::Dialog> dialog_list;
+            bd_connection.get_n_users_dialogs_by_time(user, dialog_list, n_dialogs, last_dialog_time);
+
+            std::vector<std::string> str_dialog_vector;
+            for (const auto& dialog : dialog_list) {
+                str_dialog_vector.push_back(std::move(dialog.to_string()));
+            }
+            send_secured_request_to_user(GET_100_CHATS_SUCCESS, convert_text_vector_to_text(str_dialog_vector), user_connection);
+        }
+
         void make_grope(UserConnection &user_connection, Request request) {
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             assert(data_vector.size() == 5);
@@ -381,10 +440,22 @@ namespace Net::Server {
             int is_grope = std::stoi(data_vector[3]);
             std::vector<unsigned int> user_ids = convert_to_int_vector_from_text(data_vector[4]);
 
+            std::vector<database_interface::User> user_vec;
+            for (auto id : user_ids) {
+                database_interface::User user(static_cast<int>(id));
+                user_vec.push_back(std::move(user));
+            }
+
             auto &user_in_db = user_connection.get_user_in_db_ref();
             assert(user_in_db.has_value());
 
-            // TODO !!! Use method in db to create dialog (now there is no such method)
+            database_interface::Dialog new_dialog(dialog_name, encryption, current_time,
+                                                  user_connection.user_in_db->m_user_id, is_grope);
+
+            bd_connection.make_dialog(new_dialog);
+            bd_connection.add_users_to_dialog(user_vec, new_dialog);
+
+            send_secured_request_to_user(MAKE_GROPE_SUCCESS, std::to_string(new_dialog.m_dialog_id), user_connection);
         }
 
         int find_empty_connection_number() {
@@ -404,27 +475,20 @@ namespace Net::Server {
 
         static void send_secured_request_to_user(RequestType type, const std::string &request_body,
                                                  UserConnection &user_connection) {
-            assert(user_connection.is_protected());
-            std::string encrypted_message = user_connection.encrypter.value().encrypt_text_to_text(request_body);
-            Request request(type, std::move(encrypted_message));
-            request.make_request();
-            assert(try_send_request(request, user_connection.get_client_ref()));
+            user_connection.send_secured_request(type, request_body);
         }
     };
 
     void
     UserConnection::accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
-        Request request = accept_request(client);
+        Request request = accept_request(client, connection.connection_is_protected);
+        std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
         request.parse_request();
         assert(request);
-        if (request.get_type() == SECURED_REQUEST) {
-            assert(connection.connection_is_protected);
-            auto decrypted_body = Cryptographer::as<std::string>(
-                    connection.decrypter.value().decrypt_data(request.get_body()));
-            request.set_body(decrypted_body);
+        if (connection.connection_is_protected) {
+            request = connection.decrypt_request(std::move(request));
         }
-        std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
         connection.server.push_request_to_queue(connection.connection_number, std::move(request));
     }
 
@@ -434,7 +498,7 @@ namespace Net::Server {
                   << socket.local_endpoint() << "\n";
         client = boost::asio::ip::tcp::iostream(std::move(socket));
         {
-            Request request = accept_request(client.value());
+            Request request = accept_request(client.value(), connection_is_protected);
             request.parse_request();
             assert(request);
             if (request.get_type() == MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
@@ -443,7 +507,7 @@ namespace Net::Server {
                                                                 Cryptographer::Cryptographer::get_rng());
                 send_message_by_connection(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
                                            connection.decrypter.value().get_str_publicKey(), client.value());
-                Request response = accept_request(client.value());
+                Request response = accept_request(client.value(), connection_is_protected);
                 response.parse_request();
                 assert(response);
                 assert(response.get_type() == MAKE_SECURE_CONNECTION_SUCCESS);
@@ -456,9 +520,12 @@ namespace Net::Server {
             }
         }
         {
-            Request request = accept_request(client.value());
+            Request request = accept_request(client.value(), connection_is_protected);
             request.parse_request();
             assert(request);
+            if (connection_is_protected) {
+                request = decrypt_request(std::move(request));
+            }
             if (request.get_type() == LOG_IN_REQUEST) {
                 std::vector<std::string> parsed_body = convert_to_text_vector_from_text(request.get_body());
                 assert(parsed_body.size() == 2);
@@ -466,14 +533,17 @@ namespace Net::Server {
                 std::string password = parsed_body[1];
                 database_interface::SQL_BDInterface &bd_connection = server.get_bd_connection_ref();
                 user_in_db = database_interface::User(login, password);
-                if (bd_connection.get_user_by_log_pas(user_in_db.value()).correct()) {
-                    send_message_by_connection(LOG_IN_SUCCESS, "", connection.client.value());
+                auto status = bd_connection.get_user_by_log_pas(user_in_db.value());
+                std::cout << "User with id: " + std::to_string(user_in_db->m_user_id)  + " logged in!\n";
+                if (status) {
+                    connection.send_secured_request(LOG_IN_SUCCESS, "");
                 } else {
-                    send_message_by_connection(LOG_IN_FAIL, "", connection.client.value());
+                    connection.send_secured_request(LOG_IN_FAIL, "");
                 }
             } else {
                 // Create new user request
                 assert(request.get_type() == SIGN_UP_REQUEST);
+                server.sign_up(connection, std::move(request));
             }
         }
 

@@ -1,11 +1,11 @@
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
 
-#include "Status.hpp"
 #include <string>
 #include <list>
 #include <utility>
 #include "./../TextWorker.hpp"
+#include "../Status.hpp"
 
 namespace database_interface {
 
@@ -72,7 +72,7 @@ namespace database_interface {
         explicit Message(int message_id) : m_message_id(message_id) {
         }
 
-        std::string to_strint() {
+        [[nodiscard]] std::string to_strint() const {
             // FIXME ужасно не оптимально по трафику данные так гонять, но пока что как есть, другого не дано.
             // В качестве альтернативы вижу конвертацию в reinterpret_cast<unsigned char*>, но тут возникают со стрингами проблемы
             // Если есть предложения, пишите.
