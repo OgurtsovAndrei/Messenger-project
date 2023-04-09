@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.23)
 project(Messenger_project)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v ")
 
 find_package(Threads REQUIRED)
 #[[set(CMAKE_AUTOUIC ON)
@@ -48,11 +50,15 @@ endif()
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)]]
 
+find_package(Boost 1.78 REQUIRED system)
 
 include_directories(include)
 include_directories(/usr/local/include/botan-3)
+include_directories(/usr/local/include)
 include_directories(src/install-lib/botan-install)
 include_directories(src/general)
+
+link_directories(/usr/local/lib)
 
 add_executable(Messenger_project src/general/CryptoTest/Botan-Test-1.cpp)
 add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
@@ -63,7 +69,8 @@ add_executable(DB-Test src/server/database/DB-Test.cpp)
 #add_executable(Messenger_project src/general/NetTest/NetTest-3.cpp)
 
 
-target_link_libraries(Messenger_project libbotan-3)
+target_link_libraries(Messenger_project botan-3)
+target_link_libraries(Net2 botan-3)
 #target_link_libraries(19_230228 PRIVATE Threads::Threads)
 
 #[[
