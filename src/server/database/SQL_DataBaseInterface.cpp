@@ -69,6 +69,23 @@ Status SQL_BDInterface::change_user(const User &new_user) {
      );
 }
 
+Status SQL_BDInterface::get_user_by_id(User &user){
+    std::string sql = "SELECT Name, Surname FROM Users WHERE id=";
+    sql += std::to_string(user.m_user_id) + ";";
+    char *message_error;
+    std::string string_message;
+    User::m_edit_user = &user;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    User::m_edit_user = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET User by id.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::get_user_by_log_pas(User &user) {
     std::string sql = "SELECT id, Name, Surname FROM Users WHERE Login='";
     sql += user.m_login + "' AND  PasswordHash='";
@@ -216,6 +233,48 @@ Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
                                "\n"
     );
 };
+
+Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
+    std::string sql = "INSERT INTO UsersAndDialogs (UserId, DialogId) VALUES (";
+    sql += std::to_string(user.m_user_id) + ", ";
+    sql += std::to_string(dialog.m_dialog_id) + ");";
+    char *message_error;
+    std::string string_message;
+    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    return Status(
+            exit == SQLITE_OK, "Problem in ADD User to Dialog.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
+Status SQL_BDInterface::add_users_to_dialog(const std::vector<User> &users, Dialog &dialog){
+    for (auto &user : users){
+        Status exit = add_user_to_dialog(user, dialog);
+        if (!exit.correct()){
+            return Status(false, "Problem in ADD Users to Dialog.\n One of 'add user' return this message: " + exit.message() + "\n");
+        }
+    }
+    return Status(true, "Problem in ADD Users to Dialog.\n");
+}
+
+Status SQL_BDInterface::get_users_in_dialog(const Dialog &dialog, std::vector<User> &users){
+    std::string sql = "SELECT UserId FROM UsersAndDialogs WHERE DialogId=";
+    sql += std::to_string(dialog.m_dialog_id) + ";";
+    char *message_error;
+    std::string string_message;
+    users.clear();
+    Dialog::m_users = &users;
+    int exit = sqlite3_exec(m_bd, sql.c_str(), Dialog::callback_get_dialog_users, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    Dialog::m_users = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
 
 Status SQL_BDInterface::del_dialog(const Dialog &dialog){
     std::string sql = "DELETE FROM Dialogs WHERE ";

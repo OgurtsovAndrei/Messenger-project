@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include <iostream>
 #include <list>
+#include <vector>
 #include <map>
 #include <set>
 #include "Dialog.hpp"
@@ -83,6 +84,8 @@ struct SQL_BDInterface : BDInterface {
 
     Status change_user(const User &new_user) override;
 
+    Status get_user_by_id(User &user);
+
     Status get_user_by_log_pas(User &user) override;
 
     Status get_user_id_by_log(User &user) override;
@@ -102,6 +105,12 @@ struct SQL_BDInterface : BDInterface {
 
     Status change_dialog(const Dialog &new_dialog) override;
 
+    Status add_user_to_dialog(const User &user, Dialog &dialog);
+
+    Status add_users_to_dialog(const std::vector<User> &users, Dialog &dialog);
+
+    Status get_users_in_dialog(const Dialog &dialog, std::vector<User> &users);
+
     Status get_n_users_dialogs_by_time(
         const User &user,
         std::list<Dialog> &next_dialogs,
@@ -115,12 +124,12 @@ struct SQL_BDInterface : BDInterface {
         char *message_error;
         std::string string_message;
         next_dialogs.clear();
-        Dialog::m_dialog_list = &next_dialogs;
+        Dialog::m_dialogs = &next_dialogs;
         int exit =
-                sqlite3_exec(m_bd, sql.c_str(), Dialog::callback, 0, &message_error);
+                sqlite3_exec(m_bd, sql.c_str(), Dialog::callback_get_dialogs, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
-        Dialog::m_dialog_list = nullptr;
+        Dialog::m_dialogs = nullptr;
         return Status(
                 exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
                                    "\n SQL command: " + sql + "\n"
@@ -173,6 +182,7 @@ struct Mock_BDInterface : BDInterface {
     int last_message_id = 0;
     std::map<std::string, User> users;
     std::map<std::string, std::list<User>> all_requests;
+    std::map<int, std::list<User>> dialog_users;
     std::list<Dialog> dialogs;
     std::list<Message> messages;
 
@@ -215,7 +225,14 @@ struct Mock_BDInterface : BDInterface {
     ) override {
         for (auto it = dialogs.begin(); it != dialogs.end(); it++) {
             next_dialogs.clear();
-            if (it->find(user) && it->m_date_time < last_dialog_date_time) {
+            bool fnd = false;
+            for (auto ptr = dialog_users[it->m_dialog_id].begin(); ptr != dialog_users[it->m_dialog_id].end(); ptr++){
+                if (ptr->m_user_id == user.m_user_id){
+                    fnd = true;
+                    break;
+                }
+            }
+            if (fnd && it->m_date_time < last_dialog_date_time) {
                 for (auto k = next_dialogs.begin(); k != next_dialogs.end();
                      k++) {
                     if (k->m_date_time < it->m_date_time) {

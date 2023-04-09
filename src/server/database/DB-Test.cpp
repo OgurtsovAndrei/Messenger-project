@@ -1,4 +1,4 @@
-/*
+
 //
 // Created by andrey on 05.04.23.
 //
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();
     bd.open();
     bd.close();
-*/
+
 /*
         database_interface::Mock_BDInterface bd =
         database_interface::Mock_BDInterface(); std::cout <<
@@ -99,9 +99,8 @@ int main(int argc, char **argv) {
         else
             std::cout << "Table created Successfully" << std::endl;
         sqlite3_close(DB);
-        *//*
+        */
 
 
     return (0);
 }
-*/
