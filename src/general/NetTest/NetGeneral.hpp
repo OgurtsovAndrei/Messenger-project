@@ -33,6 +33,8 @@ namespace Net {
         LOG_IN_SUCCESS,
         LOG_IN_FAIL,
         GET_100_CHATS,
+        GET_100_CHATS_SUCCESS,
+        GET_100_CHATS_FAIL,
         GET_USER_BY_LOG_AND_PASSWORD,
         SEND_DIALOG_REQUEST,
         GET_ALL_DIALOG_REQUESTS,
@@ -96,6 +98,8 @@ namespace Net {
          * TODO: добавить проверку хеша
          */
     public:
+        bool is_encrypted = false;
+
         Request(const Request &con) = delete;
         Request(Request &&) = default;
         Request &operator=(const Request &) = delete;
@@ -116,6 +120,17 @@ namespace Net {
         };
 
         const std::string &get_body() {
+            assert(!is_encrypted);
+            if (request_status == CORRECT || request_status == RAW_DATA) {
+                return body;
+            }
+            parse_request();
+            text_request.clear();
+            return body;
+        };
+
+        const std::string &get_encrypted_body() {
+            assert(is_encrypted);
             if (request_status == CORRECT || request_status == RAW_DATA) {
                 return body;
             }
@@ -204,6 +219,10 @@ namespace Net {
             request_status = CORRECT;
         }
 
+        [[nodiscard]] bool is_readable() const {
+            return request_status == CORRECT || request_status == RAW_DATA;
+        }
+
         explicit operator bool() {
             return request_status == CORRECT;
         }
@@ -228,7 +247,7 @@ namespace Net {
         return std::move(string);
     }
 
-    Request accept_request(boost::asio::ip::tcp::iostream &client) {
+    Request accept_request(boost::asio::ip::tcp::iostream &client, bool connection_is_secured) {
         // TODO Очень плохой код! Починить!
         // Но оно работает...
 
@@ -256,6 +275,7 @@ namespace Net {
         assert(new_part.find(request_sep) == new_part.size() - strlen(request_sep));
         true_string += new_part;
 
+        assert(is_number(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_CHARS)));
         unsigned int body_size = std::stoi(new_part.substr(0, BODY_SIZE_IN_REQUEST_STRING_IN_CHARS));
         true_string += read_n_and_get_string(body_size, client);
 
@@ -264,6 +284,7 @@ namespace Net {
         true_string += last_request_part;
         Request request(true_string, true);
         request.parse_request();
+        request.is_encrypted = connection_is_secured;
         return std::move(request);
     }
 
@@ -294,7 +315,6 @@ namespace Net {
             return;
         }
     }
-
 }
 
 #endif //MESSENGER_PROJECT_NETGENERAL_HPP
