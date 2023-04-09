@@ -9,7 +9,7 @@
 #include <set>
 #include "Dialog.hpp"
 #include "Message.hpp"
-#include "../Status.hpp"
+#include "./../Status.hpp"
 #include "User.hpp"
 
 namespace database_interface {
@@ -74,6 +74,14 @@ struct BDInterface {
 };
 
 struct SQL_BDInterface : BDInterface {
+    static int last_insert_id;
+
+    static int get_last_insert_id(void *NotUsed, int argc, char **argv, char **azColName){
+        assert(argc != 0);
+        last_insert_id = std::stoi(argv[0]);
+        return 0;
+    }
+
     // Work with bd connection
     Status open() override;
 

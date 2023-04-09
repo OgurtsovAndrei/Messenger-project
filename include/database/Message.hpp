@@ -1,11 +1,11 @@
 #ifndef MESSAGE_HPP
 #define MESSAGE_HPP
 
+#include "Status.hpp"
 #include <string>
 #include <list>
 #include <utility>
 #include "./../TextWorker.hpp"
-#include "../Status.hpp"
 
 namespace database_interface {
 
