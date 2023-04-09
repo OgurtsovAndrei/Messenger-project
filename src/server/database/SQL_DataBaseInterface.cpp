@@ -11,6 +11,8 @@ void chars_to_string(char *chr, std::string &str) {
     }
 }
 
+int SQL_BDInterface::last_insert_id = -1;
+
 Status SQL_BDInterface::open() {
     int exit = 0;
     exit = sqlite3_open("./../../../bd/ServerDataBase.db", &m_bd);
@@ -207,10 +209,26 @@ Status SQL_BDInterface::make_dialog(Dialog &dialog){
     int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
-    return Status(
-            exit == SQLITE_OK, "Problem in MAKE Dialog.\nMessage: " + string_message +
-                               "\n SQL command: " + sql + "\n"
-    );
+    if (exit != SQLITE_OK){
+        return Status(
+                exit == SQLITE_OK, "Problem in MAKE Dialog.\nMessage: " + string_message +
+                                   "\n SQL command: " + sql + "\n"
+        );
+    }
+    sql = "SELECT last_insert_rowid();";
+    message_error= nullptr;
+    string_message="";
+    exit = sqlite3_exec(m_bd, sql.c_str(), SQL_BDInterface::get_last_insert_id, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    if (exit != SQLITE_OK){
+        return Status(
+                exit == SQLITE_OK, "Problem in MAKE Dialog in find id.\nMessage: " + string_message +
+                                   "\n SQL command: " + sql + "\n"
+        );
+    }
+    dialog.m_dialog_id = SQL_BDInterface::last_insert_id;
+    return Status(true);
 }
 
 Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
