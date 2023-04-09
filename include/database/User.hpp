@@ -18,6 +18,9 @@ struct User {
 
     explicit User() = default;
 
+    explicit User(int user_id) : m_user_id(user_id){
+    }
+
     explicit User(
         const std::string &name,
         const std::string &surname,
