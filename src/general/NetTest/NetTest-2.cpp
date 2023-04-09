@@ -4,7 +4,7 @@
 
 #include "NetClient.hpp"
 #include "NetGeneral.hpp"
-#include "./../TextWorker.hpp"
+#include "../../../include/TextWorker.hpp"
 #include <unistd.h>
 
 int main() {

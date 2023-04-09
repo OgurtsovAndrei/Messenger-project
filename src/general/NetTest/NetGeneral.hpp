@@ -12,7 +12,7 @@
 #include <vector>
 #include <utility>
 #include <boost/asio.hpp>
-#include "./../TextWorker.hpp"
+#include "../../../include/TextWorker.hpp"
 
 namespace Net {
 
@@ -39,6 +39,8 @@ namespace Net {
         DENY_DIALOG_REQUEST,
         ACCEPT_DIALOG_REQUEST,
         MAKE_GROPE,
+        MAKE_GROPE_SUCCESS,
+        MAKE_GROPE_FAIL,
         DELETE_DIALOG,
         SEND_MESSAGE,
         SEND_MESSAGE_SUCCESS,
@@ -47,9 +49,14 @@ namespace Net {
         CHANGE_MESSAGE_SUCCESS,
         CHANGE_MESSAGE_FAIL,
         DELETE_MESSAGE,
+        DELETE_MESSAGE_SUCCESS,
+        DELETE_MESSAGE_FAIL,
         GET_100_MESSAGES,
+        GET_100_MESSAGES_SUCCESS,
+        GET_100_MESSAGES_FAIL,
         SIGN_UP_REQUEST,
         SIGN_UP_SUCCESS,
+        SIGN_UP_FAIL,
         UNKNOWN,
     };
 
