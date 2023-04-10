@@ -106,6 +106,8 @@ namespace Net::Server {
             request.is_encrypted = false;
             return std::move(request);
         }
+
+        void log_in(UserConnection &connection, Request &request);
     };
 
     struct RequestQueue {
@@ -325,6 +327,21 @@ namespace Net::Server {
             }
         }
 
+        void log_in(UserConnection &connection, Request &request) {
+            std::vector<std::string> parsed_body = convert_to_text_vector_from_text(request.get_body());
+            assert(parsed_body.size() == 2);
+            std::string login = parsed_body[0];
+            std::string password = parsed_body[1];
+            auto user_in_db = database_interface::User(login, password);
+            auto status = bd_connection.get_user_by_log_pas(user_in_db);
+            std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
+            if (status) {
+                connection.send_secured_request(LOG_IN_SUCCESS, std::to_string(user_in_db.m_user_id));
+            } else {
+                connection.send_secured_request(LOG_IN_FAIL, "");
+            }
+        }
+
     private:
         std::optional<std::thread> server_thread;
         boost::asio::io_context io_context;
@@ -527,19 +544,7 @@ namespace Net::Server {
                 request = decrypt_request(std::move(request));
             }
             if (request.get_type() == LOG_IN_REQUEST) {
-                std::vector<std::string> parsed_body = convert_to_text_vector_from_text(request.get_body());
-                assert(parsed_body.size() == 2);
-                std::string login = parsed_body[0];
-                std::string password = parsed_body[1];
-                database_interface::SQL_BDInterface &bd_connection = server.get_bd_connection_ref();
-                user_in_db = database_interface::User(login, password);
-                auto status = bd_connection.get_user_by_log_pas(user_in_db.value());
-                std::cout << "User with id: " + std::to_string(user_in_db->m_user_id)  + " logged in!\n";
-                if (status) {
-                    connection.send_secured_request(LOG_IN_SUCCESS, "");
-                } else {
-                    connection.send_secured_request(LOG_IN_FAIL, "");
-                }
+                server.log_in(connection, request);
             } else {
                 // Create new user request
                 assert(request.get_type() == SIGN_UP_REQUEST);
@@ -555,7 +560,6 @@ namespace Net::Server {
         // AWARE func calls thread detach!
         server.close_connection(connection_number);
     }
-
 }
 
 #endif //MESSENGER_PROJECT_NETSERVER_HPP
