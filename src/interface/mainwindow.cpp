@@ -1,44 +1,71 @@
 #include "../../include/interface/mainwindow.h"
+#include "./ui_mainwindow.h"
+#include "../../src/general/NetTest/netClient.hpp"
+#include "../../include/interface/register.h"
+#include "../../include/Status.hpp"
+
 #include <QStringListModel>
-#include "ui_mainWindow.h"
+#include <QTimer>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
-    ui->setupUi(this);
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow) {
+  ui->setupUi(this);
 
-    this->setWindowTitle("ИШО");
+  this->setWindowTitle("ИШО");
+  /// TODO set user info
+  ///
+  ui->chatsList->addItems({"user1", "user2"});
 
-    this->setStyleSheet(
-        ".QPushButton {background-color : #EE6070;border-width: 2px; "
-        "border-style: solid; border-radius: 10px; padding: 6px;} ");
-    ui->newMessageInput->setStyleSheet(
-        ".QTextEdit {background-color : #EE6080;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
-    ui->chatsList->setStyleSheet(
-        ".QListWidget {background-color : #EE6060;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
-    ui->messagesList->setStyleSheet(
-        ".QListWidget {background-color : #606060;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
+  fill_chats();
 
+  //  ui->chatsList->setModel(new QStringListModel(List));
 
-    ui->chatsList->addItems({"User1 ", "User2", "User3"});
+  //    ui->chatsList->setEditTriggers(QAbstractItemView::AnyKeyPressed |
+  //    QAbstractItemView::DoubleClicked); ui->sendButton->setVisible(false);
+  //    ui->newMessageInput->setVisible(false); //or true - later in the code
+  /* Проинициализоровать
+   * ChatList
+   * Messagewindow без send блока
+   * Поставить таймер с update
+   *
+   */
 
-//    ui->chatsList->setModel(new QStringListModel(List));
+  auto *chat_timer = new QTimer(this);
+  connect(chat_timer, &QTimer::timeout, [&](){
+      auto [status, chats] = client.get_last_n_dialogs(100);
+      if (chats.size() != chats_id_map.size()) {
+          ui->chatsList->clear();
+          fill_chats();
+      }
+  });
 
+  chat_timer->start(10000);
 
-//    ui->chatsList->setEditTriggers(QAbstractItemView::AnyKeyPressed | QAbstractItemView::DoubleClicked);
-//    ui->sendButton->setVisible(false);
-//    ui->newMessageInput->setVisible(false); //or true - later in the code
-/* Проинициализоровать
- * ChatList
- * Messagewindow без send блока
- *
- *
- */
+  auto *message_timer = new QTimer(this);
+  connect(message_timer, &QTimer::timeout, [&]{on_chatsList_itemClicked();});
+
+  message_timer->start(100);
 }
 
-MainWindow::~MainWindow()
+MainWindow::~MainWindow() { delete ui; }
+
+void MainWindow::fill_chats() {
+    auto [status, chats] = client.get_last_n_dialogs(100);
+    for (const auto &chat : chats) {
+        QListWidgetItem new_chat(QString::fromStdString(chat.m_name));
+        ui->chatsList->addItem(&new_chat);
+        chats_id_map[new_chat] = chat.m_dialog_id;
+    }
+}
+
+void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
 {
-    delete ui;
+    if (item != nullptr) {
+        select_chat_id = chats_id_map[*item];
+    }
+    ui->messagesList->clear();
+    auto [status, messages] = client.get_n_messages(100, select_chat_id);
+    for (const auto &mess : messages) {
+        ui->messagesList->addItems({QString::fromStdString(mess.m_text)});
+    }
 }
-
