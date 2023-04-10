@@ -1,6 +1,6 @@
 #include "../../include/interface/mainwindow.h"
 #include <QStringListModel>
-#include "./ui_mainwindow.h"
+#include "ui_mainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
