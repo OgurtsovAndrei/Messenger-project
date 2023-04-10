@@ -23,4 +23,12 @@ int main() {
         client.get_secret_request_and_out_it();
         usleep(100'000);
     }
+    std::cout << "Done1!\n";
+    auto pair = client.get_last_n_dialogs(100);
+    if (pair.first) {
+        for (const auto& dialog : pair.second) {
+            std::cout << dialog.to_string() << "\n";
+        }
+    }
+    std::cout << "Done2!\n";
 }

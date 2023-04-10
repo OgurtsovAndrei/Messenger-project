@@ -161,7 +161,7 @@ namespace Net::Server {
                     while (true) {
                         // В очереди хранятся уже расшифрованные request-ы
                         auto [connection_id, request] = request_queue.get_last_or_wait();
-                        assert(request || request.get_status() == RAW_DATA);
+                        assert(request.is_readable() || request.get_status() == RAW_DATA);
                         std::cout << "Got from user with --> " << connection_id << " connection id: "
                                   << request.get_body() << "\n";
                         std::unique_lock sessions_lock(sessions_mutex);
@@ -332,7 +332,8 @@ namespace Net::Server {
             assert(parsed_body.size() == 2);
             std::string login = parsed_body[0];
             std::string password = parsed_body[1];
-            auto user_in_db = database_interface::User(login, password);
+            connection.user_in_db = database_interface::User(login, password);
+            database_interface::User &user_in_db = connection.user_in_db.value();
             auto status = bd_connection.get_user_by_log_pas(user_in_db);
             std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
             if (status) {
@@ -506,6 +507,7 @@ namespace Net::Server {
         if (connection.connection_is_protected) {
             request = connection.decrypt_request(std::move(request));
         }
+        assert(request.is_readable());
         connection.server.push_request_to_queue(connection.connection_number, std::move(request));
     }
 
