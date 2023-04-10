@@ -20,8 +20,11 @@ public:
 private slots:
     void on_cancelButton_clicked();
 
+    void on_readyButton_clicked();
+
 private:
     Ui::Register *ui;
+    bool regVersion = true;
 };
 
 #endif // REGISTER_H

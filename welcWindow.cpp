@@ -9,6 +9,8 @@ WelcWindow::WelcWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    this->setWindowTitle("ИШО");
+
     connect(ui->logInButton, &QPushButton::clicked, [&](){
         ui->logInButton->setDown(true);
         on_regButton_clicked();
@@ -25,7 +27,7 @@ WelcWindow::~WelcWindow()
 
 void WelcWindow::on_regButton_clicked()
 {
-    Register *reg = new Register();
+    auto *reg = new Register();
     if (ui->logInButton->isDown()) {
         reg->delRegInfo();
     }

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "userUI.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,8 +16,19 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void fill_chats();
+
+/*
+ * fill chats list
+ * add chat
+ * open chat (fill it)
+ * scroll chat
+ * send message
+*/
+
 private:
     Ui::MainWindow *ui;
-
 };
+
+extern UserUI user;
 #endif // MAINWINDOW_H

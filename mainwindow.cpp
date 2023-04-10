@@ -9,20 +9,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->setWindowTitle("ИШО");
 
     this->setStyleSheet(
-        ".QPushButton {background-color : #EE6070;border-width: 2px; "
-        "border-style: solid; border-radius: 10px; padding: 6px;} ");
+        ".QPushButton {background-color : #294d42;border-width: 2px; "
+        "border-style: solid; border-radius: 5px; padding: 6px;} ");
     ui->newMessageInput->setStyleSheet(
-        ".QTextEdit {background-color : #EE6080;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
+        ".QTextEdit {background-color : #294d52;border-width: 2px; "
+        "border-radius: 5px; padding: 6px;}");
     ui->chatsList->setStyleSheet(
-        ".QListWidget {background-color : #EE6060;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
+        ".QListWidget {background-color : #294d62;border-width: 2px; "
+        "border-radius: 5px; padding: 6px;}");
     ui->messagesList->setStyleSheet(
-        ".QListWidget {background-color : #606060;border-width: 2px; "
-        "border-radius: 10px; padding: 6px;}");
+        ".QListWidget {background-color : #294d72;border-width: 2px; "
+        "border-radius: 5px; padding: 6px;}");
 
 
     ui->chatsList->addItems({"User1 ", "User2", "User3"});
+
+    fill_chats();
+
+
 
 //    ui->chatsList->setModel(new QStringListModel(List));
 
@@ -33,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 /* Проинициализоровать
  * ChatList
  * Messagewindow без send блока
- *
+ * Поставить таймер с update
  *
  */
 }
@@ -41,5 +45,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::fill_chats() {
 }
 

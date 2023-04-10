@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>332</width>
-    <height>244</height>
+    <width>434</width>
+    <height>331</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,7 +42,7 @@
     </widget>
    </item>
    <item row="1" column="1">
-    <widget class="QLineEdit" name="pasEdit">
+    <widget class="QLineEdit" name="pasInput">
      <property name="text">
       <string/>
      </property>
