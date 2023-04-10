@@ -15,7 +15,8 @@ int main() {
     if (status) {
         std::cout << "Logged in -->>" + status.message() + "\n";
     } else {
-        std::cout << "Log in failed -->>" + status.message() + "\n";
+        std::cout << "Log in failed -->> " + status.message() + "\n";
+        return 0;
     }
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";
@@ -23,12 +24,10 @@ int main() {
         client.get_secret_request_and_out_it();
         usleep(100'000);
     }
-    std::cout << "Done1!\n";
     auto pair = client.get_last_n_dialogs(100);
     if (pair.first) {
         for (const auto& dialog : pair.second) {
-            std::cout << dialog.to_string() << "\n";
+            std::cout << "Dialog in str-view: " << dialog.to_string() << "\n";
         }
     }
-    std::cout << "Done2!\n";
 }
