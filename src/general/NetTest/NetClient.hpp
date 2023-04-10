@@ -249,6 +249,8 @@ namespace Net::Client {
         }
 
         Status log_in(std::string login, std::string password) {
+            assert(login.find_first_of("\t\n ") == std::string::npos);
+            assert(password.find_first_of("\t\n ") == std::string::npos);
             if (connection_is_secured) {
                 send_secured_request(Net::LOG_IN_REQUEST, convert_text_vector_to_text({std::move(login), std::move(password)}));
             } else {
@@ -276,6 +278,8 @@ namespace Net::Client {
         }
 
         Status sing_up(std::string name, std::string surname, std::string login, std::string password) {
+            assert(login.find_first_of("\t\n ") == std::string::npos);
+            assert(password.find_first_of("\t\n ") == std::string::npos);
             // Password is not really a password, but its hash.
             std::vector<std::string> data_vector{std::move(name), std::move(surname), std::move(login), std::move(password)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);

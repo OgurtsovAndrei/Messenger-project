@@ -23,9 +23,6 @@
 #include "../../../include/TextWorker.hpp"
 
 namespace Cryptographer {
-
-
-
     template<typename Out, typename In>
     Out as(const In &data) {
         return Out(data.data(), data.data() + data.size());
@@ -37,7 +34,7 @@ namespace Cryptographer {
         std::vector<uint8_t> encryptedKey;
     };
 
-    [[nodiscard]] std::vector<std::string> convert_encrypted_data_to_text_vector(const EncryptedData &data_block) {
+    [[nodiscard]] inline std::vector<std::string> convert_encrypted_data_to_text_vector(const EncryptedData &data_block) {
         auto text = as<std::string>(data_block.ciphertext);
         auto nonce = as<std::string>(data_block.nonce);
         auto key = as<std::string>(data_block.encryptedKey);
@@ -45,7 +42,7 @@ namespace Cryptographer {
         return text_vector;
     }
 
-    [[nodiscard]] EncryptedData make_encrypted_data_from_text_vector(const std::vector<std::string> &text_vec) {
+    [[nodiscard]] inline EncryptedData make_encrypted_data_from_text_vector(const std::vector<std::string> &text_vec) {
         assert(text_vec.size() == 3);
         auto text = as<Botan::secure_vector<uint8_t>>(text_vec[0]);
         auto nonce = as<std::vector<uint8_t>>(text_vec[1]);
@@ -53,22 +50,22 @@ namespace Cryptographer {
         return {text, nonce, key};
     }
 
-    [[nodiscard]] EncryptedData make_encrypted_data_from_text(const std::string &text) {
+    [[nodiscard]] inline EncryptedData make_encrypted_data_from_text(const std::string &text) {
         return make_encrypted_data_from_text_vector(convert_to_text_vector_from_text(text));
     }
 
-    [[nodiscard]] std::string convert_encrypted_data_to_text(const EncryptedData &data_block) {
+    [[nodiscard]] inline  std::string convert_encrypted_data_to_text(const EncryptedData &data_block) {
         return convert_text_vector_to_text(convert_encrypted_data_to_text_vector(data_block));
     }
 
-    std::unique_ptr<Botan::Private_Key>
+    inline std::unique_ptr<Botan::Private_Key>
     generate_keypair(const size_t bits,
                      Botan::RandomNumberGenerator &rng) {
         return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
     }
 
 
-    EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
+    inline EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
                           Botan::Public_Key *pubkey,
                           Botan::RandomNumberGenerator &rng) {
         auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
@@ -92,7 +89,7 @@ namespace Cryptographer {
         return d;
     }
 
-    EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
+    inline EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
                           std::unique_ptr<Botan::Public_Key> pubkey,
                           Botan::RandomNumberGenerator &rng) {
         return encrypt(data, &*pubkey, rng);
@@ -100,7 +97,7 @@ namespace Cryptographer {
 
 
     Botan::secure_vector<uint8_t>
-    decrypt(const EncryptedData &encdata,
+    inline decrypt(const EncryptedData &encdata,
             const Botan::Private_Key &privkey,
             Botan::RandomNumberGenerator &rng) {
         // prepare random key material for the symmetric encryption/authentication
@@ -125,7 +122,7 @@ namespace Cryptographer {
 
     struct Cryptographer {
     public:
-        static Botan::AutoSeeded_RNG& get_rng() {
+        static Botan::AutoSeeded_RNG &get_rng() {
             static Botan::AutoSeeded_RNG rng;
             return rng;
         }
@@ -134,13 +131,16 @@ namespace Cryptographer {
     struct Decrypter {
     public:
         Decrypter(const Decrypter &con) = delete;
+
         Decrypter(Decrypter &&) = default;
+
         Decrypter &operator=(const Decrypter &) = delete;
-        Decrypter &operator=(Decrypter &&other)  noexcept {
+
+        Decrypter &operator=(Decrypter &&other) noexcept {
             key_pair = std::move(other.key_pair);
             return *this;
         };
-        
+
         explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
                                                           key_pair(generate_keypair(2048 /*  bits */, rng_)) {};
 
@@ -178,13 +178,16 @@ namespace Cryptographer {
     struct Encrypter {
     public:
         Encrypter(const Encrypter &con) = delete;
+
         Encrypter(Encrypter &&) = default;
+
         Encrypter &operator=(const Encrypter &) = delete;
-        Encrypter &operator=(Encrypter &&other)  noexcept {
+
+        Encrypter &operator=(Encrypter &&other) noexcept {
             public_key = std::move(other.public_key);
             return *this;
         };
-        
+
         explicit Encrypter(const std::string &public_key_str, Botan::AutoSeeded_RNG &rng_) : rng(rng_) {
             Botan::SecureVector<uint8_t> publicKeyBytes(Botan::base64_decode(public_key_str));
             public_key = std::unique_ptr<Botan::Public_Key>(
