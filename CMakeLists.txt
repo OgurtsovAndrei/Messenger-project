@@ -22,6 +22,7 @@ link_directories(/opt/homebrew/opt/sqlite/lib)  # -L
 
 add_executable(Net1 netTest-1.cpp SQL_DataBaseInterface.cpp dialog.cpp message.cpp Mock_DataBaseInterface.cpp user.cpp)
 
+
 target_link_libraries(Net1 botan-3 sqlite3)
 
 

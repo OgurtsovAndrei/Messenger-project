@@ -1,27 +1,30 @@
-#ifndef USER_H
-#define USER_H
-
+#ifndef USERUI_H
+#define USERUI_H
 
 #include <string>
 
-class UserUI {
+class UserUi {
 public:
-    UserUI() = default;
+    UserUi() = default;
+
+    void set_user_id(const int &id);
 
     void set_user_name(const std::string &name);
 
     void set_user_surname(const std::string &sName);
 
-    [[nodiscard]] unsigned int get_user_id() const;
+    [[nodiscard]] int get_user_id() const;
 
     [[nodiscard]] std::string get_user_name() const;
 
     [[nodiscard]] std::string get_user_surname() const;
 
 private:
-    unsigned int user_id = 0;
+    int user_id = -1;
     std::string user_name;
     std::string user_surname;
 };
 
-#endif // USER_H
+//extern UserUi user;
+
+#endif // USERUI_H

@@ -30,5 +30,4 @@ private:
     Ui::MainWindow *ui;
 };
 
-extern UserUI user;
 #endif // MAINWINDOW_H

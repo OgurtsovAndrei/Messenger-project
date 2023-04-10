@@ -505,7 +505,7 @@ namespace Net::Server {
         }
     };
 
-    void
+    void inline
     UserConnection::accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
         Request request = accept_request(client, connection.connection_is_protected);
@@ -518,7 +518,7 @@ namespace Net::Server {
         connection.server.push_request_to_queue(connection.connection_number, std::move(request));
     }
 
-    void UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection) {
+    void inline UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection) {
         auto rem_endpoint = socket.remote_endpoint();
         std::cout << "Accepted connection " << rem_endpoint << " --> "
                   << socket.local_endpoint() << "\n";

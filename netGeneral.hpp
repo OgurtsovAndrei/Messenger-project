@@ -77,7 +77,7 @@ namespace Net {
     inline constexpr char request_begin[] = "^\1\3\1#";
     inline constexpr char request_end[] = "$\1\3\1#";
 
-    std::string convert_to_string_size_n(unsigned int value, unsigned int size = 4) {
+    std::string inline convert_to_string_size_n(unsigned int value, unsigned int size = 4) {
         auto str_value = std::to_string(value);
         assert(str_value.size() <= size);
         std::string answer(size, '0');
@@ -234,7 +234,7 @@ namespace Net {
         std::string text_request;
     };
 
-    [[nodiscard]] std::string read_n_and_get_string(unsigned int n, boost::asio::ip::tcp::iostream &client) {
+    [[nodiscard]] std::string inline read_n_and_get_string(unsigned int n, boost::asio::ip::tcp::iostream &client) {
         char *string_ptr = new char[n + 1];
         string_ptr[n] = '\0';
         client.read(string_ptr, n);
@@ -247,7 +247,7 @@ namespace Net {
         return std::move(string);
     }
 
-    Request accept_request(boost::asio::ip::tcp::iostream &client, bool connection_is_secured) {
+    Request inline accept_request(boost::asio::ip::tcp::iostream &client, bool connection_is_secured) {
         // TODO Очень плохой код! Починить!
         // Но оно работает...
 
@@ -288,11 +288,11 @@ namespace Net {
         return std::move(request);
     }
 
-    void send_text_to_server(const std::string &text, boost::asio::ip::tcp::iostream &connection) {
+    void inline send_text_to_server(const std::string &text, boost::asio::ip::tcp::iostream &connection) {
         connection << text << std::endl;
     }
 
-    bool try_send_request(Request& request, boost::asio::ip::tcp::iostream &connection) {
+    bool inline try_send_request(Request& request, boost::asio::ip::tcp::iostream &connection) {
         request.make_request();
         if (request) {
             send_text_to_server(request.get_text_request(), connection);
@@ -302,13 +302,13 @@ namespace Net {
         }
     }
 
-    std::string get_line_from_connection(boost::asio::ip::tcp::iostream &connection) {
+    std::string inline get_line_from_connection(boost::asio::ip::tcp::iostream &connection) {
         std::string response;
         std::getline(connection, response);
         return std::move(response);
     }
 
-    void send_message_by_connection(RequestType type, std::string message, boost::asio::ip::tcp::iostream &connection) {
+    void inline send_message_by_connection(RequestType type, std::string message, boost::asio::ip::tcp::iostream &connection) {
         Request request(type, std::move(message));
         request.make_request();
         if (!try_send_request(request, connection)) {

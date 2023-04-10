@@ -1,21 +1,27 @@
 #include "userUI.h"
 
-void UserUI::set_user_name(const std::string &name) {
+void UserUi::set_user_id(const int &id) {
+    user_id = id;
+}
+
+void UserUi::set_user_name(const std::string &name) {
     user_name = name;
 }
 
-void UserUI::set_user_surname(const std::string &sName) {
+void UserUi::set_user_surname(const std::string &sName) {
     user_name = sName;
 }
 
-[[nodiscard]] unsigned int UserUI::get_user_id() const {
+[[nodiscard]] int UserUi::get_user_id() const {
     return user_id;
 }
 
-[[nodiscard]] std::string UserUI::get_user_name() const {
+[[nodiscard]] std::string UserUi::get_user_name() const {
     return user_name;
 }
 
-[[nodiscard]] std::string UserUI::get_user_surname() const {
+[[nodiscard]] std::string UserUi::get_user_surname() const {
     return user_surname;
 }
+
+UserUi user;

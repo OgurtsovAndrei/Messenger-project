@@ -2,6 +2,7 @@
 #define REGISTER_H
 
 #include <QWidget>
+#include "netClient.hpp"
 
 namespace Ui {
 class Register;
@@ -26,5 +27,7 @@ private:
     Ui::Register *ui;
     bool regVersion = true;
 };
+
+extern Net::Client::Client client;
 
 #endif // REGISTER_H

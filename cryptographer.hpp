@@ -37,7 +37,7 @@ namespace Cryptographer {
         std::vector<uint8_t> encryptedKey;
     };
 
-    [[nodiscard]] std::vector<std::string> convert_encrypted_data_to_text_vector(const EncryptedData &data_block) {
+    [[nodiscard]] std::vector<std::string> inline convert_encrypted_data_to_text_vector(const EncryptedData &data_block) {
         auto text = as<std::string>(data_block.ciphertext);
         auto nonce = as<std::string>(data_block.nonce);
         auto key = as<std::string>(data_block.encryptedKey);
@@ -45,7 +45,7 @@ namespace Cryptographer {
         return text_vector;
     }
 
-    [[nodiscard]] EncryptedData make_encrypted_data_from_text_vector(const std::vector<std::string> &text_vec) {
+    [[nodiscard]] EncryptedData inline make_encrypted_data_from_text_vector(const std::vector<std::string> &text_vec) {
         assert(text_vec.size() == 3);
         auto text = as<Botan::secure_vector<uint8_t>>(text_vec[0]);
         auto nonce = as<std::vector<uint8_t>>(text_vec[1]);
@@ -53,22 +53,22 @@ namespace Cryptographer {
         return {text, nonce, key};
     }
 
-    [[nodiscard]] EncryptedData make_encrypted_data_from_text(const std::string &text) {
+    [[nodiscard]] EncryptedData inline make_encrypted_data_from_text(const std::string &text) {
         return make_encrypted_data_from_text_vector(convert_to_text_vector_from_text(text));
     }
 
-    [[nodiscard]] std::string convert_encrypted_data_to_text(const EncryptedData &data_block) {
+    [[nodiscard]] std::string inline convert_encrypted_data_to_text(const EncryptedData &data_block) {
         return convert_text_vector_to_text(convert_encrypted_data_to_text_vector(data_block));
     }
 
-    std::unique_ptr<Botan::Private_Key>
+    std::unique_ptr<Botan::Private_Key> inline
     generate_keypair(const size_t bits,
                      Botan::RandomNumberGenerator &rng) {
         return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
     }
 
 
-    EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
+    EncryptedData inline encrypt(const Botan::secure_vector<uint8_t> &data,
                           Botan::Public_Key *pubkey,
                           Botan::RandomNumberGenerator &rng) {
         auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
@@ -92,14 +92,14 @@ namespace Cryptographer {
         return d;
     }
 
-    EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
+    EncryptedData inline encrypt(const Botan::secure_vector<uint8_t> &data,
                           std::unique_ptr<Botan::Public_Key> pubkey,
                           Botan::RandomNumberGenerator &rng) {
         return encrypt(data, &*pubkey, rng);
     }
 
 
-    Botan::secure_vector<uint8_t>
+    Botan::secure_vector<uint8_t> inline
     decrypt(const EncryptedData &encdata,
             const Botan::Private_Key &privkey,
             Botan::RandomNumberGenerator &rng) {
