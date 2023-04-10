@@ -314,7 +314,7 @@ namespace Net::Server {
             std::string login = data_vector[2];
             std::string password = data_vector[3];
 
-            assert(login.find_first_not_of("\t\n ") == std::string::npos);
+            assert(login.find_first_of("\t\n ") == std::string::npos);
 
             database_interface::User new_user(name, surname, login, password);
             auto status = bd_connection.make_user(new_user);
