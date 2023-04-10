@@ -109,7 +109,7 @@ namespace Net::Client {
             }
             Request response = get_request();
             response.parse_request();
-            if (response && response.get_type() == SEND_MESSAGE_SUCCESS) {
+            if (response.is_readable() && response.get_type() == SEND_MESSAGE_SUCCESS) {
                 return Status(true);
             } else {
                 assert(response.get_type() == SEND_MESSAGE_FAIL);
@@ -130,7 +130,7 @@ namespace Net::Client {
                 send_request(CHANGE_MESSAGE, data_to_send);
             }
             Request response = get_request();
-            if (response && response.get_type() == CHANGE_MESSAGE_SUCCESS) {
+            if (response.is_readable() && response.get_type() == CHANGE_MESSAGE_SUCCESS) {
                 return Status(true);
             } else {
                 assert(response.get_type() == CHANGE_MESSAGE_FAIL);
@@ -151,7 +151,7 @@ namespace Net::Client {
                 send_request(DELETE_MESSAGE, data_to_send);
             }
             Request response = get_request();
-            if (response && response.get_type() == DELETE_MESSAGE_SUCCESS) {
+            if (response.is_readable() && response.get_type() == DELETE_MESSAGE_SUCCESS) {
                 return Status(true);
             } else {
                 assert(response.get_type() == DELETE_MESSAGE_FAIL);
@@ -173,7 +173,7 @@ namespace Net::Client {
                 send_request(GET_100_MESSAGES, data_to_send);
             }
             Request response = get_request();
-            if (response && response.get_type() == GET_100_MESSAGES_SUCCESS) {
+            if (response.is_readable() && response.get_type() == GET_100_MESSAGES_SUCCESS) {
                 std::vector<database_interface::Message> messages_vector;
                 for (const std::string &text_message: convert_to_text_vector_from_text(response.get_body())) {
                     database_interface::Message new_message;
@@ -208,7 +208,7 @@ namespace Net::Client {
             if (connection_is_secured) {
                 response = decrypt_request(std::move(response));
             }
-            if (response && response.get_type() == GET_100_CHATS_SUCCESS) {
+            if (response.is_readable() && response.get_type() == GET_100_CHATS_SUCCESS) {
                 std::vector<database_interface::Dialog> dialogs_vector;
                 for (const std::string &text_dialog: convert_to_text_vector_from_text(response.get_body())) {
                     database_interface::Dialog new_dialog(-1);
@@ -237,7 +237,7 @@ namespace Net::Client {
             }
             Request response = get_request();
             response.parse_request();
-            if (response && response.get_type() == MAKE_GROPE_SUCCESS) {
+            if (response.is_readable() && response.get_type() == MAKE_GROPE_SUCCESS) {
                 return Status(true);
             } else {
                 assert(response.get_type() == MAKE_GROPE_FAIL);
@@ -292,7 +292,7 @@ namespace Net::Client {
             if (connection_is_secured) {
                 response = decrypt_request(std::move(response));
             }
-            if (response && response.get_type() == SIGN_UP_SUCCESS) {
+            if (response.is_readable() && response.get_type() == SIGN_UP_SUCCESS) {
                 return Status(true, response.get_body());
             } else {
                 assert(response.get_type() == SIGN_UP_FAIL);
