@@ -2,7 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "userUI.h"
+#include <QListWidgetItem>
+#include <QMap>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,8 +17,6 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    void fill_chats();
-
 /*
  * fill chats list
  * add chat
@@ -26,8 +25,16 @@ public:
  * send message
 */
 
+private slots:
+    void fill_chats();
+
+    void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
+
 private:
     Ui::MainWindow *ui;
+    QMap<QListWidgetItem, int> chats_id_map;
+    int select_chat_id;
+
 };
 
 #endif // MAINWINDOW_H
