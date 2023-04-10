@@ -19,7 +19,7 @@
 #include <optional>
 #include <queue>
 #include <condition_variable>
-#include "Status.hpp"
+#include "/Users/arina/hse/project/Messenger-project/include/Status.hpp"
 #include "../../../include/TextWorker.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
 #include "./../../../include/database/User.hpp"
