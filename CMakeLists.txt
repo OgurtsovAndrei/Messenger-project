@@ -67,7 +67,7 @@ include_directories(/usr/local/include/botan-3)
 include_directories(src/install-lib/botan-install)
 include_directories(src/general)
 
-add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
+add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp src/server/database/DB-main.cpp)
 add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
 add_executable(Net3 src/general/NetTest/NetTest-3.cpp)
 #add_executable(NetG src/general/NetTest/NetGeneral.hpp)

@@ -1,4 +1,5 @@
 #include "../../../include/database/Dialog.hpp"
+#include <iostream>
 
 namespace database_interface {
 
