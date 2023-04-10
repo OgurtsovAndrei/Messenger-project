@@ -101,7 +101,7 @@ Status SQL_BDInterface::get_user_by_log_pas(User &user) {
     sqlite3_free(message_error);
     User::m_edit_user = nullptr;
     return Status(
-        exit == SQLITE_OK, "Problem in GET User.\nMessage: " + string_message +
+        exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
     );
 }
