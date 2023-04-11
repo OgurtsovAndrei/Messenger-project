@@ -3,6 +3,7 @@
 #include "../../src/general/NetTest/netClient.hpp"
 #include "../../include/interface/register.h"
 #include "../../include/Status.hpp"
+#include "../../include/interface/bubble.h"
 
 #include <QStringListModel>
 #include <QTimer>
@@ -64,7 +65,9 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
         select_chat_id = chats_id_map[item->text()];
     }
     ui->messagesList->clear();
+    std::cout << "Message size: ";
     auto [status, messages] = client.get_n_messages(100, select_chat_id);
+    std::cout << messages.size() << "\n";
     for (const auto &mess : messages) {
         ui->messagesList->addItem(QString::fromStdString(mess.m_text));
     }
@@ -78,12 +81,8 @@ void MainWindow::on_findButton_clicked()
     }
     unsigned int second_user = std::stoi(find_chat);
     std::cout << "Size client\n";
-    std::cout << client.get_n_messages(100, select_chat_id).second.size() << "\n";
-    std::cout << bool(client.make_dialog(find_chat, "RSA", 100000, false, {second_user, client_id})) <<
-        "    " <<
-        client.make_dialog(find_chat, "RSA", 100000, false, {second_user, client_id}).message() << "\n";
-    if (client.make_dialog(find_chat, "2048", 1000, false, {client_id, second_user})) {
-        std::cout << client.get_n_messages(100, select_chat_id).second.size() << "\n";
+    if (client.make_dialog(find_chat, "RSA", 1000, false, {client_id, second_user})) {
+        std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         ui->chatsList->clear();
         fill_chats();
     }
@@ -92,10 +91,23 @@ void MainWindow::on_findButton_clicked()
 
 void MainWindow::on_sendButton_clicked()
 {
-    QString message = ui->newMessageInput->toPlainText();
-    if (message.isEmpty()) {
+    QString msg = ui->newMessageInput->toPlainText();
+    if (msg.isEmpty()) {
         return;
     }
+    std::cout << "send in: ";
+    std::cout << select_chat_id << "\n";
+    Status a = client.send_message_to_another_user(select_chat_id, 1000, msg.toStdString());
+    std::cout << bool(a) <<
+        "\n" <<
+        a.message() << "\n";
+    auto *item = new QListWidgetItem(msg);
+    ui->messagesList->addItem(item);
+//    auto *bub = new Bubble(msg);
+//    ui->messagesList->setItemWidget(item, bub);
+    ui->newMessageInput->setPlainText("");
+    ui->messagesList->scrollToBottom();
+
 }
 
 void MainWindow::set_client_id(const int &id) {
