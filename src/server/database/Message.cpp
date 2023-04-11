@@ -1,4 +1,5 @@
 #include "../../../include/database/Message.hpp"
+#include <iostream>
 
 namespace database_interface {
 
@@ -21,7 +22,7 @@ int Message::callback_get_message_list(void *NotUsed, int argc, char **argv, cha
                                           std::stoi(argv[i+1]),
                                           argv[i+2],
                                           argv[i+3],
-                                          std::stoi(argv[i+5])));
+                                          std::stoi(argv[i+4])));
     }
     return 0;
 }
