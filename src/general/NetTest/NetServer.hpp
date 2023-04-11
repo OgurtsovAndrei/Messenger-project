@@ -19,7 +19,7 @@
 #include <optional>
 #include <queue>
 #include <condition_variable>
-#include "/Users/arina/hse/project/Messenger-project/include/Status.hpp"
+#include "../../../include/Status.hpp"
 #include "../../../include/TextWorker.hpp"
 #include "./../CryptoTest/Cryptographer.hpp"
 #include "./../../../include/database/User.hpp"
@@ -410,15 +410,16 @@ namespace Net::Server {
             send_response_and_return_if_false(data_vector.size() == 3, user_connection, GET_100_MESSAGES_FAIL, "Bad request body format or invalid request type!");
             send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_MESSAGES_FAIL, "Number of messages should bu INT!");
             send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_MESSAGES_FAIL, "Dialog ID should bu INT!");
+            std::cout << "VVVVVVVVVVVVVVV " << is_number(data_vector[2]) << " " << true << "\n";
             send_response_and_return_if_false(is_number(data_vector[2]), user_connection, GET_100_MESSAGES_FAIL, "Last message time ID should bu INT!");
+            std::cout << "VVVV\n";
             int number_of_messages = std::stoi(data_vector[0]);
             int dialog_id = std::stoi(data_vector[1]);
             int last_message_time = std::stoi(data_vector[2]);
 
             database_interface::Dialog current_dialog(dialog_id);
             Status current_status;
-            std::list<database_interface::Message> messages_list;
-
+            std::list<database_interface::Message> messages_list;\
             current_status = bd_connection.get_n_dialogs_messages_by_time(current_dialog, messages_list,
                                                                           number_of_messages, last_message_time);
 
