@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">.QPushButton {background-color : #294d42;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;} </string>
+   <string notr="true">QPushButton {background-color : #69827A;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
@@ -42,14 +42,17 @@
        <number>0</number>
       </property>
       <item row="0" column="1">
-       <widget class="QPushButton" name="addChatButton">
+       <widget class="QPushButton" name="findButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton:pressed { background-color: #96a7a1; }</string>
+        </property>
         <property name="text">
-         <string>Add Chat</string>
+         <string>Find</string>
         </property>
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLineEdit" name="findLine">
         <property name="styleSheet">
          <string notr="true">QLineEdit {background-color : #396d75; border-width: 1px; 
 border-radius: 5px; padding: 6px;}</string>
@@ -62,11 +65,6 @@ border-radius: 5px; padding: 6px;}</string>
          <string notr="true">.QListWidget {background-color : #294d62;border-width: 2px; 
         border-radius: 5px; padding: 6px;}</string>
         </property>
-        <item>
-         <property name="text">
-          <string>user1</string>
-         </property>
-        </item>
        </widget>
       </item>
      </layout>
@@ -89,6 +87,9 @@ border-radius: 5px; padding: 6px;}</string>
        <layout class="QVBoxLayout" name="sendButtonLayout">
         <item>
          <widget class="QPushButton" name="sendButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton:pressed { background-color: #96a7a1; }</string>
+          </property>
           <property name="text">
            <string>Send</string>
           </property>
