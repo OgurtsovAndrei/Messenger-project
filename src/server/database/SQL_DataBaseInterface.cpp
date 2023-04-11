@@ -15,7 +15,7 @@ int SQL_BDInterface::last_insert_id = -1;
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("./../../../bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("/Users/arina/hse/project/Messenger-project/bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 
@@ -111,13 +111,9 @@ Status SQL_BDInterface::get_user_id_by_log(User &user){
     sql += user.m_login + "';";
     char *message_error;
     std::string string_message;
-    User new_user = User();
-    User::m_edit_user = &new_user;
+    User::m_edit_user = &user;
     int exit =
             sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
-    if (new_user.m_user_id != -1) {
-        user.m_user_id = new_user.m_user_id;
-    }
     User::m_edit_user = nullptr;
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);

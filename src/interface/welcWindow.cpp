@@ -1,13 +1,15 @@
 #include "../../include/interface/welcWindow.h"
-#include <QDesktopServices>
-#include "../../include/interface/register.h"
 #include "./ui_welcWindow.h"
+#include "../../include/interface/register.h"
+#include <QDesktopServices>
 
 WelcWindow::WelcWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::WelcWindow)
 {
     ui->setupUi(this);
+
+    this->setWindowTitle("ИШО");
 
     connect(ui->logInButton, &QPushButton::clicked, [&](){
         ui->logInButton->setDown(true);
@@ -25,7 +27,7 @@ WelcWindow::~WelcWindow()
 
 void WelcWindow::on_regButton_clicked()
 {
-    Register *reg = new Register();
+    auto *reg = new Register();
     if (ui->logInButton->isDown()) {
         reg->delRegInfo();
     }
