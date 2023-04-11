@@ -300,6 +300,34 @@ namespace Net::Client {
             }
         }
 
+        std::pair<Status, database_interface::User> get_user_id_by_login(const std::string& login) {
+            assert(login.find_first_of("\t\n ") == std::string::npos);
+            if (connection_is_secured) {
+                send_secured_request(GET_USER_BY_LOGIN, login);
+            } else {
+                send_request(GET_USER_BY_LOGIN, login);
+            }
+
+            Request response = get_request();
+            if (connection_is_secured) {
+                response = decrypt_request(std::move(response));
+            }
+            if (response.is_readable() && response.get_type() == GET_USER_BY_LOGIN_SUCCESS) {
+                database_interface::User user{};
+                std::vector<std::string> user_data = convert_to_text_vector_from_text(response.get_body());
+                assert(user_data.size() == 4);
+                assert(is_number(user_data[0]));
+                user.m_user_id = std::stoi(user_data[0]);
+                user.m_name = std::move(user_data[1]);
+                user.m_surname = std::move(user_data[2]);;
+                user.m_login = std::move(user_data[3]);;
+                return {Status(true, response.get_body()), std::move(user)};
+            } else {
+                assert(response.get_type() == SIGN_UP_FAIL);
+                return {Status(false, response.get_body()), database_interface::User{}};
+            }
+        };
+
         Request get_request() {
             Request request = accept_request(connection.value(), connection_is_secured);
             if (connection_is_secured) {request.is_encrypted = true; }

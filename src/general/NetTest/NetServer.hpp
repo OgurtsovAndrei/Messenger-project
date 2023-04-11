@@ -209,10 +209,11 @@ namespace Net::Server {
                                 break;
                             case LOG_IN_FAIL:
                                 break;
-                            case GET_100_CHATS:
-                                get_n_dialogs(user_connection, std::move(request));
+                            case GET_USER_BY_LOGIN:
+                                process_get_user_by_login_request(user_connection, std::move(request));
                                 break;
-                            case GET_USER_BY_LOG_AND_PASSWORD:
+                            case GET_100_CHATS:
+                                process_get_n_dialogs_request(user_connection, std::move(request));
                                 break;
                             case SEND_DIALOG_REQUEST:
                                 break;
@@ -223,7 +224,7 @@ namespace Net::Server {
                             case ACCEPT_DIALOG_REQUEST:
                                 break;
                             case MAKE_GROPE:
-                                make_grope(user_connection, std::move(request));
+                                process_make_grope_request(user_connection, std::move(request));
                                 break;
                             case DELETE_DIALOG:
                                 break;
@@ -231,13 +232,13 @@ namespace Net::Server {
                                 process_send_message_request(user_connection, std::move(request));
                                 break;
                             case CHANGE_MESSAGE:
-                                change_old_message(user_connection, std::move(request));
+                                process_change_old_message_request(user_connection, std::move(request));
                                 break;
                             case DELETE_MESSAGE:
-                                delete_message(user_connection, std::move(request));
+                                proces_delete_message_request(user_connection, std::move(request));
                                 break;
                             case GET_100_MESSAGES:
-                                get_n_messages(user_connection, std::move(request));
+                                process_get_n_messages_request(user_connection, std::move(request));
                                 break;
                             case SIGN_UP_REQUEST:
                                 break;
@@ -375,7 +376,7 @@ namespace Net::Server {
             bd_connection.make_message(new_message);
         }
 
-        void change_old_message(UserConnection &user_connection, Request request) {
+        void process_change_old_message_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 2, user_connection, CHANGE_MESSAGE_FAIL, "Bad request body format or invalid request type!");
@@ -391,7 +392,7 @@ namespace Net::Server {
             send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
         }
 
-        void delete_message(UserConnection &user_connection, Request request) {
+        void proces_delete_message_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, DELETE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 1, user_connection, DELETE_MESSAGE_FAIL, "Bad request body format or invalid request type!");
@@ -403,7 +404,7 @@ namespace Net::Server {
             send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
         }
 
-        void get_n_messages(UserConnection &user_connection, Request request) {
+        void process_get_n_messages_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, GET_100_MESSAGES_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 3, user_connection, GET_100_MESSAGES_FAIL, "Bad request body format or invalid request type!");
@@ -430,7 +431,7 @@ namespace Net::Server {
             send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec), user_connection);
         }
 
-        void get_n_dialogs(UserConnection &user_connection, Request request) {
+        void process_get_n_dialogs_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, GET_100_CHATS_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 2, user_connection, GET_100_CHATS_FAIL, "Bad request body format or invalid request type!");
@@ -451,7 +452,7 @@ namespace Net::Server {
             send_secured_request_to_user(GET_100_CHATS_SUCCESS, convert_text_vector_to_text(str_dialog_vector), user_connection);
         }
 
-        void make_grope(UserConnection &user_connection, Request request) {
+        void process_make_grope_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, MAKE_GROPE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 5, user_connection, MAKE_GROPE_FAIL, "Bad request body format or invalid request type!");
@@ -480,6 +481,19 @@ namespace Net::Server {
             current_status = bd_connection.add_users_to_dialog(user_vec, new_dialog);
             send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL, "Add users to dialog exception: " + current_status.message());
             send_secured_request_to_user(MAKE_GROPE_SUCCESS, std::to_string(new_dialog.m_dialog_id), user_connection);
+        }
+
+        void process_get_user_by_login_request(UserConnection &user_connection, Request request) {
+            std::string login = request.get_body();
+            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection, GET_USER_BY_LOGIN_FAIL, "Login should contain one word!");
+            database_interface::User user(login);
+            Status current_status = bd_connection.get_user_id_by_log(user);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
+            current_status = bd_connection.get_user_by_id(user);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
+            std::cout << "User:" << std::to_string(user.m_user_id) << ":" << user.m_name << ":" << user.m_surname << ":" << user.m_login << "\n";
+            std::vector<std::string> user_data = {std::to_string(user.m_user_id), user.m_name, user.m_surname, user.m_login};
+            send_secured_request_to_user(GET_USER_BY_LOGIN_SUCCESS, convert_text_vector_to_text(user_data), user_connection);
         }
 
         int find_empty_connection_number() {
