@@ -40,7 +40,7 @@ int main() {
                 client.send_text_request("Hi, that is iteration № " + std::to_string(i) + "!");
                 client.get_request_and_out_it();
                 client.send_secured_text_request("SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!");
-                client.get_secret_request_and_out_it();
+                client.get_secret_request_and_return_body();
                 usleep(100'000);
             }
         });

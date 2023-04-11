@@ -109,13 +109,14 @@ namespace Net::Client {
             }
             Request response = get_request();
             response.parse_request();
+            if (connection_is_secured) {
+                response = decrypt_request(std::move(response));
+            }
             if (response.is_readable() && response.get_type() == SEND_MESSAGE_SUCCESS) {
-                return Status(true);
+                return Status(true, response.get_body());
             } else {
                 assert(response.get_type() == SEND_MESSAGE_FAIL);
-                if (connection_is_secured) {
-                    response = decrypt_request(std::move(response));
-                }
+
                 return Status(false, response.get_body());
             }
         }
@@ -151,19 +152,19 @@ namespace Net::Client {
                 send_request(DELETE_MESSAGE, data_to_send);
             }
             Request response = get_request();
+            if (connection_is_secured) {
+                response = decrypt_request(std::move(response));
+            }
             if (response.is_readable() && response.get_type() == DELETE_MESSAGE_SUCCESS) {
                 return Status(true);
             } else {
                 assert(response.get_type() == DELETE_MESSAGE_FAIL);
-                if (connection_is_secured) {
-                    response = decrypt_request(std::move(response));
-                }
                 return Status(false, response.get_body());
             }
         }
 
         std::pair<Status, std::vector<database_interface::Message>>
-        get_n_messages(int n, int dialog_id, int last_message_time = -1) {
+        get_n_messages(int n, int dialog_id, int last_message_time = INT32_MAX) {
             std::vector<std::string> data_vector{std::to_string(n), std::to_string(dialog_id),
                                                  std::to_string(last_message_time)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);
@@ -173,6 +174,9 @@ namespace Net::Client {
                 send_request(GET_100_MESSAGES, data_to_send);
             }
             Request response = get_request();
+            if (connection_is_secured) {
+                response = decrypt_request(std::move(response));
+            }
             if (response.is_readable() && response.get_type() == GET_100_MESSAGES_SUCCESS) {
                 std::vector<database_interface::Message> messages_vector;
                 for (const std::string &text_message: convert_to_text_vector_from_text(response.get_body())) {
@@ -187,9 +191,6 @@ namespace Net::Client {
                 return {Status(true), std::move(messages_vector)};
             } else {
                 assert(response.get_type() == GET_100_MESSAGES_FAIL);
-                if (connection_is_secured) {
-                    response = decrypt_request(std::move(response));
-                }
                 return {Status(false, response.get_body()), {}};
             }
         }
@@ -257,12 +258,9 @@ namespace Net::Client {
                 send_request(Net::LOG_IN_REQUEST, convert_text_vector_to_text({std::move(login), std::move(password)}));
             }
             Request response = get_request();
-            std::cout << "Response status: " + std::to_string(static_cast<bool>(response)) + "\n";
             if (connection_is_secured) {
                 response = decrypt_request(std::move(response));
             }
-            std::cout << "Response status: " + std::to_string(static_cast<int>(response.get_type())) + " with body: <" + response.get_body() + ">\n";
-            std::cout << "Response status: " + std::to_string(static_cast<bool>(response)) + "\n";
             if (response.is_readable() && response.get_type() == LOG_IN_SUCCESS) {
                 return Status(true, response.get_body());
             } else {
@@ -344,11 +342,11 @@ namespace Net::Client {
             return std::move(request);
         }
 
-        void get_secret_request_and_out_it() {
+        std::string get_secret_request_and_return_body() {
             assert(connection_is_secured);
             Request request = accept_request(connection.value(), connection_is_secured);
             request = decrypt_request(std::move(request));
-            std::cout << "Got from server: " << request.get_body() << "\n";
+            return "Got from server: " + request.get_body();
         }
 
     private:
