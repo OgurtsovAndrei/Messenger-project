@@ -3,6 +3,7 @@
 #include "../../include/interface/mainwindow.h"
 #include "../../src/general/NetTest/netClient.hpp"
 #include "../../include/interface/welcWindow.h"
+#include "../../include/database/DataBaseInterface.hpp"
 
 Net::Client::Client client("localhost", "12345");
 
@@ -45,10 +46,11 @@ void Register::on_readyButton_clicked() {
     std::cout << "Logged in -->>" + status.message() + "\n";
 //    client.set_user_id(std::stoi(status.message()));
     auto *win = new MainWindow();
+    win->set_client_id(std::stoi(status.message()));
     win->show();
     this->close();
   } else {
     std::cout << "Log in failed -->>" + status.message() + "\n";
-    std::cout << "log in isn't correct. Please try again or register";
+    std::cout << "log in isn't correct. Please try again or register" << "\n";
   }
 }
