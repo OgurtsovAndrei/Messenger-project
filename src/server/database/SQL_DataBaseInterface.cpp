@@ -198,7 +198,6 @@ Status SQL_BDInterface::close_dialog_request(
 Status SQL_BDInterface::make_dialog(Dialog &dialog){
     std::string sql =
             "INSERT INTO Dialogs (Name, Encryption, DateTime, OwnerId, IsGroup) VALUES ('";
-    sql += std::to_string(dialog.m_dialog_id) + ", '";
     sql += dialog.m_name + "', '";
     sql += dialog.m_encryption + "', ";
     sql += std::to_string(dialog.m_date_time) + ", ";
