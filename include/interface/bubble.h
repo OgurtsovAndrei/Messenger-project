@@ -12,7 +12,7 @@ class Bubble : public QWidget
     Q_OBJECT
 
 public:
-    explicit Bubble(QWidget *parent = nullptr);
+    explicit Bubble(const QString &msg = "", QWidget *parent = nullptr);
     ~Bubble();
 
 private:
