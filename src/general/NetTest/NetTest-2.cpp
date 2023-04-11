@@ -11,12 +11,14 @@ int main() {
     Net::Client::Client client("localhost", "12345");
 //    client.make_connection();
     client.make_secure_connection();
-    auto status = client.log_in("A-login", "A-password");
-    if (status) {
-        std::cout << "Logged in -->>" + status.message() + "\n";
-    } else {
-        std::cout << "Log in failed -->> " + status.message() + "\n";
-        return 0;
+    {
+        auto status = client.log_in("A-login", "A-password");
+        if (status) {
+            std::cout << "Logged in -->>" + status.message() + "\n";
+        } else {
+            std::cout << "Log in failed -->> " + status.message() + "\n";
+            return 0;
+        }
     }
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";
@@ -28,6 +30,18 @@ int main() {
     if (pair.first) {
         for (const auto& dialog : pair.second) {
             std::cout << "Dialog in str-view: " << dialog.to_string() << "\n";
+        }
+    }
+    {
+        auto [status, user] = client.get_user_id_by_login("A-login");
+        if (status) {
+            std::cout << "User id: " << user.m_user_id << "\tExpected id: ___\n";
+            std::cout << "User login: " << user.m_login << "\tExpected login: A-login\n";
+            std::cout << "User name: " << user.m_name << "\tExpected name: ___\n";
+            std::cout << "User surname: " << user.m_surname << "\tExpected surname: ___\n";
+//            assert(std::vector<std::string>{user.} == std::vector<std::string>{})
+        } else {
+            std::cout << status.message();
         }
     }
 }

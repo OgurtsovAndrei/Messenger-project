@@ -2,16 +2,17 @@
 #define USER_HPP
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace database_interface {
 
 struct User {
     int m_user_id = -1;
-    std::string m_name = "";
-    std::string m_surname = "";
-    std::string m_login = "";
-    std::string m_password_hash = "";
+    std::string m_name;
+    std::string m_surname;
+    std::string m_login;
+    std::string m_password_hash;
 
     static std::vector<User> *m_requests;
     static User *m_edit_user;
@@ -22,25 +23,28 @@ struct User {
     }
 
     explicit User(
-        const std::string &name,
-        const std::string &surname,
-        const std::string &login,
-        const std::string &password_hash,
+        std::string name,
+        std::string surname,
+        std::string login,
+        std::string password_hash,
         int user_id = -1
     )
         : m_user_id(user_id),
-          m_name(name),
-          m_surname(surname),
-          m_login(login),
-          m_password_hash(password_hash) {
+          m_name(std::move(name)),
+          m_surname(std::move(surname)),
+          m_login(std::move(login)),
+          m_password_hash(std::move(password_hash)) {
     }
 
-    explicit User(const std::string &login, const std::string &password_hash)
-        : m_login(login), m_password_hash(password_hash) {
+    explicit User(std::string login, std::string password_hash)
+        : m_login(std::move(login)), m_password_hash(std::move(password_hash)) {
+    }
+    explicit User(std::string login)
+        : m_login(std::move(login)) {
     }
 
-    explicit User(int id, const std::string &name, const std::string &surname)
-            : m_user_id(id), m_name(name), m_surname(surname) {
+    explicit User(int id, std::string name, std::string surname)
+            : m_user_id(id), m_name(std::move(name)), m_surname(std::move(surname)) {
     }
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
