@@ -33,20 +33,20 @@ void Register::on_readyButton_clicked() {
 //  Net::Client::Client client("localhost", "12345");
   client.make_secure_connection();
   Status status;
+  std::string login = ui->logInput->text().toStdString();
   if (regVersion) {
     status = client.sing_up(ui->nameInput->text().toStdString(),
                             ui->snameInput->text().toStdString(),
-                            ui->logInput->text().toStdString(),
+                            login,
                             ui->pasInput->text().toStdString());
   } else {
-    status = client.log_in(ui->logInput->text().toStdString(),
-                           ui->pasInput->text().toStdString());
+    status = client.log_in(login,ui->pasInput->text().toStdString());
   }
   if (status) {
     std::cout << "Logged in -->>" + status.message() + "\n";
 //    client.set_user_id(std::stoi(status.message()));
     auto *win = new MainWindow();
-    win->set_client_id(std::stoi(status.message()));
+    win->set_client_id(client.get_user_id_by_login(login).second.m_user_id);
     win->show();
     this->close();
   } else {
