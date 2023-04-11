@@ -373,7 +373,9 @@ namespace Net::Server {
             auto &user_in_db = user_connection.get_user_in_db_ref();
             database_interface::Message new_message(current_time, message_text, "", dialog_id,
                                                     user_in_db.value().m_user_id);
-            bd_connection.make_message(new_message);
+            Status current_status = bd_connection.make_message(new_message);
+            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL, "Send message exception: " + current_status.message());
+            send_secured_request_to_user(SEND_MESSAGE_SUCCESS, new_message.to_strint(), user_connection);
         }
 
         void process_change_old_message_request(UserConnection &user_connection, Request request) {
@@ -401,7 +403,7 @@ namespace Net::Server {
 
             Status current_status = bd_connection.del_message(database_interface::Message(message_id));
             send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL, "Delete message exception: " + current_status.message());
-            send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+            send_secured_request_to_user(DELETE_MESSAGE_SUCCESS, "", user_connection);
         }
 
         void process_get_n_messages_request(UserConnection &user_connection, Request request) {
@@ -410,9 +412,8 @@ namespace Net::Server {
             send_response_and_return_if_false(data_vector.size() == 3, user_connection, GET_100_MESSAGES_FAIL, "Bad request body format or invalid request type!");
             send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_MESSAGES_FAIL, "Number of messages should bu INT!");
             send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_MESSAGES_FAIL, "Dialog ID should bu INT!");
-            std::cout << "VVVVVVVVVVVVVVV " << is_number(data_vector[2]) << " " << true << "\n";
             send_response_and_return_if_false(is_number(data_vector[2]), user_connection, GET_100_MESSAGES_FAIL, "Last message time ID should bu INT!");
-            std::cout << "VVVV\n";
+
             int number_of_messages = std::stoi(data_vector[0]);
             int dialog_id = std::stoi(data_vector[1]);
             int last_message_time = std::stoi(data_vector[2]);
@@ -425,7 +426,7 @@ namespace Net::Server {
 
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_SUCCESS, "Get messages exception: " + current_status.message());
             std::vector<std::string> message_vec;
-            message_vec.resize(number_of_messages);
+            message_vec.reserve(number_of_messages);
             for (auto &message : messages_list) {
                 message_vec.push_back(message.to_strint());
             }
@@ -489,8 +490,6 @@ namespace Net::Server {
             send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection, GET_USER_BY_LOGIN_FAIL, "Login should contain one word!");
             database_interface::User user(login);
             Status current_status = bd_connection.get_user_id_by_log(user);
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
-            current_status = bd_connection.get_user_by_id(user);
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
             std::cout << "User:" << std::to_string(user.m_user_id) << ":" << user.m_name << ":" << user.m_surname << ":" << user.m_login << "\n";
             std::vector<std::string> user_data = {std::to_string(user.m_user_id), user.m_name, user.m_surname, user.m_login};
