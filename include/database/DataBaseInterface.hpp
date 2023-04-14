@@ -100,6 +100,12 @@ struct SQL_BDInterface : BDInterface {
 
     Status del_user(const User &user) override;
 
+    Status del_user_dialogs(const User &user);
+
+    Status del_user_messages(const User &user);
+
+    Status del_user_requests(const User &user);
+
     Status make_dialog_request(const User &from_user, const User &to_user) override;
 
     Status close_dialog_request(const User &from_user, const User &to_user) override;
@@ -145,6 +151,10 @@ struct SQL_BDInterface : BDInterface {
     }
 
     Status del_dialog(const Dialog &dialog) override;
+
+    Status del_all_massages_in_dialog(const Dialog &dialog);
+
+    Status del_all_users_in_dialog(const Dialog &dialog);
 
     // Message
     Status make_message(Message &message) override;
