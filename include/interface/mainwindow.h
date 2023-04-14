@@ -28,7 +28,7 @@ public:
 */
 
 private slots:
-    void fill_chats();
+    void update_chats();
 
     void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
 

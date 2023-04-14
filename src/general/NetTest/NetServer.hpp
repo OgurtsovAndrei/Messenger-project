@@ -67,7 +67,7 @@ namespace Net::Server {
             return user_in_db;
         }
 
-        void send_secured_request(RequestType type, const std::string& request_body) {
+        void send_secured_request(RequestType type, const std::string &request_body) {
             assert(is_protected());
             std::string encrypted_message = encrypter.value().encrypt_text_to_text(request_body);
             Request request(type, std::move(encrypted_message));
@@ -102,7 +102,7 @@ namespace Net::Server {
                                           UserConnection &connection);
 
         Request decrypt_request(Request request) { //NOLINT [static_method]
-            if (!request.is_encrypted) {return std::move(request);}
+            if (!request.is_encrypted) { return std::move(request); }
             assert(connection_is_protected);
             auto decrypted_body = Cryptographer::as<std::string>(
                     decrypter.value().decrypt_data(request.get_encrypted_body()));
@@ -168,7 +168,8 @@ namespace Net::Server {
                         if (iter == sessions.end()) { continue; }
                         UserConnection &user_connection = iter->second;
                         sessions_lock.unlock();
-                        send_response_and_return_if_false(request.is_readable(), user_connection, UNKNOWN, "Can not parse the request!");
+                        send_response_and_return_if_false(request.is_readable(), user_connection, UNKNOWN,
+                                                          "Can not parse the request!");
                         std::cout << "Got from user with --> " << connection_id << " connection id: "
                                   << request.get_body() << "\n";
                         switch (request.get_type()) {
@@ -313,14 +314,17 @@ namespace Net::Server {
 
         void sign_up(UserConnection &user_connection, Request request) {
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 4, user_connection, SIGN_UP_FAIL, "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(data_vector.size() == 4, user_connection, SIGN_UP_FAIL,
+                                              "Bad request body format or invalid request type!");
             std::string name = data_vector[0];
             std::string surname = data_vector[1];
             std::string login = data_vector[2];
             std::string password = data_vector[3];
 
-            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection, SIGN_UP_FAIL, "Login should contain only one word!");
-            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection, SIGN_UP_FAIL, "Password should contain only one word!");
+            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
+                                              SIGN_UP_FAIL, "Login should contain only one word!");
+            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection,
+                                              SIGN_UP_FAIL, "Password should contain only one word!");
 
             database_interface::User new_user(name, surname, login, password);
             auto status = bd_connection.make_user(new_user);
@@ -331,13 +335,16 @@ namespace Net::Server {
             }
         }
 
-        void log_in(UserConnection &user_connection, Request &request) {
+        void log_in(UserConnection &user_connection, Request &request, bool &logging_in_is_successful) {
             std::vector<std::string> parsed_body = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(parsed_body.size() == 2, user_connection, LOG_IN_FAIL, "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(parsed_body.size() == 2, user_connection, LOG_IN_FAIL,
+                                              "Bad request body format or invalid request type!");
             std::string login = parsed_body[0];
             std::string password = parsed_body[1];
-            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection, LOG_IN_FAIL, "Login should contain only one word!");
-            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection, LOG_IN_FAIL, "Password should contain only one word!");
+            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
+                                              LOG_IN_FAIL, "Login should contain only one word!");
+            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection,
+                                              LOG_IN_FAIL, "Password should contain only one word!");
             user_connection.user_in_db = database_interface::User(login, password);
             database_interface::User &user_in_db = user_connection.user_in_db.value();
             std::cout << login << ":" << password << ":" << user_in_db.m_name << ":" << user_in_db.m_surname << "\n";
@@ -345,6 +352,7 @@ namespace Net::Server {
             std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
             if (status) {
                 user_connection.send_secured_request(LOG_IN_SUCCESS, std::to_string(user_in_db.m_user_id));
+                logging_in_is_successful = true;
             } else {
                 user_connection.send_secured_request(LOG_IN_FAIL, status.message());
             }
@@ -362,57 +370,77 @@ namespace Net::Server {
         database_interface::SQL_BDInterface bd_connection;
 
         void process_send_message_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, SEND_MESSAGE_FAIL, "It is necessary to log in to send message!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              SEND_MESSAGE_FAIL, "It is necessary to log in to send message!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 3, user_connection, SEND_MESSAGE_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, SEND_MESSAGE_FAIL, "Dialog ID is not a number!");
-            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, SEND_MESSAGE_FAIL, "Current time is not a number!");
+            send_response_and_return_if_false(data_vector.size() == 3, user_connection, SEND_MESSAGE_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, SEND_MESSAGE_FAIL,
+                                              "Dialog ID is not a number!");
+            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, SEND_MESSAGE_FAIL,
+                                              "Current time is not a number!");
             int dialog_id = std::stoi(data_vector[0]);
             int current_time = std::stoi(data_vector[1]);
             std::string message_text = data_vector[2];
             auto &user_in_db = user_connection.get_user_in_db_ref();
             database_interface::Message new_message(current_time, message_text, "", dialog_id,
                                                     user_in_db.value().m_user_id);
-            bd_connection.make_message(new_message);
+            Status current_status = bd_connection.make_message(new_message);
+            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Send message exception: " + current_status.message());
+            send_secured_request_to_user(SEND_MESSAGE_SUCCESS, new_message.to_strint(), user_connection);
         }
 
         void process_change_old_message_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 2, user_connection, CHANGE_MESSAGE_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, CHANGE_MESSAGE_FAIL, "Message ID should be int!");
+            send_response_and_return_if_false(data_vector.size() == 2, user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Message ID should be int!");
             int old_message_id = std::stoi(data_vector[0]);
             std::string new_body = data_vector[1];
             database_interface::Message old_message(old_message_id);
             Status current_status = bd_connection.get_message_by_id(old_message);
-            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL, "Invalid Message ID: " + current_status.message());
+            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Invalid Message ID: " + current_status.message());
             old_message.m_text = new_body;
             current_status = bd_connection.change_message(old_message);
-            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL, "Get message exception: " + current_status.message());
+            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Get message exception: " + current_status.message());
             send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
         }
 
         void proces_delete_message_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, DELETE_MESSAGE_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              DELETE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 1, user_connection, DELETE_MESSAGE_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, DELETE_MESSAGE_FAIL, "Message ID should bu INT!");
+            send_response_and_return_if_false(data_vector.size() == 1, user_connection, DELETE_MESSAGE_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, DELETE_MESSAGE_FAIL,
+                                              "Message ID should bu INT!");
             int message_id = std::stoi(data_vector[0]);
 
             Status current_status = bd_connection.del_message(database_interface::Message(message_id));
-            send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL, "Delete message exception: " + current_status.message());
-            send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+            send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL,
+                                              "Delete message exception: " + current_status.message());
+            send_secured_request_to_user(DELETE_MESSAGE_SUCCESS, "", user_connection);
         }
 
         void process_get_n_messages_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, GET_100_MESSAGES_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              GET_100_MESSAGES_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 3, user_connection, GET_100_MESSAGES_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_MESSAGES_FAIL, "Number of messages should bu INT!");
-            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_MESSAGES_FAIL, "Dialog ID should bu INT!");
-            std::cout << "VVVVVVVVVVVVVVV " << is_number(data_vector[2]) << " " << true << "\n";
-            send_response_and_return_if_false(is_number(data_vector[2]), user_connection, GET_100_MESSAGES_FAIL, "Last message time ID should bu INT!");
-            std::cout << "VVVV\n";
+            send_response_and_return_if_false(data_vector.size() == 3, user_connection, GET_100_MESSAGES_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_MESSAGES_FAIL,
+                                              "Number of messages should bu INT!");
+            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_MESSAGES_FAIL,
+                                              "Dialog ID should bu INT!");
+            send_response_and_return_if_false(is_number(data_vector[2]), user_connection, GET_100_MESSAGES_FAIL,
+                                              "Last message time ID should bu INT!");
+
             int number_of_messages = std::stoi(data_vector[0]);
             int dialog_id = std::stoi(data_vector[1]);
             int last_message_time = std::stoi(data_vector[2]);
@@ -423,42 +451,55 @@ namespace Net::Server {
             current_status = bd_connection.get_n_dialogs_messages_by_time(current_dialog, messages_list,
                                                                           number_of_messages, last_message_time);
 
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_SUCCESS, "Get messages exception: " + current_status.message());
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_SUCCESS,
+                                              "Get messages exception: " + current_status.message());
             std::vector<std::string> message_vec;
-            message_vec.resize(number_of_messages);
-            for (auto &message : messages_list) {
+            message_vec.reserve(number_of_messages);
+            for (auto &message: messages_list) {
                 message_vec.push_back(message.to_strint());
             }
-            send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec), user_connection);
+            send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec),
+                                         user_connection);
         }
 
         void process_get_n_dialogs_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, GET_100_CHATS_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              GET_100_CHATS_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 2, user_connection, GET_100_CHATS_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_CHATS_FAIL, "Number of dialogs should bu INT!");
-            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_CHATS_FAIL, "Last dialog time should bu INT!");
+            send_response_and_return_if_false(data_vector.size() == 2, user_connection, GET_100_CHATS_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_CHATS_FAIL,
+                                              "Number of dialogs should bu INT!");
+            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_CHATS_FAIL,
+                                              "Last dialog time should bu INT!");
             int n_dialogs = std::stoi(data_vector[0]);
             int last_dialog_time = std::stoi(data_vector[1]);
 
             database_interface::User &user = user_connection.user_in_db.value();
             std::list<database_interface::Dialog> dialog_list;
-            Status current_status = bd_connection.get_n_users_dialogs_by_time(user, dialog_list, n_dialogs, last_dialog_time);
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_CHATS_FAIL, "Get dialogs exception: " + current_status.message());
+            Status current_status = bd_connection.get_n_users_dialogs_by_time(user, dialog_list, n_dialogs,
+                                                                              last_dialog_time);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_CHATS_FAIL,
+                                              "Get dialogs exception: " + current_status.message());
 
             std::vector<std::string> str_dialog_vector;
-            for (const auto& dialog : dialog_list) {
+            for (const auto &dialog: dialog_list) {
                 str_dialog_vector.push_back(std::move(dialog.to_string()));
             }
-            send_secured_request_to_user(GET_100_CHATS_SUCCESS, convert_text_vector_to_text(str_dialog_vector), user_connection);
+            send_secured_request_to_user(GET_100_CHATS_SUCCESS, convert_text_vector_to_text(str_dialog_vector),
+                                         user_connection);
         }
 
         void process_make_grope_request(UserConnection &user_connection, Request request) {
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection, MAKE_GROPE_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              MAKE_GROPE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 5, user_connection, MAKE_GROPE_FAIL, "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[2]), user_connection, MAKE_GROPE_FAIL, "Current time should bu INT!");
-            send_response_and_return_if_false(is_number(data_vector[3]), user_connection, MAKE_GROPE_FAIL, "Is grope should bu INT or BOOL!");
+            send_response_and_return_if_false(data_vector.size() == 5, user_connection, MAKE_GROPE_FAIL,
+                                              "Bad request body format or invalid request type!");
+            send_response_and_return_if_false(is_number(data_vector[2]), user_connection, MAKE_GROPE_FAIL,
+                                              "Current time should bu INT!");
+            send_response_and_return_if_false(is_number(data_vector[3]), user_connection, MAKE_GROPE_FAIL,
+                                              "Is grope should bu INT or BOOL!");
             // TODO: Check that vec[4] is correct int vec
 
             std::string dialog_name = data_vector[0];
@@ -468,7 +509,7 @@ namespace Net::Server {
             std::vector<unsigned int> user_ids = convert_to_int_vector_from_text(data_vector[4]);
 
             std::vector<database_interface::User> user_vec;
-            for (auto id : user_ids) {
+            for (auto id: user_ids) {
                 database_interface::User user(static_cast<int>(id));
                 user_vec.push_back(std::move(user));
             }
@@ -478,23 +519,28 @@ namespace Net::Server {
                                                   user_connection.user_in_db->m_user_id, is_grope);
 
             Status current_status = bd_connection.make_dialog(new_dialog);
-            send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL, "Make dialog exception: " + current_status.message());
+            send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL,
+                                              "Make dialog exception: " + current_status.message());
             current_status = bd_connection.add_users_to_dialog(user_vec, new_dialog);
-            send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL, "Add users to dialog exception: " + current_status.message());
+            send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL,
+                                              "Add users to dialog exception: " + current_status.message());
             send_secured_request_to_user(MAKE_GROPE_SUCCESS, std::to_string(new_dialog.m_dialog_id), user_connection);
         }
 
         void process_get_user_by_login_request(UserConnection &user_connection, Request request) {
             std::string login = request.get_body();
-            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection, GET_USER_BY_LOGIN_FAIL, "Login should contain one word!");
+            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
+                                              GET_USER_BY_LOGIN_FAIL, "Login should contain one word!");
             database_interface::User user(login);
             Status current_status = bd_connection.get_user_id_by_log(user);
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
-            current_status = bd_connection.get_user_by_id(user);
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL, "Get user exception: " + current_status.message());
-            std::cout << "User:" << std::to_string(user.m_user_id) << ":" << user.m_name << ":" << user.m_surname << ":" << user.m_login << "\n";
-            std::vector<std::string> user_data = {std::to_string(user.m_user_id), user.m_name, user.m_surname, user.m_login};
-            send_secured_request_to_user(GET_USER_BY_LOGIN_SUCCESS, convert_text_vector_to_text(user_data), user_connection);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL,
+                                              "Get user exception: " + current_status.message());
+            std::cout << "User:" << std::to_string(user.m_user_id) << ":" << user.m_name << ":" << user.m_surname << ":"
+                      << user.m_login << "\n";
+            std::vector<std::string> user_data = {std::to_string(user.m_user_id), user.m_name, user.m_surname,
+                                                  user.m_login};
+            send_secured_request_to_user(GET_USER_BY_LOGIN_SUCCESS, convert_text_vector_to_text(user_data),
+                                         user_connection);
         }
 
         int find_empty_connection_number() {
@@ -559,7 +605,8 @@ namespace Net::Server {
                                            "", client.value());
             }
         }
-        {
+        bool logging_in_is_successful = false;
+        while (!logging_in_is_successful) {
             Request request = accept_request(client.value(), connection_is_protected);
             request.parse_request();
             assert(request);
@@ -567,10 +614,9 @@ namespace Net::Server {
                 request = decrypt_request(std::move(request));
             }
             if (request.get_type() == LOG_IN_REQUEST) {
-                server.log_in(connection, request);
-            } else {
+                server.log_in(connection, request, logging_in_is_successful);
+            } else if (request.get_type() == SIGN_UP_SUCCESS) {
                 // Create new user request
-                assert(request.get_type() == SIGN_UP_REQUEST);
                 server.sign_up(connection, std::move(request));
             }
         }
