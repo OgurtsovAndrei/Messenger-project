@@ -10,10 +10,15 @@
 
 int main() {
     Net::Client::Client client("localhost", "12345");
-//    client.make_connection();
     client.make_secure_connection();
     {
+        std::cout << "Done0" << std::endl;
+        auto status1 = client.log_in("sdfasdf", "asdf");
+        std::cout << "Done1" << std::endl;
+        auto status2 = client.log_in("asdfadgin", "A-password");
+        std::cout << "Done2" << std::endl;
         auto status = client.log_in("A-login", "A-password");
+        std::cout << "Done3" << std::endl;
         if (status) {
             std::cout << "Logged in -->>" + status.message() + "\n";
         } else {

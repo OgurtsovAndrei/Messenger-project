@@ -268,9 +268,6 @@ namespace Net::Client {
                     std::cerr << response.get_type() << "\n";
                     assert(response.get_type() == LOG_IN_FAIL);
                 }
-                if (connection_is_secured) {
-                    response = decrypt_request(std::move(response));
-                }
                 return Status(false, response.get_body());
             }
         }
