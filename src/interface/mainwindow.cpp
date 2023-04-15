@@ -4,6 +4,7 @@
 #include "../../include/interface/register.h"
 #include "../../include/Status.hpp"
 #include "../../include/interface/bubble.h"
+#include "../../include/interface/welcWindow.h"
 
 #include <QStringListModel>
 #include <QListWidget>
@@ -88,7 +89,7 @@ void MainWindow::on_findButton_clicked()
     }
     unsigned int sec_id = sec_client.m_user_id;
     std::cout << sec_id << "\n";
-    if (client.make_dialog("", "RSA", 1000, false, {client_id, sec_id})) {
+    if (client.make_dialog("Dina to Tina", "RSA", 1000, false, {client_id, sec_id})) {
         std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
     }

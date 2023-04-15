@@ -15,6 +15,8 @@ WelcWindow::WelcWindow(QWidget *parent) :
         ui->logInButton->setDown(true);
         on_regButton_clicked();
     });
+
+    client.make_secure_connection();
 }
 
 WelcWindow::~WelcWindow()

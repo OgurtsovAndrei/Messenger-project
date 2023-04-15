@@ -2,6 +2,7 @@
 #define WELCWINDOW_H
 
 #include <QWidget>
+#include "../../src/general/NetTest/netClient.hpp"
 
 namespace Ui {
 class WelcWindow;
@@ -21,5 +22,7 @@ private slots:
 private:
     Ui::WelcWindow *ui;
 };
+
+extern Net::Client::Client client;
 
 #endif // WELCWINDOW_H
