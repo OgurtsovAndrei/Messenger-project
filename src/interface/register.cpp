@@ -31,7 +31,7 @@ void Register::on_cancelButton_clicked() {
 void Register::on_readyButton_clicked() {
   // TODO check if password okay
 //  Net::Client::Client client("localhost", "12345");
-  client.make_secure_connection();
+//  client.make_secure_connection();
   Status status;
   std::string login = ui->logInput->text().toStdString();
   if (regVersion) {
