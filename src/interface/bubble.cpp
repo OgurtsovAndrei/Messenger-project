@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QPainterPath>
+#include <iostream>
 
 Bubble::Bubble(const QString &msg, const bool &incoming)
 {
@@ -13,11 +14,15 @@ Bubble::Bubble(const QString &msg, const bool &incoming)
         "QLabel { background-color : #357d50; color : white; border-width: "
         "2px; border-radius: 10px; padding: 6px;}");
     lbl->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-    if (incoming) {
-        lbl->setAlignment(Qt::AlignLeft);
-    }
-    lbl->setText(msg);
     lbl->setWordWrap(true);
+    lbl->setText(msg);
     bubLayout->addWidget(lbl);
+    if (incoming) {
+        bubLayout->setAlignment(Qt::AlignLeft);
+    }
+    else {
+        bubLayout->setAlignment(Qt::AlignRight);
+    }
+    bubLayout->setSpacing(3);
     setLayout(bubLayout);
 }

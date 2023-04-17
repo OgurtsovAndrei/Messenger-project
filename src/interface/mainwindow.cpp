@@ -109,9 +109,10 @@ void MainWindow::on_findButton_clicked()
 void MainWindow::addMessage(const QString &msg, const bool &incoming)
 {
     auto *item = new QListWidgetItem;
-    auto *bub = new Bubble(msg, incoming);
+    auto *bub = new Bubble(msg);
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
+    item->setSizeHint(bub->sizeHint());
     ui->newMessageInput->setPlainText("");
     ui->messagesList->scrollToBottom();
 

@@ -36,6 +36,8 @@ private slots:
 
     void addMessage(const QString &msg, const bool &incoming = false);
 
+//    void on_sendButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QMap<QString, int> chats_id_map;
