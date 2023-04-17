@@ -2,21 +2,11 @@
 #define BUBBLE_H
 
 #include <QWidget>
+#include <QString>
 
-namespace Ui {
-class Bubble;
-}
-
-class Bubble : public QWidget
-{
-    Q_OBJECT
-
+class Bubble : public QWidget {
 public:
-    explicit Bubble(const QString &msg = "", QWidget *parent = nullptr);
-    ~Bubble();
-
-private:
-    Ui::Bubble *ui;
+    Bubble(const QString &msg, const bool &incoming = false);
 };
 
 #endif // BUBBLE_H

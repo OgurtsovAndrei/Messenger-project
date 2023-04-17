@@ -34,7 +34,7 @@ private slots:
 
     void on_findButton_clicked();
 
-    void on_sendButton_clicked();
+    void addMessage(const QString &msg, const bool &incoming = false);
 
 private:
     Ui::MainWindow *ui;
