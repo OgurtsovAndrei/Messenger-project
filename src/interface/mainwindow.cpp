@@ -1,7 +1,6 @@
 #include "../../include/interface/mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "../../src/general/NetTest/netClient.hpp"
-#include "../../include/interface/register.h"
 #include "../../include/Status.hpp"
 #include "../../include/interface/bubble.h"
 #include "../../include/interface/welcWindow.h"
@@ -9,6 +8,7 @@
 #include <QStringListModel>
 #include <QListWidget>
 #include <QTimer>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -18,6 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
     /// TODO set user info
     ///
     update_chats();
+
+    connect(ui->sendButton, &QPushButton::clicked, [&]{
+        QString msg = ui->newMessageInput->toPlainText();
+        if (msg.isEmpty()) {
+            return;
+        }
+        Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
+        addMessage(msg);
+    });
 
     //  ui->chatsList->setModel(new QStringListModel(List));
 
@@ -68,12 +77,13 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
         select_chat_id = chats_id_map[item->text()];
     }
     ui->messagesList->clear();
-    std::cout << "Message size: ";
     auto [status, messages] = client.get_n_messages(100, select_chat_id);
-    std::cout << messages.size() << "\n";
     for (const auto &mess : messages) {
-        auto *mess_widget = new QListWidgetItem(QString::fromStdString(mess.m_text));
-        ui->messagesList->addItem(mess_widget);
+        bool incoming = false;
+        if (mess.m_user_id == client_id) {
+            incoming = true;
+        }
+        addMessage(QString::fromStdString(mess.m_text), incoming);
     }
 }
 
@@ -96,17 +106,12 @@ void MainWindow::on_findButton_clicked()
     ///TODO search user and start dialog
 }
 
-void MainWindow::on_sendButton_clicked()
+void MainWindow::addMessage(const QString &msg, const bool &incoming)
 {
-    QString msg = ui->newMessageInput->toPlainText();
-    if (msg.isEmpty()) {
-        return;
-    }
-    Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
-    auto *item = new QListWidgetItem(msg);
+    auto *item = new QListWidgetItem;
+    auto *bub = new Bubble(msg, incoming);
     ui->messagesList->addItem(item);
-//    auto *bub = new Bubble(msg);
-//    ui->messagesList->setItemWidget(item, bub);
+    ui->messagesList->setItemWidget(item, bub);
     ui->newMessageInput->setPlainText("");
     ui->messagesList->scrollToBottom();
 

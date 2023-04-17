@@ -39,9 +39,11 @@ void Register::on_readyButton_clicked() {
                             ui->snameInput->text().toStdString(),
                             login,
                             ui->pasInput->text().toStdString());
+    std::cout << bool(status) << " " << status.message() << "\n";
   } else {
     status = client.log_in(login,ui->pasInput->text().toStdString());
   }
+  std::cout << bool(status) << " " << status.message() << "\n";
   if (status) {
     std::cout << "Logged in -->>" + status.message() + "\n";
 //    client.set_user_id(std::stoi(status.message()));

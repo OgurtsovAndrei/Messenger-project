@@ -1,5 +1,4 @@
 #include "../../include/interface/welcWindow.h"
-#include "../../include/interface/bubble.h"
 
 #include <QApplication>
 
