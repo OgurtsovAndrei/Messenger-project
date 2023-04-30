@@ -61,6 +61,7 @@ namespace Net {
         SIGN_UP_REQUEST,
         SIGN_UP_SUCCESS,
         SIGN_UP_FAIL,
+        CLOSE_CONNECTION,
         UNKNOWN,
     };
 

@@ -93,6 +93,7 @@ namespace Net::Server {
         std::optional<boost::asio::ip::tcp::iostream> client;
         std::optional<std::thread> session_thread;
         bool connection_is_protected = false;
+        bool connection_is_active = false;
         Cryptographer::Cryptographer cryptographer;
         std::optional<Cryptographer::Encrypter> encrypter;
         std::optional<Cryptographer::Decrypter> decrypter;
@@ -245,6 +246,10 @@ namespace Net::Server {
                                 break;
                             case SIGN_UP_SUCCESS:
                                 break;
+                            case CLOSE_CONNECTION:
+                                user_connection.connection_is_active = false;
+                                user_connection.client.value().close();
+                                break;
                             case UNKNOWN:
                                 break;
                         }
@@ -312,7 +317,7 @@ namespace Net::Server {
             return bd_connection;
         }
 
-        void sign_up(UserConnection &user_connection, Request request) {
+        void sign_up(UserConnection &user_connection, Request request, bool &logging_in_is_successful) {
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
             send_response_and_return_if_false(data_vector.size() == 4, user_connection, SIGN_UP_FAIL,
                                               "Bad request body format or invalid request type!");
@@ -345,6 +350,7 @@ namespace Net::Server {
                                               LOG_IN_FAIL, "Login should contain only one word!");
             send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection,
                                               LOG_IN_FAIL, "Password should contain only one word!");
+
             user_connection.user_in_db = database_interface::User(login, password);
             database_interface::User &user_in_db = user_connection.user_in_db.value();
             std::cout << login << ":" << password << ":" << user_in_db.m_name << ":" << user_in_db.m_surname << "\n";
@@ -386,6 +392,7 @@ namespace Net::Server {
             database_interface::Message new_message(current_time, message_text, "", dialog_id,
                                                     user_in_db.value().m_user_id);
             Status current_status = bd_connection.make_message(new_message);
+            std::cout << "Sent message id: " << new_message.m_message_id << "\n";
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
                                               "Send message exception: " + current_status.message());
             send_secured_request_to_user(SEND_MESSAGE_SUCCESS, new_message.to_strint(), user_connection);
@@ -615,14 +622,14 @@ namespace Net::Server {
             }
             if (request.get_type() == LOG_IN_REQUEST) {
                 server.log_in(connection, request, logging_in_is_successful);
-            } else if (request.get_type() == SIGN_UP_SUCCESS) {
+            } else if (request.get_type() == SIGN_UP_REQUEST) {
                 // Create new user request
-                server.sign_up(connection, std::move(request));
+                server.sign_up(connection, std::move(request), logging_in_is_successful);
             }
         }
-
+        connection_is_active = true;
         std::cout << "Start accepting requests!\n";
-        while (client.value()) {
+        while (client.value() && connection_is_active) {
             accept_client_request(client.value(), rem_endpoint.address().to_string(), connection);
         }
         std::cout << "Completed -> " << rem_endpoint << "\n";
