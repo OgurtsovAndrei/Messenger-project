@@ -19,6 +19,7 @@ include_directories(src/general)
 include_directories(include/database)
 include_directories(src/server/database)
 include_directories(bd)
+
 find_package(SQLite3 REQUIRED)
 
 add_definitions(-DCMAKE_EXPECTED_SQLite3_VERSION="${SQLite3_VERSION}")
@@ -36,8 +37,8 @@ target_link_libraries(Net2 libbotan-3.a)
 target_link_libraries(Net3 libbotan-3.a)
 #target_link_libraries(19_230228 PRIVATE Threads::Threads)
 
-target_link_libraries(main SQLite::SQLite3)
-target_include_directories(main PRIVATE ${SQLite3_INCLUDE_DIRS})
+target_link_libraries(Net1 SQLite::SQLite3)
+target_include_directories(Net1 PRIVATE ${SQLite3_INCLUDE_DIRS})
 
 
 
