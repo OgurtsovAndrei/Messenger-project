@@ -10,6 +10,12 @@ include_directories(include)
 include_directories(/usr/local/include/botan-3)
 include_directories(src/install-lib/botan-install)
 include_directories(src/general)
+include_directories(include/database)
+include_directories(src/server/database)
+include_directories(bd)
+find_package(SQLite3 REQUIRED)
+
+add_definitions(-DCMAKE_EXPECTED_SQLite3_VERSION="${SQLite3_VERSION}")
 
 add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
 add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
@@ -23,6 +29,9 @@ target_link_libraries(Net1 libbotan-3.a sqlite3)
 target_link_libraries(Net2 libbotan-3.a)
 target_link_libraries(Net3 libbotan-3.a)
 #target_link_libraries(19_230228 PRIVATE Threads::Threads)
+
+target_link_libraries(main SQLite::SQLite3)
+target_include_directories(main PRIVATE ${SQLite3_INCLUDE_DIRS})
 
 
 
