@@ -11,20 +11,37 @@
 int main() {
     Net::Client::Client client("localhost", "12345");
     client.make_secure_connection();
-    {
-        std::cout << "Done0" << std::endl;
+    if (false) {
+//        std::cout << "Done0" << std::endl;
         auto status1 = client.log_in("sdfasdf", "asdf");
-        std::cout << "Done1" << std::endl;
-        auto status2 = client.log_in("asdfadgin", "A-password");
-        std::cout << "Done2" << std::endl;
+        assert(!status1);
+//        std::cout << "Done1" << std::endl;
+        auto status2 = client.log_in("A-login", "asdf");
+        assert(!status2);
+//        std::cout << "Done2" << std::endl;
+        auto status3 = client.log_in("asdfadgin", "A-password");
+        assert(!status3);
+//        std::cout << "Done3" << std::endl;
         auto status = client.log_in("A-login", "A-password");
-        std::cout << "Done3" << std::endl;
+        assert(status);
+//        std::cout << "Done4" << std::endl;
         if (status) {
             std::cout << "Logged in -->>" + status.message() + "\n";
         } else {
             std::cout << "Log in failed -->> " + status.message() + "\n";
             return 0;
         }
+    }
+    if (true) {
+        std::string login = "New-Login-1";
+        std::string password =  "New-Password-1";
+        std::string surname = "New-Surname-1";
+        std::string name = "New-username-1";
+        auto status = client.sing_up(name, surname, login, password);
+        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+        status = client.log_in(login, password);
+        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+
     }
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";
@@ -52,7 +69,7 @@ int main() {
             std::cout << status.message();
         }
     }
-    {
+    if (false) {
         std::cout << "Before send: -------------------------------------- \n";
         auto [message_status, messages] = client.get_n_messages(100, 1, INT32_MAX);
         assert(message_status);
@@ -63,6 +80,8 @@ int main() {
         Status send_status = client.send_message_to_another_user(1, 1234567, "A-to-B - Test message!");
         database_interface::Message sent_message{};
         database_interface::Message::parse_to_message(send_status.message(), sent_message);
+        std::cout << "Sent message id: " << sent_message.m_message_id << std::endl;
+        std::cout << "Sent message: " << sent_message.m_text << " " << sent_message.m_user_id << std::endl;
         auto [new_message_status, new_messages] = client.get_n_messages(100, 1, INT32_MAX);
         assert(new_message_status);
         for (const auto& message : new_messages) {
@@ -78,5 +97,5 @@ int main() {
         }
         std::cout << "---------------------------------------------------- \n";
     }
-
+    client.close_connection();
 }

@@ -272,6 +272,29 @@ namespace Net::Client {
             }
         }
 
+        Status close_connection() {
+            if (connection_is_secured) {
+                send_secured_request(Net::LOG_IN_REQUEST, "");
+            } else {
+                send_request(Net::LOG_IN_REQUEST, "");
+            }
+            /*Request response = get_request();
+            if (connection_is_secured) {
+                response = decrypt_request(std::move(response));
+            }
+            if (response.is_readable() && response.get_type() == CLOSE_CONNECTION) {
+                return Status(true, response.get_body());
+            } else {
+                if (response.get_type() != LOG_IN_FAIL) {
+                    std::cerr << response.get_type() << "\n";
+                    assert(response.get_type() == LOG_IN_FAIL);
+                }
+                return Status(false, response.get_body());
+            }*/
+            connection->close();
+            return Status{true};
+        }
+
         Status sing_up(std::string name, std::string surname, std::string login, std::string password) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
