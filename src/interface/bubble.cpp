@@ -5,10 +5,8 @@
 #include <QPainterPath>
 #include <iostream>
 
-Bubble::Bubble(const QString &msg, const bool &incoming)
+Bubble::Bubble(const QString &msg, const bool &incoming) : lbl(new QLabel), bubLayout(new QHBoxLayout)
 {
-    auto *bubLayout = new QHBoxLayout();
-    auto *lbl = new QLabel;
 /// TODO addicon
     lbl->setStyleSheet(
         "QLabel { background-color : #357d50; color : white; border-width: "

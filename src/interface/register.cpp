@@ -2,8 +2,7 @@
 #include "./ui_register.h"
 #include "../../include/interface/mainwindow.h"
 #include "../../src/general/NetTest/netClient.hpp"
-#include "../../include/interface/welcWindow.h"
-#include "../../include/database/DataBaseInterface.hpp"
+#include "interface/welcWindow.h"
 
 Net::Client::Client client("localhost", "12345");
 
@@ -39,8 +38,8 @@ void Register::on_readyButton_clicked() {
                             ui->snameInput->text().toStdString(),
                             login,
                             ui->pasInput->text().toStdString());
-    std::cout << bool(status) << " " << status.message() << "\n";
-  } else {
+  }
+  if ((regVersion && status) || (!regVersion && !status)) {
     status = client.log_in(login,ui->pasInput->text().toStdString());
   }
   std::cout << bool(status) << " " << status.message() << "\n";
