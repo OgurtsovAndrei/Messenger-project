@@ -1,5 +1,6 @@
 #include "../../include/interface/mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "./ui_addGroup.h"
 #include "../../src/general/NetTest/netClient.hpp"
 #include "../../include/Status.hpp"
 #include "../../include/interface/bubble.h"
@@ -7,6 +8,7 @@
 
 #include <QStringListModel>
 #include <QListWidget>
+#include <QLineEdit>
 #include <QTimer>
 #include <QLabel>
 
@@ -19,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     ///
     update_chats();
 
-    connect(ui->sendButton, &QPushButton::clicked, [&]{
+    connect(ui->sendButton, &QPushButton::clicked, this, [&]{
         QString msg = ui->newMessageInput->toPlainText();
         if (msg.isEmpty()) {
             return;
@@ -27,6 +29,22 @@ MainWindow::MainWindow(QWidget *parent)
         Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
         addMessage(msg);
     });
+
+//    connect(ui->findLine, &QLineEdit::textChanged, this, [&]{
+//        if (ui->findLine->text() != "") {
+//            ui->findButton->setText("Find");
+//            return;
+//        }
+//        ui->findButton->setText("New Group");
+//    });
+
+//    connect(ui->findButton, &QPushButton::clicked, this, [&]{
+//        if (ui->findButton->text() == "Find") {
+//            on_findButton_clicked();
+//            return;
+//        }
+//        addGroup();
+//    })
 
     //  ui->chatsList->setModel(new QStringListModel(List));
 
@@ -116,6 +134,11 @@ void MainWindow::addMessage(const QString &msg, const bool &incoming)
     ui->newMessageInput->setPlainText("");
     ui->messagesList->scrollToBottom();
 
+}
+
+void MainWindow::on_groupButton_clicked()
+{
+    ;
 }
 
 void MainWindow::set_client_id(const int &id) {
