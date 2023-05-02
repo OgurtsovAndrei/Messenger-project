@@ -14,7 +14,8 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QPushButton {background-color : #486E65;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}</string>
+   <string notr="true">QPushButton {background-color : #486E65;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}
+QPushButton:pressed { background-color: #96a7a1; }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
@@ -126,6 +127,9 @@ border-radius: 5px; padding: 6px;}</string>
         <property name="styleSheet">
          <string notr="true">.QListWidget {background-color : #294d72;border-width: 2px; 
         border-radius: 5px; padding: 6px;}</string>
+        </property>
+        <property name="autoScrollMargin">
+         <number>6</number>
         </property>
         <property name="iconSize">
          <size>

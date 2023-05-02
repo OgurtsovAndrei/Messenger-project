@@ -1,10 +1,11 @@
-#include "../../include/interface/mainwindow.h"
+#include "interface/mainwindow.h"
 #include "./ui_mainwindow.h"
 #include "./ui_addGroup.h"
-#include "../../src/general/NetTest/netClient.hpp"
-#include "../../include/Status.hpp"
-#include "../../include/interface/bubble.h"
-#include "../../include/interface/welcWindow.h"
+#include "NetTest/netClient.hpp"
+#include "Status.hpp"
+#include "interface/addGroup.h"
+#include "interface/bubble.h"
+#include "interface/welcWindow.h"
 
 #include <QStringListModel>
 #include <QListWidget>
@@ -28,7 +29,16 @@ MainWindow::MainWindow(QWidget *parent)
         }
         Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
         addMessage(msg);
+        ui->newMessageInput->setPlainText("");
     });
+
+//    connect(ui->chatsList, SIGNAL(itemClicked(QListWidgetItem*item)),
+//            this, SLOT([&](QListWidgetItem *item){
+//            if (item != nullptr) {
+//                select_chat_id = chats_id_map[item->text()];
+//            }
+//            update_messages(selected_chat_id);
+//    }));
 
 //    connect(ui->findLine, &QLineEdit::textChanged, this, [&]{
 //        if (ui->findLine->text() != "") {
@@ -67,12 +77,12 @@ MainWindow::MainWindow(QWidget *parent)
 //      }
 //    });
 //
-//    chat_timer->start(10000);
+//    chat_timer->start(1000);
 
-//    auto *message_timer = new QTimer(this);
-//    connect(message_timer, &QTimer::timeout, [&]{on_chatsList_itemClicked();});
-//
-//    message_timer->start(1000);
+    auto *message_timer = new QTimer(this);
+    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
+
+    message_timer->start(10000);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -94,11 +104,14 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     if (item != nullptr) {
         select_chat_id = chats_id_map[item->text()];
     }
-    ui->messagesList->clear();
     auto [status, messages] = client.get_n_messages(100, select_chat_id);
+    if (ui->messagesList->count() == messages.size()) {
+        return ;
+    }
+    ui->messagesList->clear();
     for (const auto &mess : messages) {
         bool incoming = false;
-        if (mess.m_user_id == client_id) {
+        if (mess.m_user_id != client_id) {
             incoming = true;
         }
         addMessage(QString::fromStdString(mess.m_text), incoming);
@@ -117,7 +130,7 @@ void MainWindow::on_findButton_clicked()
     }
     unsigned int sec_id = sec_client.m_user_id;
     std::cout << sec_id << "\n";
-    if (client.make_dialog("Dina to Tina", "RSA", 1000, false, {client_id, sec_id})) {
+    if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {client_id, sec_id})) {
         std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
     }
@@ -127,18 +140,21 @@ void MainWindow::on_findButton_clicked()
 void MainWindow::addMessage(const QString &msg, const bool &incoming)
 {
     auto *item = new QListWidgetItem;
-    auto *bub = new Bubble(msg);
+    auto *bub = new Bubble(msg, incoming);
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
     item->setSizeHint(bub->sizeHint());
-    ui->newMessageInput->setPlainText("");
     ui->messagesList->scrollToBottom();
-
 }
 
 void MainWindow::on_groupButton_clicked()
 {
-    ;
+   auto *add_gr = new AddGroup(this);
+   add_gr->show();
+}
+
+int MainWindow::get_client_id() {
+    return client_id;
 }
 
 void MainWindow::set_client_id(const int &id) {
