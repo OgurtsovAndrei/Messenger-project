@@ -148,6 +148,8 @@ struct SQL_BDInterface : BDInterface {
         );
     }
 
+    Status update_dialog_time(const Dialog &dialog);
+
     Status del_dialog(const Dialog &dialog) override;
 
     Status del_all_massages_in_dialog(const Dialog &dialog);
