@@ -36,7 +36,7 @@ private slots:
 
     void addMessage(const QString &msg, const bool &incoming = false);
 
-//    void on_sendButton_clicked();
+    void on_groupButton_clicked();
 
 private:
     Ui::MainWindow *ui;

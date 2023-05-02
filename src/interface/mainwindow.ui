@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QPushButton {background-color : #69827A;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}</string>
+   <string notr="true">QPushButton {background-color : #486E65;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
@@ -41,6 +41,14 @@
       <property name="spacing">
        <number>0</number>
       </property>
+      <item row="1" column="0" colspan="2">
+       <widget class="QListWidget" name="chatsList">
+        <property name="styleSheet">
+         <string notr="true">.QListWidget {background-color : #294d62;border-width: 2px; 
+        border-radius: 5px; padding: 6px;}</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QPushButton" name="findButton">
         <property name="styleSheet">
@@ -59,11 +67,13 @@ border-radius: 5px; padding: 6px;}</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QListWidget" name="chatsList">
+      <item row="2" column="0" colspan="2">
+       <widget class="QPushButton" name="groupButton">
         <property name="styleSheet">
-         <string notr="true">.QListWidget {background-color : #294d62;border-width: 2px; 
-        border-radius: 5px; padding: 6px;}</string>
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>New Group</string>
         </property>
        </widget>
       </item>
