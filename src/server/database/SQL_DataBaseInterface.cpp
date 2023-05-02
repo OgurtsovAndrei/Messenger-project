@@ -1,5 +1,6 @@
 #include <sqlite3.h>
 #include <iostream>
+#include <ctime>
 #include "../../../include/database/DataBaseInterface.hpp"
 
 namespace database_interface {
@@ -15,7 +16,9 @@ int SQL_BDInterface::last_insert_id = -1;
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("./../bd/ServerDataBase.db", &m_bd);
+//    exit = sqlite3_open("./../bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("./../../../bd/ServerDataBase.db", &m_bd);
+//    exit = sqlite3_open("/Users/arina/hse/project/Messenger-project/bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 
@@ -251,7 +254,7 @@ Status SQL_BDInterface::make_dialog(Dialog &dialog){
             "INSERT INTO Dialogs (Name, Encryption, DateTime, OwnerId, IsGroup) VALUES ('";
     sql += dialog.m_name + "', '";
     sql += dialog.m_encryption + "', ";
-    sql += std::to_string(dialog.m_date_time) + ", ";
+    sql += std::to_string(time(NULL)) + ", ";
     sql += std::to_string(dialog.m_owner_id) + ", ";
     sql += std::to_string(dialog.m_is_group) + ");";
     char *message_error;
@@ -287,7 +290,7 @@ Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
     sql += std::to_string(new_dialog.m_dialog_id) + ", '";
     sql += new_dialog.m_name + "', '";
     sql += new_dialog.m_encryption + "', ";
-    sql += std::to_string(new_dialog.m_date_time) + ", ";
+    sql += std::to_string(time(NULL)) + ", ";
     sql += std::to_string(new_dialog.m_owner_id) + ", ";
     sql += std::to_string(new_dialog.m_is_group) + ");";
     char *message_error;
@@ -303,6 +306,10 @@ Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
 };
 
 Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
+    Status update = update_dialog_time(dialog);
+    if (!update.correct()){
+        return Status(false, "Problem in UPDATE in ADD User to Dialog.\nMessage: " + update.message());
+    }
     std::string sql = "INSERT INTO UsersAndDialogs (UserId, DialogId) VALUES (";
     sql += std::to_string(user.m_user_id) + ", ";
     sql += std::to_string(dialog.m_dialog_id) + ");";
@@ -340,6 +347,21 @@ Status SQL_BDInterface::get_users_in_dialog(const Dialog &dialog, std::vector<Us
     Dialog::m_users = nullptr;
     return Status(
             exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
+Status SQL_BDInterface::update_dialog_time(const Dialog &dialog){
+    std::string sql = "UPDATE Dialogs\nSET DateTime=";
+    sql += std::to_string(dialog.m_dialog_id) + "\n";
+    sql += "WHERE id=" + std::to_string(dialog.m_dialog_id) + ";";
+    char *message_error;
+    std::string string_message;
+    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    return Status(
+            exit == SQLITE_OK, "Problem in UPDATE Dialog time.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
     );
 }
@@ -396,9 +418,13 @@ Status SQL_BDInterface::del_all_users_in_dialog(const Dialog &dialog){
 
 // Message
 Status SQL_BDInterface::make_message(Message &message){
+        Status update = update_dialog_time(Dialog(message.m_dialog_id));
+        if (!update.correct()){
+            return Status(false, "Problem in UPDATE in MAKE Message.\nMessage: " + update.message());
+        }
         std::string sql =
                 "INSERT INTO Messages (DateTime, Text, File, DialogId, UserId) VALUES (";
-        sql += std::to_string(message.m_date_time) + ", '";
+        sql += std::to_string(time(NULL)) + ", '";
         sql += message.m_text + "', '";
         sql += message.m_file_path + "', ";
         sql += std::to_string(message.m_dialog_id) + ", ";
