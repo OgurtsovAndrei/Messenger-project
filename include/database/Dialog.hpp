@@ -27,6 +27,19 @@ namespace database_interface {
         explicit Dialog(
                 std::string name,
                 std::string encryption,
+                int owner,
+                bool is_group
+        )
+                : m_name(std::move(name)),
+                  m_encryption(std::move(encryption)),
+                  m_owner_id(owner),
+                  m_is_group(is_group),
+                  m_dialog_id(-1) {
+        }
+
+        explicit Dialog(
+                std::string name,
+                std::string encryption,
                 int date_time,
                 int owner,
                 bool is_group

@@ -353,7 +353,7 @@ Status SQL_BDInterface::get_users_in_dialog(const Dialog &dialog, std::vector<Us
 
 Status SQL_BDInterface::update_dialog_time(const Dialog &dialog){
     std::string sql = "UPDATE Dialogs\nSET DateTime=";
-    sql += std::to_string(dialog.m_dialog_id) + "\n";
+    sql += std::to_string(time(NULL)) + "\n";
     sql += "WHERE id=" + std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
     std::string string_message;

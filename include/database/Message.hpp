@@ -69,6 +69,18 @@ namespace database_interface {
                   m_user_id(user_id) {
         }
 
+        explicit Message(
+                std::string text,
+                std::string file_path,
+                int dialog_id,
+                int user_id
+        )
+                : m_text(std::move(text)),
+                  m_file_path(std::move(file_path)),
+                  m_dialog_id(dialog_id),
+                  m_user_id(user_id) {
+        }
+
         explicit Message(int message_id) : m_message_id(message_id) {
         }
 
