@@ -19,6 +19,10 @@ public:
 
     void set_client_id(const int &id);
 
+    int get_client_id();
+
+    void update_chats();
+
 /*
  * fill chats list
  * add chat
@@ -28,7 +32,6 @@ public:
 */
 
 private slots:
-    void update_chats();
 
     void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
 
@@ -36,7 +39,7 @@ private slots:
 
     void addMessage(const QString &msg, const bool &incoming = false);
 
-//    void on_sendButton_clicked();
+    void on_groupButton_clicked();
 
 private:
     Ui::MainWindow *ui;

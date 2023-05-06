@@ -2,7 +2,7 @@
 #define WELCWINDOW_H
 
 #include <QWidget>
-#include "../../src/general/NetTest/netClient.hpp"
+#include "NetTest/netClient.hpp"
 
 namespace Ui {
 class WelcWindow;
