@@ -2,6 +2,10 @@
 #include <iostream>
 #include <ctime>
 #include "../../../include/database/DataBaseInterface.hpp"
+#include <botan/argon2.h>
+#include <botan/rng.h>
+#include <botan/system_rng.h>
+#include <botan/auto_rng.h>
 
 namespace database_interface {
 
@@ -35,6 +39,13 @@ Status SQL_BDInterface::make_user(User &user) {
     sql += user.m_name + "', '";
     sql += user.m_surname + "', '";
     sql += user.m_login + "', '";
+    std::unique_ptr<Botan::RandomNumberGenerator> rng;
+#if defined(BOTAN_HAS_SYSTEM_RNG)
+    rng.reset(new Botan::System_RNG);
+#else
+    rng.reset(new Botan::AutoSeeded_RNG);
+#endif
+    user.m_password_hash = Botan::argon2_generate_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), *(rng.get()), 1, 8192, 1);
     sql += user.m_password_hash + "');";
     char *message_error;
     std::string string_message;
@@ -93,16 +104,19 @@ Status SQL_BDInterface::get_user_by_id(User &user){
 
 Status SQL_BDInterface::get_user_by_log_pas(User &user) {
     std::string sql = "SELECT id, Name, Surname FROM Users WHERE Login='";
-    sql += user.m_login + "' AND  PasswordHash='";
-    sql += user.m_password_hash + "';";
+    sql += user.m_login + "';";
     char *message_error;
     std::string string_message;
-    User::m_edit_user = &user;
+    User tmp_user;
+    User::m_edit_user = &tmp_user;
     int exit =
         sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
     User::m_edit_user = nullptr;
+    if (exit == SQLITE_OK && tmp_user.m_user_id != -1 && Botan::argon2_check_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), tmp_user.m_password_hash)){
+        user = tmp_user;
+    }
     return Status(
         exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
@@ -434,10 +448,26 @@ Status SQL_BDInterface::make_message(Message &message){
         int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
-        return Status(
-                exit == SQLITE_OK, "Problem in MAKE Message.\nMessage: " + string_message +
-                                   "\n SQL command: " + sql + "\n"
-        );
+        if (exit != SQLITE_OK){
+            return Status(
+                    exit == SQLITE_OK, "Problem in MAKE Message.\nMessage: " + string_message +
+                                       "\n SQL command: " + sql + "\n"
+            );
+        }
+        sql = "SELECT last_insert_rowid();";
+        message_error= nullptr;
+        string_message="";
+        exit = sqlite3_exec(m_bd, sql.c_str(), SQL_BDInterface::get_last_insert_id, 0, &message_error);
+        chars_to_string(message_error, string_message);
+        sqlite3_free(message_error);
+        if (exit != SQLITE_OK){
+            return Status(
+                    exit == SQLITE_OK, "Problem in MAKE Message in find id.\nMessage: " + string_message +
+                                       "\n SQL command: " + sql + "\n"
+            );
+        }
+        message.m_message_id = SQL_BDInterface::last_insert_id;
+        return Status(true);
 }
 
 Status SQL_BDInterface::change_message(const Message &new_message){
