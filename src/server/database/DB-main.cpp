@@ -19,8 +19,8 @@
 //    user.m_login = "A-login";
 //    bd.get_user_id_by_log(user);
 //    std::cout << '<' << user.m_user_id << '|' << user.m_name << '|' << user.m_surname << ">\n";
-//    database_interface::Message mes =  database_interface::Message("ads", "", 6, 2);
-//    std::cout << bd.make_message(mes).correct();
+//    database_interface::Message mes =  database_interface::Message("ads", "", 5, 2);
+//    std::cout << bd.make_message(mes).correct() << mes.m_message_id;
 //    bd.close();
 //    return (0);
 //}
