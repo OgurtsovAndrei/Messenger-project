@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <nlohmann/json.hpp>
+
 
 namespace database_interface {
 
@@ -13,6 +15,8 @@ struct User {
     std::string m_surname;
     std::string m_login;
     std::string m_password_hash;
+
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, m_user_id, m_name, m_surname, m_login, m_password_hash);
 
     static std::vector<User> *m_requests;
     static User *m_edit_user;

@@ -6,7 +6,7 @@
 #define MESSENGER_PROJECT_NETSERVER_HPP
 
 #include <utility>
-#include "NetGeneral.hpp"
+#include "NetGeneral-Refactored.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
 #include <thread>
@@ -19,15 +19,23 @@
 #include <optional>
 #include <queue>
 #include <condition_variable>
-#include "../../../include/Status.hpp"
-#include "../../../include/TextWorker.hpp"
-#include "./../CryptoTest/Cryptographer.hpp"
-#include "./../../../include/database/User.hpp"
-#include "./../../../include/database/DataBaseInterface.hpp"
+#include "Status.hpp"
+#include "TextWorker.hpp"
+#include "Cryptographer.hpp"
+#include "User.hpp"
+#include "DataBaseInterface.hpp"
 
-#define send_response_and_return_if_false(expr, user, status, message) if (!(expr)) \
-{user.send_secured_request(status, "Fail in assert(" #expr "), with message: <" + static_cast<std::string>(message) + ">"); \
+#define send_response_and_return_if_false(expr, user, assert_request_type, message) if (!(expr)) \
+{user.send_secured_request(DecryptedRequest(assert_request_type, to_json_exception("Fail in assert(" #expr "), with message: <" + static_cast<std::string>(message) + ">"))); \
 return;} while (0)
+
+json to_json_exception(std::string str) {
+    json j;
+    j["what"] = std::move(str);
+    return j;
+}
+
+#define require(expr, message) if (!(expr)) {return Status(false, message);} while (0)
 
 namespace Net::Server {
 
@@ -67,12 +75,22 @@ namespace Net::Server {
             return user_in_db;
         }
 
-        void send_secured_request(RequestType type, const std::string &request_body) {
-            assert(is_protected());
-            std::string encrypted_message = encrypter.value().encrypt_text_to_text(request_body);
-            Request request(type, std::move(encrypted_message));
-            request.make_request();
-            assert(try_send_request(request, get_client_ref()));
+        Status send_secured_request(const DecryptedRequest &decrypted_request) {
+            require(connection_is_protected, "Connection should be secured!!");
+            require(encrypter.has_value(), "Connection should be secured!!");
+            EncryptedRequest encrypted_request = decrypted_request.encrypt(encrypter.value());
+            Net::try_send_request(encrypted_request, client.value());
+            return Status(true);
+        }
+
+        Status send_secured_exception(RequestType type, std::string exception_message) {
+            require(connection_is_protected, "Connection should be secured!!");
+            require(encrypter.has_value(), "Connection should be secured!!");
+
+            EncryptedRequest encrypted_request = DecryptedRequest(type, to_json_exception(
+                    std::move(exception_message))).encrypt(encrypter.value());
+            Net::try_send_request(encrypted_request, client.value());
+            return Status(true);
         }
 
         ~UserConnection() {
@@ -89,7 +107,7 @@ namespace Net::Server {
         boost::asio::ip::tcp::socket current_socket;
         Server &server;
         // Not necessary to init
-        std::vector<Request> connection_requests;
+        std::vector<DecryptedRequest> connection_requests;
         std::optional<boost::asio::ip::tcp::iostream> client;
         std::optional<std::thread> session_thread;
         bool connection_is_protected = false;
@@ -102,14 +120,14 @@ namespace Net::Server {
         static void accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection);
 
-        Request decrypt_request(Request request) { //NOLINT [static_method]
-            if (!request.is_encrypted) { return std::move(request); }
-            assert(connection_is_protected);
-            auto decrypted_body = Cryptographer::as<std::string>(
-                    decrypter.value().decrypt_data(request.get_encrypted_body()));
-            request.set_body(decrypted_body);
-            request.is_encrypted = false;
-            return std::move(request);
+        Status
+        decrypt_request(EncryptedRequest request_to_decrypt, DecryptedRequest &back_ref) { //NOLINT [static_method]
+            require(decrypter.has_value(), "Connections should be secured!");
+            try {
+                back_ref = request_to_decrypt.decrypt(decrypter.value());
+            } catch (std::exception &exception) {
+                return Status(false, exception.what());
+            }
         }
     };
 
@@ -117,7 +135,7 @@ namespace Net::Server {
     public:
         RequestQueue() = default;
 
-        [[nodiscard]] std::pair<int, Request> get_last_or_wait() {
+        [[nodiscard]] std::pair<int, DecryptedRequest> get_last_or_wait() {
             std::unique_lock queue_lock(queue_mutex);
             while (request_queue.empty()) {
                 cond_var.wait(queue_lock);
@@ -127,13 +145,13 @@ namespace Net::Server {
             return std::move(value);
         }
 
-        void push_to_queue(int number, Request value) {
+        void push_to_queue(int number, DecryptedRequest value) {
             std::unique_lock queue_lock(queue_mutex);
             request_queue.emplace(number, std::move(value));
             cond_var.notify_one();
         }
 
-        void push_to_queue(std::pair<int, Request> value) {
+        void push_to_queue(std::pair<int, DecryptedRequest> value) {
             std::unique_lock queue_lock(queue_mutex);
             request_queue.push(std::move(value));
             cond_var.notify_one();
@@ -141,7 +159,7 @@ namespace Net::Server {
 
     private:
         std::mutex queue_mutex;
-        std::queue<std::pair<int, Request>> request_queue;
+        std::queue<std::pair<int, DecryptedRequest>> request_queue;
         std::condition_variable cond_var; // FIXME: Как лучше назвать? Пока что пусть будет такая заглушка.
     };
 
@@ -169,32 +187,22 @@ namespace Net::Server {
                         if (iter == sessions.end()) { continue; }
                         UserConnection &user_connection = iter->second;
                         sessions_lock.unlock();
-                        send_response_and_return_if_false(request.is_readable(), user_connection, UNKNOWN,
-                                                          "Can not parse the request!");
-                        std::cout << "Got from user with --> " << connection_id << " connection id: "
-                                  << request.get_body() << "\n";
-                        switch (request.get_type()) {
+                        std::cout << "Got from user with --> " << connection_id << " connection id\n";
+                        switch (request.request_type) {
                             case TEXT_REQUEST:
-                                send_message_by_connection(RESPONSE_REQUEST_SUCCESS,
-                                                           "Got from you: <" + request.get_body() + ">",
-                                                           user_connection.get_client_ref());
-                                break;
-                            case SECURED_REQUEST:
-                                send_secured_request_to_user(RESPONSE_REQUEST_SUCCESS,
-                                                             "Got from you: <" + request.get_body() + ">",
-                                                             user_connection);
+                                [[fallthrough]];
+                            case SECURED_REQUEST: {
+                                json data;
+                                data.push_back("Got from you: <" + request.data.dump() + ">");
+                                user_connection.send_secured_request(DecryptedRequest(RESPONSE_REQUEST_SUCCESS,
+                                                                                      std::move(data)));
+                            }
                                 break;
                             case FILE:
                                 break;
                             case RESPONSE_REQUEST_SUCCESS:
                                 break;
                             case RESPONSE_REQUEST_FAIL:
-                                break;
-                            case MAKE_UNSECURE_CONNECTION:
-                                break;
-                            case MAKE_UNSECURE_CONNECTION_SUCCESS:
-                                break;
-                            case MAKE_UNSECURE_CONNECTION_FAIL:
                                 break;
                             case MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY:
 
@@ -249,8 +257,38 @@ namespace Net::Server {
                             case CLOSE_CONNECTION:
                                 user_connection.connection_is_active = false;
                                 user_connection.client.value().close();
-                                break;
+                                return;
                             case UNKNOWN:
+                                break;
+                            case GET_100_CHATS_SUCCESS:
+                                break;
+                            case GET_100_CHATS_FAIL:
+                                break;
+                            case MAKE_GROPE_SUCCESS:
+                                break;
+                            case MAKE_GROPE_FAIL:
+                                break;
+                            case SEND_MESSAGE_SUCCESS:
+                                break;
+                            case SEND_MESSAGE_FAIL:
+                                break;
+                            case CHANGE_MESSAGE_SUCCESS:
+                                break;
+                            case CHANGE_MESSAGE_FAIL:
+                                break;
+                            case DELETE_MESSAGE_SUCCESS:
+                                break;
+                            case DELETE_MESSAGE_FAIL:
+                                break;
+                            case GET_100_MESSAGES_SUCCESS:
+                                break;
+                            case GET_100_MESSAGES_FAIL:
+                                break;
+                            case GET_USER_BY_LOGIN_SUCCESS:
+                                break;
+                            case GET_USER_BY_LOGIN_FAIL:
+                                break;
+                            case SIGN_UP_FAIL:
                                 break;
                         }
                     }
@@ -305,11 +343,11 @@ namespace Net::Server {
             return bd_connection.close();
         }
 
-        void push_request_to_queue(int number, Request value) {
+        void push_request_to_queue(int number, DecryptedRequest value) {
             request_queue.push_to_queue(number, std::move(value));
         }
 
-        void push_request_to_queue(std::pair<int, Request> value) {
+        void push_request_to_queue(std::pair<int, DecryptedRequest> value) {
             request_queue.push_to_queue(std::move(value));
         }
 
@@ -317,50 +355,59 @@ namespace Net::Server {
             return bd_connection;
         }
 
-        void sign_up(UserConnection &user_connection, Request request, bool &logging_in_is_successful) {
-            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 4, user_connection, SIGN_UP_FAIL,
-                                              "Bad request body format or invalid request type!");
-            std::string name = data_vector[0];
-            std::string surname = data_vector[1];
-            std::string login = data_vector[2];
-            std::string password = data_vector[3];
-
-            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
+        void sign_up(UserConnection &user_connection, const DecryptedRequest &request) {
+            database_interface::User new_user;
+            try {
+                nlohmann::from_json(request.data, new_user);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(SIGN_UP_FAIL,
+                                                       "Can not parse request: bad request body format or invalid request type: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+            send_response_and_return_if_false(new_user.m_login.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
                                               SIGN_UP_FAIL, "Login should contain only one word!");
-            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection,
-                                              SIGN_UP_FAIL, "Password should contain only one word!");
 
-            database_interface::User new_user(name, surname, login, password);
+            send_response_and_return_if_false(new_user.m_password_hash.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
+                                              SIGN_UP_FAIL, "Password should contain only one word!");
             auto status = bd_connection.make_user(new_user);
             if (status) {
-                send_secured_request_to_user(SIGN_UP_SUCCESS, std::to_string(new_user.m_user_id), user_connection);
+                database_interface::User user_copy = new_user;
+                user_copy.m_password_hash.clear();
+                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, static_cast<json>(user_copy)));
             } else {
-                send_secured_request_to_user(SIGN_UP_FAIL, status.message(), user_connection);
+                user_connection.send_secured_exception(SIGN_UP_FAIL, status.message());
             }
         }
 
-        void log_in(UserConnection &user_connection, Request &request, bool &logging_in_is_successful) {
-            std::vector<std::string> parsed_body = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(parsed_body.size() == 2, user_connection, LOG_IN_FAIL,
-                                              "Bad request body format or invalid request type!");
-            std::string login = parsed_body[0];
-            std::string password = parsed_body[1];
-            send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
-                                              LOG_IN_FAIL, "Login should contain only one word!");
-            send_response_and_return_if_false(password.find_first_of("\t\n ") == std::string::npos, user_connection,
-                                              LOG_IN_FAIL, "Password should contain only one word!");
-
-            user_connection.user_in_db = database_interface::User(login, password);
+        void log_in(UserConnection &user_connection, DecryptedRequest &request, bool &logging_in_is_successful) {
+            user_connection.user_in_db = database_interface::User();
             database_interface::User &user_in_db = user_connection.user_in_db.value();
-            std::cout << login << ":" << password << ":" << user_in_db.m_name << ":" << user_in_db.m_surname << "\n";
+            try {
+                nlohmann::from_json(request.data, user_in_db);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(LOG_IN_FAIL,
+                                                       "Not able to logg in: cannot parse json user: bad request or invalid user data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+
+            send_response_and_return_if_false(user_in_db.m_login.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
+                                              SIGN_UP_FAIL, "Login should contain only one word!");
+
+            send_response_and_return_if_false(user_in_db.m_password_hash.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
+                                              SIGN_UP_FAIL, "Password should contain only one word!");
             auto status = bd_connection.get_user_by_log_pas(user_in_db);
             std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
             if (status) {
-                user_connection.send_secured_request(LOG_IN_SUCCESS, std::to_string(user_in_db.m_user_id));
+                database_interface::User user_copy = user_in_db;
+                user_copy.m_password_hash.clear();
+                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, static_cast<json>(user_copy)));
                 logging_in_is_successful = true;
             } else {
-                user_connection.send_secured_request(LOG_IN_FAIL, status.message());
+                user_connection.send_secured_exception(LOG_IN_FAIL, status.message());
             }
         }
 
@@ -375,30 +422,30 @@ namespace Net::Server {
         std::vector<std::thread> consumers;
         database_interface::SQL_BDInterface bd_connection;
 
-        void process_send_message_request(UserConnection &user_connection, Request request) {
+        void process_send_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
-                                              SEND_MESSAGE_FAIL, "It is necessary to log in to send message!");
-            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 3, user_connection, SEND_MESSAGE_FAIL,
-                                              "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, SEND_MESSAGE_FAIL,
-                                              "Dialog ID is not a number!");
-            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, SEND_MESSAGE_FAIL,
-                                              "Current time is not a number!");
-            int dialog_id = std::stoi(data_vector[0]);
-            int current_time = std::stoi(data_vector[1]);
-            std::string message_text = data_vector[2];
-            auto &user_in_db = user_connection.get_user_in_db_ref();
-            database_interface::Message new_message(current_time, message_text, "", dialog_id,
-                                                    user_in_db.value().m_user_id);
+                                              SEND_MESSAGE_FAIL, "It is necessary to log in!");
+            database_interface::Message new_message;
+            try {
+                nlohmann::from_json(request.data, new_message);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(SEND_MESSAGE_FAIL,
+                                                       "Not able to send message: cannot parse json message: bad request or invalid message data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+
             Status current_status = bd_connection.make_message(new_message);
             std::cout << "Sent message id: " << new_message.m_message_id << "\n";
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
                                               "Send message exception: " + current_status.message());
-            send_secured_request_to_user(SEND_MESSAGE_SUCCESS, new_message.to_strint(), user_connection);
+            DecryptedRequest response(CHANGE_MESSAGE_SUCCESS, new_message);
+            user_connection.send_secured_request(response);
         }
 
-        void process_change_old_message_request(UserConnection &user_connection, Request request) {
+        void process_change_old_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
+            /*
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
@@ -408,18 +455,47 @@ namespace Net::Server {
                                               "Message ID should be int!");
             int old_message_id = std::stoi(data_vector[0]);
             std::string new_body = data_vector[1];
-            database_interface::Message old_message(old_message_id);
+            */
+            database_interface::Message old_message;
+            database_interface::Message new_message;
+            try {
+                nlohmann::from_json(request.data, old_message);
+                nlohmann::from_json(request.data, new_message);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(SEND_MESSAGE_FAIL,
+                                                       "Not able to find message to change: cannot parse json message: bad request or invalid message data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+
             Status current_status = bd_connection.get_message_by_id(old_message);
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
                                               "Invalid Message ID: " + current_status.message());
-            old_message.m_text = new_body;
+            old_message.m_text = new_message.m_text;
             current_status = bd_connection.change_message(old_message);
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
-                                              "Get message exception: " + current_status.message());
-            send_secured_request_to_user(CHANGE_MESSAGE_SUCCESS, "", user_connection);
+                                              "Change message exception: " + current_status.message());
+            DecryptedRequest response(CHANGE_MESSAGE_SUCCESS, old_message);
+            user_connection.send_secured_request(response);
         }
 
-        void proces_delete_message_request(UserConnection &user_connection, Request request) {
+        void proces_delete_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              DELETE_MESSAGE_FAIL, "It is necessary to log in!");
+            database_interface::Message message;
+            try {
+                nlohmann::from_json(request.data, message);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(SEND_MESSAGE_FAIL,
+                                                       "Cannot delete message: cannot parse json message: bad request or invalid message data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+            Status current_status = bd_connection.del_message(message);
+            send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL,
+                                              "Delete message exception: " + current_status.message());
+            user_connection.send_secured_request(DecryptedRequest(DELETE_MESSAGE_SUCCESS, {}));
+        }
+
+        /*void proces_delete_message_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               DELETE_MESSAGE_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
@@ -433,9 +509,9 @@ namespace Net::Server {
             send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL,
                                               "Delete message exception: " + current_status.message());
             send_secured_request_to_user(DELETE_MESSAGE_SUCCESS, "", user_connection);
-        }
+        }*/
 
-        void process_get_n_messages_request(UserConnection &user_connection, Request request) {
+        /*void process_get_n_messages_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               GET_100_MESSAGES_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
@@ -458,7 +534,7 @@ namespace Net::Server {
             current_status = bd_connection.get_n_dialogs_messages_by_time(current_dialog, messages_list,
                                                                           number_of_messages, last_message_time);
 
-            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_SUCCESS,
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_FAIL,
                                               "Get messages exception: " + current_status.message());
             std::vector<std::string> message_vec;
             message_vec.reserve(number_of_messages);
@@ -467,9 +543,38 @@ namespace Net::Server {
             }
             send_secured_request_to_user(GET_100_MESSAGES_SUCCESS, convert_text_vector_to_text(message_vec),
                                          user_connection);
+        }*/
+
+        void process_get_n_messages_request(UserConnection &user_connection, const DecryptedRequest &request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              GET_100_MESSAGES_FAIL, "It is necessary to log in!");
+            database_interface::Dialog current_dialog;
+            std::list<database_interface::Message> messages_list;
+            int number_of_messages;
+            int last_message_time;
+            try {
+                nlohmann::from_json(request.data["dialog"], current_dialog);
+                number_of_messages = request.data["number_of_messages"];
+                last_message_time = request.data["last_message_time"];
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(GET_100_MESSAGES_FAIL,
+                                                       "Cannot get messages: cannot parse json: bad request or invalid message data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+
+            Status current_status;
+            current_status = bd_connection.get_n_dialogs_messages_by_time(current_dialog, messages_list,
+                                                                          number_of_messages, last_message_time);
+
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_MESSAGES_FAIL,
+                                              "Get messages exception: " + current_status.message());
+            std::vector<json> message_vec(messages_list.begin(), messages_list.end());
+            user_connection.send_secured_request(DecryptedRequest(GET_100_MESSAGES_SUCCESS,
+                                                                  nlohmann::json{{"messages", message_vec}}));
         }
 
-        void process_get_n_dialogs_request(UserConnection &user_connection, Request request) {
+
+        /*void process_get_n_dialogs_request(UserConnection &user_connection, Request request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               GET_100_CHATS_FAIL, "It is necessary to log in!");
             std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
@@ -496,34 +601,63 @@ namespace Net::Server {
             send_secured_request_to_user(GET_100_CHATS_SUCCESS, convert_text_vector_to_text(str_dialog_vector),
                                          user_connection);
         }
+        */
 
-        void process_make_grope_request(UserConnection &user_connection, Request request) {
+        void process_get_n_dialogs_request(UserConnection &user_connection, DecryptedRequest request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              GET_100_CHATS_FAIL, "It is necessary to log in!");
+//            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
+//            send_response_and_return_if_false(data_vector.size() == 2, user_connection, GET_100_CHATS_FAIL,
+//                                              "Bad request body format or invalid request type!");
+//            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_CHATS_FAIL,
+//                                              "Number of dialogs should bu INT!");
+//            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_CHATS_FAIL,
+//                                              "Last dialog time should bu INT!");
+
+            int n_dialogs;
+            int last_dialog_time;
+
+            try {
+                n_dialogs = request.data["n_dialogs"];
+                last_dialog_time = request.data["last_dialog_time"];
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(GET_100_CHATS_FAIL,
+                                                       "Cannot get dialogs: cannot parse json: bad request or invalid message data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+
+            database_interface::User &user = user_connection.user_in_db.value();
+            std::list<database_interface::Dialog> dialog_list;
+            Status current_status = bd_connection.get_n_users_dialogs_by_time(user, dialog_list, n_dialogs,
+                                                                              last_dialog_time);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_100_CHATS_FAIL,
+                                              "Get dialogs exception: " + current_status.message());
+
+            std::vector<json> json_dialog_vector(dialog_list.begin(), dialog_list.end());
+            user_connection.send_secured_request(DecryptedRequest(GET_100_CHATS_SUCCESS,
+                                                                  nlohmann::json{{"dialogs", json_dialog_vector}}));
+        }
+
+        void process_make_grope_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               MAKE_GROPE_FAIL, "It is necessary to log in!");
-            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 5, user_connection, MAKE_GROPE_FAIL,
-                                              "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[2]), user_connection, MAKE_GROPE_FAIL,
-                                              "Current time should bu INT!");
-            send_response_and_return_if_false(is_number(data_vector[3]), user_connection, MAKE_GROPE_FAIL,
-                                              "Is grope should bu INT or BOOL!");
-            // TODO: Check that vec[4] is correct int vec
+            std::vector<int> user_ids;
 
-            std::string dialog_name = data_vector[0];
-            std::string encryption = data_vector[1];
-            int current_time = std::stoi(data_vector[2]);
-            int is_grope = std::stoi(data_vector[3]);
-            std::vector<unsigned int> user_ids = convert_to_int_vector_from_text(data_vector[4]);
+            database_interface::Dialog new_dialog;
+            try {
+                new_dialog = request.data["dialog"];
+                new_dialog.m_owner_id = user_connection.user_in_db->m_user_id;
+                user_ids = std::vector<int>(request.data["user_ids"]);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(MAKE_GROPE_FAIL,
+                                                       "Cannot make grope: cannot parse json: bad request or invalid data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
 
             std::vector<database_interface::User> user_vec;
             for (auto id: user_ids) {
-                database_interface::User user(static_cast<int>(id));
-                user_vec.push_back(std::move(user));
+                user_vec.emplace_back(id);
             }
-
-            auto &user_in_db = user_connection.get_user_in_db_ref();
-            database_interface::Dialog new_dialog(dialog_name, encryption, current_time,
-                                                  user_connection.user_in_db->m_user_id, is_grope);
 
             Status current_status = bd_connection.make_dialog(new_dialog);
             send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL,
@@ -531,23 +665,19 @@ namespace Net::Server {
             current_status = bd_connection.add_users_to_dialog(user_vec, new_dialog);
             send_response_and_return_if_false(current_status.correct(), user_connection, MAKE_GROPE_FAIL,
                                               "Add users to dialog exception: " + current_status.message());
-            send_secured_request_to_user(MAKE_GROPE_SUCCESS, std::to_string(new_dialog.m_dialog_id), user_connection);
+
+            user_connection.send_secured_request(DecryptedRequest(MAKE_GROPE_SUCCESS, new_dialog));
         }
 
-        void process_get_user_by_login_request(UserConnection &user_connection, Request request) {
-            std::string login = request.get_body();
+        void process_get_user_by_login_request(UserConnection &user_connection, DecryptedRequest request) {
+            std::string login = request.data["login"];
             send_response_and_return_if_false(login.find_first_of("\t\n ") == std::string::npos, user_connection,
                                               GET_USER_BY_LOGIN_FAIL, "Login should contain one word!");
             database_interface::User user(login);
             Status current_status = bd_connection.get_user_id_by_log(user);
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL,
                                               "Get user exception: " + current_status.message());
-            std::cout << "User:" << std::to_string(user.m_user_id) << ":" << user.m_name << ":" << user.m_surname << ":"
-                      << user.m_login << "\n";
-            std::vector<std::string> user_data = {std::to_string(user.m_user_id), user.m_name, user.m_surname,
-                                                  user.m_login};
-            send_secured_request_to_user(GET_USER_BY_LOGIN_SUCCESS, convert_text_vector_to_text(user_data),
-                                         user_connection);
+            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_LOGIN_SUCCESS, user));
         }
 
         int find_empty_connection_number() {
@@ -565,24 +695,19 @@ namespace Net::Server {
             return val;
         }
 
-        static void send_secured_request_to_user(RequestType type, const std::string &request_body,
-                                                 UserConnection &user_connection) {
-            user_connection.send_secured_request(type, request_body);
-        }
     };
 
     void
     UserConnection::accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
-        Request request = accept_request(client, connection.connection_is_protected);
-        std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
-        request.parse_request();
-        assert(request);
-        if (connection.connection_is_protected) {
-            request = connection.decrypt_request(std::move(request));
+        // TODO
+        if (!connection.connection_is_protected || !connection.decrypter.has_value()) {
+            throw std::runtime_error("Bad connection!");
         }
-        assert(request.is_readable());
-        connection.server.push_request_to_queue(connection.connection_number, std::move(request));
+        EncryptedRequest encrypted_request(client);
+        std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
+        DecryptedRequest decrypted_request = encrypted_request.decrypt(connection.decrypter.value());
+        connection.server.push_request_to_queue(connection.connection_number, std::move(decrypted_request));
     }
 
     void UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection) {
@@ -590,41 +715,43 @@ namespace Net::Server {
         std::cout << "Accepted connection " << rem_endpoint << " --> "
                   << socket.local_endpoint() << "\n";
         client = boost::asio::ip::tcp::iostream(std::move(socket));
-        {
-            Request request = accept_request(client.value(), connection_is_protected);
-            request.parse_request();
-            assert(request);
-            if (request.get_type() == MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
+        while (true) {
+            try {
+                EncryptedRequest encrypted_request(client.value());
+                DecryptedRequest request = encrypted_request.reinterpret_cast_to_decrypted();
+                if (request.request_type != MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
+                    continue;
+                }
                 connection.decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng());
-                connection.encrypter = Cryptographer::Encrypter(request.get_body(),
+                connection.encrypter = Cryptographer::Encrypter(request.data["public_key"],
                                                                 Cryptographer::Cryptographer::get_rng());
-                send_message_by_connection(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
-                                           connection.decrypter.value().get_str_publicKey(), client.value());
-                Request response = accept_request(client.value(), connection_is_protected);
-                response.parse_request();
-                assert(response);
-                assert(response.get_type() == MAKE_SECURE_CONNECTION_SUCCESS);
+                DecryptedRequest response_with_key(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY);
+                response_with_key.data["public_key"] = connection.decrypter.value().get_str_publicKey();
+                Net::try_send_request(response_with_key.reinterpret_cast_to_encrypted(), client.value());
+                EncryptedRequest response(client.value());
+                if (response.reinterpret_cast_to_decrypted().request_type != MAKE_SECURE_CONNECTION_SUCCESS) {
+                    continue;
+                }
                 connection.connection_is_protected = true;
                 std::cout << "Secured connection with " << rem_endpoint << " was established!\n";
-            } else {
-                assert(request.get_type() == MAKE_UNSECURE_CONNECTION);
-                send_message_by_connection(MAKE_UNSECURE_CONNECTION_SUCCESS,
-                                           "", client.value());
+            } catch (...) {
+                continue;
             }
+            break;
         }
         bool logging_in_is_successful = false;
         while (!logging_in_is_successful) {
-            Request request = accept_request(client.value(), connection_is_protected);
-            request.parse_request();
-            assert(request);
-            if (connection_is_protected) {
-                request = decrypt_request(std::move(request));
-            }
-            if (request.get_type() == LOG_IN_REQUEST) {
-                server.log_in(connection, request, logging_in_is_successful);
-            } else if (request.get_type() == SIGN_UP_REQUEST) {
-                // Create new user request
-                server.sign_up(connection, std::move(request), logging_in_is_successful);
+            try {
+                EncryptedRequest encrypted_request(client.value());
+                DecryptedRequest request = encrypted_request.decrypt(decrypter.value());
+                if (request.request_type == LOG_IN_REQUEST) {
+                    server.log_in(connection, request, logging_in_is_successful);
+                } else if (request.request_type == SIGN_UP_REQUEST) {
+                    // Create new user request
+                    server.sign_up(connection, request);
+                }
+            } catch (...) {
+                continue;
             }
         }
         connection_is_active = true;
