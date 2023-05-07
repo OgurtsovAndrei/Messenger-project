@@ -20,7 +20,7 @@
 #include <botan/pkcs8.h>
 #include <botan/x509_key.h>
 #include <botan/data_src.h>
-#include "../../../include/TextWorker.hpp"
+#include "TextWorker.hpp"
 
 namespace Cryptographer {
     template<typename Out, typename In>
@@ -177,7 +177,7 @@ namespace Cryptographer {
 
     struct Encrypter {
     public:
-        Encrypter(const Encrypter &con) = delete;
+        Encrypter(const Encrypter &) = delete;
 
         Encrypter(Encrypter &&) = default;
 

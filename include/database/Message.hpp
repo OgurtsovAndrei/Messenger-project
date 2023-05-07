@@ -6,7 +6,7 @@
 #include <list>
 #include <utility>
 #include "./../TextWorker.hpp"
-#include "../Status.hpp"
+#include "nlohmann/json.hpp"
 
 namespace database_interface {
 
@@ -17,6 +17,7 @@ namespace database_interface {
         std::string m_file_path;
         int m_dialog_id{};
         int m_user_id;
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Message, m_message_id, m_date_time, m_text, m_file_path, m_dialog_id, m_user_id);
 
         static Message *m_edit_message;
         static std::list<Message> *m_message_list;

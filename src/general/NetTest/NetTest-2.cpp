@@ -4,7 +4,7 @@
 
 #include <cassert>
 #include "NetClient.hpp"
-#include "NetGeneral.hpp"
+#include "NetGeneral-Refactored.hpp"
 #include "../../../include/TextWorker.hpp"
 #include <unistd.h>
 
@@ -33,7 +33,7 @@ int main() {
         }
     }
     if (true) {
-        std::string login = "New-Login-1";
+        std::string login = "New-Login-2";
         std::string password =  "New-Password-1";
         std::string surname = "New-Surname-1";
         std::string name = "New-username-1";
@@ -46,7 +46,7 @@ int main() {
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";
         client.send_secured_text_request("SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!");
-        assert(client.get_secret_request_and_return_body() == "Got from server: Got from you: <SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!>");
+        assert(client.get_request_and_return_text_body() == "Got from server: Got from you: <SECURED --> Secret hi, from iteration № " + std::to_string(i) + "!>");
         usleep(100'000);
     }
     auto pair = client.get_last_n_dialogs(100);
