@@ -12,7 +12,7 @@
 #include <vector>
 #include <utility>
 #include <boost/asio.hpp>
-#include "../../../include/TextWorker.hpp"
+#include "TextWorker.hpp"
 
 namespace Net {
 

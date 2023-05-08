@@ -6,7 +6,7 @@
 #define MESSENGER_PROJECT_NETSERVER_HPP
 
 #include <utility>
-#include "NetGeneral-Refactored.hpp"
+#include "NetGeneral.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
 #include <thread>
@@ -193,7 +193,7 @@ namespace Net::Server {
                                 [[fallthrough]];
                             case SECURED_REQUEST: {
                                 json data;
-                                data.push_back("Got from you: <" + request.data.dump() + ">");
+                                data["text"] = "Got from you: <" + static_cast<std::string>(request.data["text"]) + ">";
                                 user_connection.send_secured_request(DecryptedRequest(RESPONSE_REQUEST_SUCCESS,
                                                                                       std::move(data)));
                             }
@@ -256,8 +256,7 @@ namespace Net::Server {
                                 break;
                             case CLOSE_CONNECTION:
                                 user_connection.connection_is_active = false;
-                                user_connection.client.value().close();
-                                return;
+                                break;
                             case UNKNOWN:
                                 break;
                             case GET_100_CHATS_SUCCESS:
@@ -375,7 +374,7 @@ namespace Net::Server {
             if (status) {
                 database_interface::User user_copy = new_user;
                 user_copy.m_password_hash.clear();
-                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, static_cast<json>(user_copy)));
+                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, user_copy));
             } else {
                 user_connection.send_secured_exception(SIGN_UP_FAIL, status.message());
             }
@@ -404,7 +403,7 @@ namespace Net::Server {
             if (status) {
                 database_interface::User user_copy = user_in_db;
                 user_copy.m_password_hash.clear();
-                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, static_cast<json>(user_copy)));
+                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, user_copy));
                 logging_in_is_successful = true;
             } else {
                 user_connection.send_secured_exception(LOG_IN_FAIL, status.message());
@@ -438,7 +437,7 @@ namespace Net::Server {
             std::cout << "Sent message id: " << new_message.m_message_id << "\n";
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
                                               "Send message exception: " + current_status.message());
-            DecryptedRequest response(CHANGE_MESSAGE_SUCCESS, new_message);
+            DecryptedRequest response(SEND_MESSAGE_SUCCESS, new_message);
             user_connection.send_secured_request(response);
         }
 
@@ -606,13 +605,6 @@ namespace Net::Server {
         void process_get_n_dialogs_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               GET_100_CHATS_FAIL, "It is necessary to log in!");
-//            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-//            send_response_and_return_if_false(data_vector.size() == 2, user_connection, GET_100_CHATS_FAIL,
-//                                              "Bad request body format or invalid request type!");
-//            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, GET_100_CHATS_FAIL,
-//                                              "Number of dialogs should bu INT!");
-//            send_response_and_return_if_false(is_number(data_vector[1]), user_connection, GET_100_CHATS_FAIL,
-//                                              "Last dialog time should bu INT!");
 
             int n_dialogs;
             int last_dialog_time;
@@ -701,7 +693,7 @@ namespace Net::Server {
     UserConnection::accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
         // TODO
-        if (!connection.connection_is_protected || !connection.decrypter.has_value()) {
+        if (!connection.connection_is_protected || !connection.decrypter.has_value() || client.bad()) {
             throw std::runtime_error("Bad connection!");
         }
         EncryptedRequest encrypted_request(client);
@@ -756,9 +748,14 @@ namespace Net::Server {
         }
         connection_is_active = true;
         std::cout << "Start accepting requests!\n";
-        while (client.value() && connection_is_active) {
-            accept_client_request(client.value(), rem_endpoint.address().to_string(), connection);
+        try {
+            while (client.value() && connection_is_active) {
+                accept_client_request(client.value(), rem_endpoint.address().to_string(), connection);
+            }
+        } catch (...) {
+            std::cout << "Connection -> expires, closing the connection!\n";
         }
+
         std::cout << "Completed -> " << rem_endpoint << "\n";
         // AWARE func calls thread detach!
         server.close_connection(connection_number);
