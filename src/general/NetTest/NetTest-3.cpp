@@ -4,7 +4,7 @@
 
 #define MULTI_CLIENT_TEST
 
-#include "NetClient.hpp"
+#include "Net/NetClient.hpp"
 #include <unistd.h>
 #include <chrono>
 

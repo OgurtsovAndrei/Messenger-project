@@ -2,8 +2,8 @@
 // Created by andrey on 05.05.23.
 //
 
-#ifndef MESSENGER_PROJECT_NETGENERAL_REFACTORED_HPP
-#define MESSENGER_PROJECT_NETGENERAL_REFACTORED_HPP
+#ifndef MESSENGER_PROJECT_NETGENERAL_HPP
+#define MESSENGER_PROJECT_NETGENERAL_HPP
 
 
 #include <string>
@@ -124,7 +124,10 @@ namespace Net {
 
         explicit EncryptedRequest(boost::asio::ip::tcp::iostream &connection) {
             std::string request_string_size = read_n_and_get_string(REQUEST_STRING_SIZE_IN_CHARS, connection);
-            assert(is_number(request_string_size));
+            if (!is_number(request_string_size)) {std::cout << "<<" <<  request_string_size << ">>\n"; }
+            if (!is_number(request_string_size)) {
+                throw std::runtime_error("Bad connection! Expected request length, but received bytes are not number!");
+            }
             int request_size = std::stoi(request_string_size);
             data_string = read_n_and_get_string(request_size, connection);
         }
@@ -173,19 +176,13 @@ namespace Net {
 
     namespace {
         inline void send_text_to_server(const std::string &text, boost::asio::ip::tcp::iostream &connection) {
-            connection << text << std::endl;
+            connection << text;
         }
     }
 
     inline void try_send_request(const EncryptedRequest &request, boost::asio::ip::tcp::iostream &connection) {
         send_text_to_server(request.to_text(), connection);
     }
-
-    inline void send_data_by_connection(RequestType type, json data_to_sent, boost::asio::ip::tcp::iostream &connection,
-                                        Cryptographer::Encrypter &encrypter) {
-        DecryptedRequest request(type, std::move(data_to_sent));
-        try_send_request(request.encrypt(encrypter), connection);
-    }
 }
 
-#endif //MESSENGER_PROJECT_NETGENERAL_REFACTORED_HPP
+#endif //MESSENGER_PROJECT_NETGENERAL_HPP

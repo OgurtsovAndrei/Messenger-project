@@ -17,11 +17,11 @@
 #include <mutex>
 #include <optional>
 
-#include "NetGeneral-Refactored.hpp"
+#include "NetGeneral.hpp"
 #include "Cryptographer.hpp"
-#include "./../../../include/database/Message.hpp"
-#include "./../../../include/database/Dialog.hpp"
-#include "../../../include/Status.hpp"
+#include "database/Message.hpp"
+#include "database/Dialog.hpp"
+#include "Status.hpp"
 
 
 namespace Net::Client {
@@ -80,7 +80,7 @@ namespace Net::Client {
 
             DecryptedRequest response = get_request();
             if (response.get_type() == SEND_MESSAGE_SUCCESS) {
-                return Status(true, response.data["message_id"]);
+                return Status(true, response.data.dump(4));
             } else {
                 assert(response.get_type() == SEND_MESSAGE_FAIL);
                 return Status(false, response.data["what"]);
@@ -207,7 +207,7 @@ namespace Net::Client {
         }
 
 
-        std::pair<Status, std::vector<database_interface::Dialog>> get_last_n_dialogs (int n_dialogs, int last_dialog_time = INT32_MAX) {
+        /*std::pair<Status, std::vector<database_interface::Dialog>> get_last_n_dialogs (int n_dialogs, int last_dialog_time = INT32_MAX) {
             std::vector<std::string> data_vector{std::to_string(n_dialogs),
                                                  std::to_string(last_dialog_time)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);
@@ -237,9 +237,32 @@ namespace Net::Client {
                 assert(response.get_type() == GET_100_CHATS_FAIL);
                 return {Status(false, response.get_body()), {}};
             }
+        }*/
+
+        std::pair<Status, std::vector<database_interface::Dialog>> get_last_n_dialogs(int n_dialogs, int last_dialog_time = INT32_MAX) {
+            DecryptedRequest decrypted_request(GET_100_CHATS, {{"n_dialogs", n_dialogs}, {"last_dialog_time", last_dialog_time}});
+            send_request(decrypted_request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_100_CHATS_SUCCESS) {
+                std::vector<database_interface::Dialog> dialogs_vector = response.data["dialogs"];
+                /*for (const auto& json_dialog : response.data["dialogs"]) {
+                    database_interface::Dialog new_dialog(-1);
+                    Status current_status = database_interface::Dialog::parse_to_dialog(json_dialog.dump(), new_dialog);
+                    if (!current_status) {
+                        return {Status(false, "Can not convert status from:\t\t <" + json_dialog.dump() + ">"),
+                                std::move(dialogs_vector)};
+                    }
+                    dialogs_vector.push_back(std::move(new_dialog));
+                }*/
+                return {Status(true), std::move(dialogs_vector)};
+            } else {
+                assert(response.get_type() == GET_100_CHATS_FAIL);
+                return {Status(false, response.data["what"]), {}};
+            }
         }
 
-        Status make_dialog(std::string dialog_name, std::string encryption, int current_time, int is_grope, const std::vector<unsigned int>& user_ids) {
+        /*Status make_dialog(std::string dialog_name, std::string encryption, int current_time, int is_grope, const std::vector<unsigned int>& user_ids) {
             std::vector<std::string> data_vector{std::move(dialog_name), std::move(encryption), std::to_string(current_time), std::to_string(is_grope),
                                                  convert_int_vector_to_text(user_ids)};
             std::string data_to_send = convert_text_vector_to_text(data_vector);
@@ -259,33 +282,50 @@ namespace Net::Client {
                 }
                 return Status(false, response.data["what"]);
             }
+        }*/
+
+        Status make_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group, const std::vector<unsigned int>& user_ids) {
+            database_interface::Dialog new_dialog;
+            nlohmann::json dialog_json;
+
+            new_dialog.m_name = std::move(dialog_name);
+            new_dialog.m_encryption = std::move(encryption);
+            new_dialog.m_date_time = current_time;
+            new_dialog.m_is_group = is_group;
+
+            dialog_json["user_ids"] = user_ids;
+            dialog_json["dialog"] = new_dialog;
+
+            DecryptedRequest request(MAKE_GROPE, dialog_json);
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == MAKE_GROPE_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == MAKE_GROPE_FAIL);
+                return Status(false, response.data["what"]);
+            }
         }
 
         Status log_in(std::string login, std::string password) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
-            if (connection_is_secured) {
-                send_secured_request(Net::LOG_IN_REQUEST, convert_text_vector_to_text({std::move(login), std::move(password)}));
+            database_interface::User user(std::move(login), std::move(password));
+            DecryptedRequest request(LOG_IN_REQUEST, user);
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == LOG_IN_SUCCESS) {
+                user = response.data;
+                return Status(true, std::to_string(user.m_user_id));
             } else {
-                send_request(Net::LOG_IN_REQUEST, convert_text_vector_to_text({std::move(login), std::move(password)}));
-            }
-            Request response = get_request();
-            if (connection_is_secured) {
-                response = decrypt_request(std::move(response));
-            }
-            if (response.is_readable() && response.get_type() == LOG_IN_SUCCESS) {
-                return Status(true, response.get_body());
-            } else {
-                if (response.get_type() != LOG_IN_FAIL) {
-                    std::cerr << response.get_type() << "\n";
-                    assert(response.get_type() == LOG_IN_FAIL);
-                }
+                assert(response.get_type() == LOG_IN_FAIL);
                 return Status(false, response.data["what"]);
             }
         }
 
         Status close_connection() {
-            send_request(DecryptedRequest(Net::LOG_IN_REQUEST).encrypt(encrypter.value()));
+            send_request(DecryptedRequest(Net::CLOSE_CONNECTION).encrypt(encrypter.value()));
             connection->close();
             return Status{true};
         }
@@ -294,19 +334,20 @@ namespace Net::Client {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
             // Password is not really a password, but its hash.
-            std::vector<std::string> data_vector{std::move(name), std::move(surname), std::move(login), std::move(password)};
-            std::string data_to_send = convert_text_vector_to_text(data_vector);
-            if (connection_is_secured) {
-                send_secured_request(SIGN_UP_REQUEST, data_to_send);
-            } else {
-                send_request(SIGN_UP_REQUEST, data_to_send);
-            }
-            Request response = get_request();
-            if (connection_is_secured) {
-                response = decrypt_request(std::move(response));
-            }
-            if (response.is_readable() && response.get_type() == SIGN_UP_SUCCESS) {
-                return Status(true, response.get_body());
+            database_interface::User user;
+            user.m_name = std::move(name);
+            user.m_surname = std::move(surname);
+            user.m_login = std::move(login);
+            user.m_password_hash = std::move(password);
+
+            DecryptedRequest request(SIGN_UP_REQUEST, user);
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+
+            if (response.get_type() == SIGN_UP_SUCCESS) {
+                user = response.data;
+                return Status(true, std::to_string(user.m_user_id));
             } else {
                 assert(response.get_type() == SIGN_UP_FAIL);
                 return Status(false, response.data["what"]);
@@ -315,31 +356,25 @@ namespace Net::Client {
 
         std::pair<Status, database_interface::User> get_user_id_by_login(const std::string& login) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
-            if (connection_is_secured) {
-                send_secured_request(GET_USER_BY_LOGIN, login);
-            } else {
-                send_request(GET_USER_BY_LOGIN, login);
-            }
+            DecryptedRequest request(GET_USER_BY_LOGIN, json{{"login", login}});
+            send_request(request.encrypt(encrypter.value()));
 
-            Request response = get_request();
-            if (connection_is_secured) {
-                response = decrypt_request(std::move(response));
-            }
-            if (response.is_readable() && response.get_type() == GET_USER_BY_LOGIN_SUCCESS) {
-                database_interface::User user{};
-                std::vector<std::string> user_data = convert_to_text_vector_from_text(response.get_body());
-                assert(user_data.size() == 4);
-                assert(is_number(user_data[0]));
-                user.m_user_id = std::stoi(user_data[0]);
-                user.m_name = std::move(user_data[1]);
-                user.m_surname = std::move(user_data[2]);;
-                user.m_login = std::move(user_data[3]);;
-                return {Status(true, response.get_body()), std::move(user)};
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_USER_BY_LOGIN_SUCCESS) {
+                database_interface::User user = response.data;
+                return {Status(true, ""), std::move(user)};
             } else {
                 assert(response.get_type() == SIGN_UP_FAIL);
-                return {Status(false, response.get_body()), database_interface::User{}};
+                return {Status(false, response.data["what"]), database_interface::User{}};
             }
         };
+
+        std::string send_text_request_and_return_response_text(const std::string& message) {
+            send_request(Net::DecryptedRequest(Net::SECURED_REQUEST, json{{"text", message}}).encrypt(encrypter.value()));
+            auto response = get_request();
+            assert(response.get_type() == RESPONSE_REQUEST_SUCCESS);
+            return response.data["text"];
+        }
 
         DecryptedRequest get_request() {
             EncryptedRequest request(connection.value());
@@ -350,6 +385,7 @@ namespace Net::Client {
             auto request = get_request();
             return "Got from server: " + request.data.dump(4);
         }
+
 
     private:
 #ifndef MULTI_CLIENT_TEST

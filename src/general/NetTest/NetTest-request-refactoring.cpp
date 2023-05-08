@@ -2,7 +2,7 @@
 // Created by andrey on 05.05.23.
 //
 
-#include "NetGeneral-Refactored.hpp"
+#include "Net/NetGeneral.hpp"
 #include "Cryptographer.hpp"
 #include <iostream>
 #include <string>
