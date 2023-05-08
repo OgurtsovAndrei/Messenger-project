@@ -2,8 +2,8 @@
 // Created by andrey on 15.03.23.
 //
 
-#ifndef MESSENGER_PROJECT_NETGENERAL_HPP
-#define MESSENGER_PROJECT_NETGENERAL_HPP
+#ifndef MESSENGER_PROJECT_NETGENERAL_BU_HPP
+#define MESSENGER_PROJECT_NETGENERAL_BU_HPP
 
 #include <string>
 #include <iostream>
@@ -12,7 +12,7 @@
 #include <vector>
 #include <utility>
 #include <boost/asio.hpp>
-#include "../../../include/TextWorker.hpp"
+#include "TextWorker.hpp"
 
 namespace Net {
 
@@ -22,9 +22,9 @@ namespace Net {
         FILE,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
-        MAKE_UNSECURE_CONNECTION,
-        MAKE_UNSECURE_CONNECTION_SUCCESS,
-        MAKE_UNSECURE_CONNECTION_FAIL,
+//        MAKE_UNSECURE_CONNECTION,
+//        MAKE_UNSECURE_CONNECTION_SUCCESS,
+//        MAKE_UNSECURE_CONNECTION_FAIL,
         MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY,
         MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY,
         MAKE_SECURE_CONNECTION_SUCCESS,
@@ -305,12 +305,6 @@ namespace Net {
         }
     }
 
-    inline std::string get_line_from_connection(boost::asio::ip::tcp::iostream &connection) {
-        std::string response;
-        std::getline(connection, response);
-        return std::move(response);
-    }
-
     inline void send_message_by_connection(RequestType type, std::string message, boost::asio::ip::tcp::iostream &connection) {
         Request request(type, std::move(message));
         request.make_request();
@@ -320,4 +314,4 @@ namespace Net {
     }
 }
 
-#endif //MESSENGER_PROJECT_NETGENERAL_HPP
+#endif //MESSENGER_PROJECT_NETGENERAL_BU_HPP

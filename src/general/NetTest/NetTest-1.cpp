@@ -2,7 +2,7 @@
 // Created by andrey on 08.03.23.
 //
 
-#include "NetServer.hpp"
+#include "Net/NetServer.hpp"
 #include <cassert>
 
 int main() {
@@ -12,7 +12,7 @@ int main() {
         std::cout << open_res.message() << "\n";
         return 0;
     }
-    server.run_server(4);
+    server.run_server(1);
     assert(server.close_database().correct());
     return 0;
 }
