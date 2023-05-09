@@ -103,19 +103,21 @@ Status SQL_BDInterface::get_user_by_id(User &user){
 }
 
 Status SQL_BDInterface::get_user_by_log_pas(User &user) {
-    std::string sql = "SELECT id, Name, Surname FROM Users WHERE Login='";
+    std::string sql = "SELECT id, Name, Surname, PasswordHash FROM Users WHERE Login='";
     sql += user.m_login + "';";
     char *message_error;
     std::string string_message;
     User tmp_user;
     User::m_edit_user = &tmp_user;
     int exit =
-        sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
+        sqlite3_exec(m_bd, sql.c_str(), User::get_all_params, 0, &message_error);
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
     User::m_edit_user = nullptr;
     if (exit == SQLITE_OK && tmp_user.m_user_id != -1 && Botan::argon2_check_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), tmp_user.m_password_hash)){
-        user = tmp_user;
+        user.m_user_id = tmp_user.m_user_id;
+        user.m_name = tmp_user.m_name;
+        user.m_surname = tmp_user.m_surname;
     }
     return Status(
         exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User.\nMessage: " + string_message +
