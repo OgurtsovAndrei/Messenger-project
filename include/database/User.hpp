@@ -49,6 +49,8 @@ struct User {
 
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 
+    static int get_all_params(void *NotUsed, int argc, char **argv, char **azColName);
+
     static int request_callback(void *NotUsed, int argc, char **argv, char **azColName);
 };
 
