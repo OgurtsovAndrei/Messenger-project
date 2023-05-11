@@ -1,6 +1,6 @@
 #include "interface/mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "NetTest/netClient.hpp"
+#include "Net/NetClient.hpp"
 #include "Status.hpp"
 #include "interface/addGroup.h"
 #include "interface/bubble.h"
@@ -143,7 +143,6 @@ void MainWindow::on_chatName_clicked()
 ///   TODO get_dialog_by_id
     auto [status, chats] = client.get_last_n_dialogs(100);
     for  (auto &chat : chats) {
-        QString new_chat;
         if (chat.m_dialog_id == select_chat_id) {
             auto *ch_info = new ChatInfo(&chat, this);
             ch_info->show();

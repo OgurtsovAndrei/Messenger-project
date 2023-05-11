@@ -1,4 +1,4 @@
-#include "../../../include/database/User.hpp"
+#include "database/User.hpp"
 #include <vector>
 
 namespace database_interface {

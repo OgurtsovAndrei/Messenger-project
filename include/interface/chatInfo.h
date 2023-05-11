@@ -2,7 +2,7 @@
 #define CHATINFO_H
 
 #include <QDialog>
-#include "Dialog.hpp"
+#include "database/Dialog.hpp"
 
 namespace Ui {
 class ChatInfo;

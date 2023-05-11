@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 #include <list>
-#include "User.hpp"
+#include "database/User.hpp"
 #include "Status.hpp"
 #include "TextWorker.hpp"
 

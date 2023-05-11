@@ -7,10 +7,10 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "Dialog.hpp"
-#include "Message.hpp"
-#include "./../Status.hpp"
-#include "User.hpp"
+#include "database/Dialog.hpp"
+#include "database/Message.hpp"
+#include "Status.hpp"
+#include "database/User.hpp"
 
 namespace database_interface {
 

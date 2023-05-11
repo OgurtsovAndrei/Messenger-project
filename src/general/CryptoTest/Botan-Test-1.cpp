@@ -18,7 +18,7 @@
 #include <botan/data_src.h>
 //#include <botan/vector>
 
-#include "../../../include/Cryptographer.hpp"
+#include "Cryptographer.hpp"
 
 using namespace Cryptographer;
 

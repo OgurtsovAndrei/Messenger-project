@@ -5,7 +5,7 @@
 #include <cassert>
 #include "Net/NetClient.hpp"
 #include "Net/NetGeneral.hpp"
-#include "../../../include/TextWorker.hpp"
+#include "TextWorker.hpp"
 #include <unistd.h>
 
 int main() {

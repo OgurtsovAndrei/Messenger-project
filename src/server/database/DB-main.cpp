@@ -4,7 +4,7 @@
 //#include <chrono>
 //#include <ctime>
 //#include "../../../include/database/DataBaseInterface.hpp"
-//#include "../../../include/database/User.hpp"
+//#include "User.hpp"
 //
 //int main(int argc, char **argv) {
 //    database_interface::SQL_BDInterface bd = database_interface::SQL_BDInterface();

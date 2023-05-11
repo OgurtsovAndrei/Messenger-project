@@ -17,7 +17,7 @@
 #include <mutex>
 #include <optional>
 
-#include "NetGeneral.hpp"
+#include "Net/NetGeneral.hpp"
 #include "Cryptographer.hpp"
 #include "database/Message.hpp"
 #include "database/Dialog.hpp"

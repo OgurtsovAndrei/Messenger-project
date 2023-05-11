@@ -1,7 +1,7 @@
-#include "../../include/interface/register.h"
+#include "interface/register.h"
 #include "./ui_register.h"
-#include "../../include/interface/mainwindow.h"
-#include "../../src/general/NetTest/netClient.hpp"
+#include "interface/mainwindow.h"
+#include "Net/NetClient.hpp"
 #include "interface/welcWindow.h"
 
 Net::Client::Client client("localhost", "12345");
