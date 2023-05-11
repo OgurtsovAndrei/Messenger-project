@@ -289,6 +289,13 @@ namespace Net::Server {
                                 break;
                             case SIGN_UP_FAIL:
                                 break;
+                            case ADD_USER_TO_DIALOG:
+                                process_add_user_to_dialog_request(user_connection, std::move(request));
+                                break;
+                            case ADD_USER_TO_DIALOG_SUCCESS:
+                                break;
+                            case ADD_USER_TO_DIALOG_FAIL:
+                                break;
                         }
                     }
                 })));
@@ -659,6 +666,19 @@ namespace Net::Server {
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_LOGIN_FAIL,
                                               "Get user exception: " + current_status.message());
             user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_LOGIN_SUCCESS, user));
+        }
+
+        void process_add_user_to_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
+            send_response_and_return_if_false(request.data["user_id"].is_number(), user_connection,
+                                              ADD_USER_TO_DIALOG_FAIL, "User_id should be the integer!!");
+            send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
+                                              ADD_USER_TO_DIALOG_FAIL, "Dialog_id should be the integer!!");
+            database_interface::User user_to_add(static_cast<int>(request.data["user_id"]));
+            database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
+            Status current_status = bd_connection.add_user_to_dialog(user_to_add, current_dialog);
+            send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
+                                              "Add_user_to_dialog exception: " + current_status.message());
+            user_connection.send_secured_request(DecryptedRequest(ADD_USER_TO_DIALOG_SUCCESS, {}));
         }
 
         int find_empty_connection_number() {

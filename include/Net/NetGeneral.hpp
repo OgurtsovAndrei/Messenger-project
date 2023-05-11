@@ -65,6 +65,9 @@ namespace Net {
         SIGN_UP_REQUEST,
         SIGN_UP_SUCCESS,
         SIGN_UP_FAIL,
+        ADD_USER_TO_DIALOG,
+        ADD_USER_TO_DIALOG_SUCCESS,
+        ADD_USER_TO_DIALOG_FAIL,
         CLOSE_CONNECTION,
         UNKNOWN,
     };
