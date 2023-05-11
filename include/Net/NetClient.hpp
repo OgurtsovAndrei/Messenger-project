@@ -30,7 +30,7 @@ namespace Net::Client {
     public:
 #ifndef MULTI_CLIENT_TEST
 
-        Client(std::string server_ip_ = "localhost", std::string port_ = "12345") :
+        explicit Client(std::string server_ip_ = "localhost", std::string port_ = "12345") :
                 server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #else
         Client(boost::asio::io_context &ioContext, std::string server_ip_ = "localhost", std::string port_ = "12345") :
@@ -304,6 +304,24 @@ namespace Net::Client {
                 return Status(true);
             } else {
                 assert(response.get_type() == MAKE_GROPE_FAIL);
+                return Status(false, response.data["what"]);
+            }
+        }
+
+        Status change_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group) {
+            // TODO
+        }
+
+        Status add_user_to_dialog(int user_id, int dialog_id) {
+            DecryptedRequest request(ADD_USER_TO_DIALOG, json{{"user_id", user_id},{"dialog_id", dialog_id}});
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == ADD_USER_TO_DIALOG_SUCCESS) {
+                database_interface::User user = response.data;
+                return Status(true, "");
+            } else {
+                assert(response.get_type() == ADD_USER_TO_DIALOG_FAIL);
                 return Status(false, response.data["what"]);
             }
         }
