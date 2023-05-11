@@ -11,7 +11,11 @@
 int main() {
     Net::Client::Client client("localhost", "12345");
     client.make_secure_connection();
-    if (true) {
+    if (false) {
+        std::string login = "New-Login-1";
+        std::string password =  "New-Password-1";
+        std::string surname = "New-Surname-1";
+        std::string name = "New-username-1";
         std::cout << "Done0" << std::endl;
         auto status1 = client.log_in("sdfasdf", "asdf");
         assert(!status1);
@@ -32,7 +36,7 @@ int main() {
             return 0;
         }
     } else {
-        std::string login = "New-Login-2";
+        std::string login = "New-Login-1";
         std::string password =  "New-Password-1";
         std::string surname = "New-Surname-1";
         std::string name = "New-username-1";
@@ -40,7 +44,6 @@ int main() {
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
         status = client.log_in(login, password);
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
-
     }
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";

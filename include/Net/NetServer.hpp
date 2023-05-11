@@ -67,10 +67,6 @@ namespace Net::Server {
             return connection_is_protected;
         }
 
-        [[nodiscard]] boost::asio::ip::tcp::iostream &get_client_ref() {
-            return client.value();
-        }
-
         std::optional<database_interface::User> &get_user_in_db_ref() {
             return user_in_db;
         }
@@ -79,6 +75,7 @@ namespace Net::Server {
             require(connection_is_protected, "Connection should be secured!!");
             require(encrypter.has_value(), "Connection should be secured!!");
             EncryptedRequest encrypted_request = decrypted_request.encrypt(encrypter.value());
+            std::unique_lock lock(*client_connection_out_mutex);
             Net::try_send_request(encrypted_request, client.value());
             return Status(true);
         }
@@ -89,6 +86,7 @@ namespace Net::Server {
 
             EncryptedRequest encrypted_request = DecryptedRequest(type, to_json_exception(
                     std::move(exception_message))).encrypt(encrypter.value());
+            std::unique_lock lock(*client_connection_out_mutex);
             Net::try_send_request(encrypted_request, client.value());
             return Status(true);
         }
@@ -106,6 +104,8 @@ namespace Net::Server {
         int connection_number;
         boost::asio::ip::tcp::socket current_socket;
         Server &server;
+        std::unique_ptr<std::mutex> client_connection_out_mutex = std::make_unique<std::mutex>();
+        std::unique_ptr<std::mutex> client_connection_in_mutex = std::make_unique<std::mutex>();
         // Not necessary to init
         std::vector<DecryptedRequest> connection_requests;
         std::optional<boost::asio::ip::tcp::iostream> client;
@@ -117,7 +117,7 @@ namespace Net::Server {
         std::optional<Cryptographer::Decrypter> decrypter;
         std::optional<database_interface::User> user_in_db;
 
-        static void accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
+        static void accept_client_request(const std::string &rem_endpoint_str,
                                           UserConnection &connection);
 
         Status
@@ -399,12 +399,12 @@ namespace Net::Server {
                                               user_connection,
                                               SIGN_UP_FAIL, "Password should contain only one word!");
             auto status = bd_connection.get_user_by_log_pas(user_in_db);
-            std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
             if (status) {
                 database_interface::User user_copy = user_in_db;
                 user_copy.m_password_hash.clear();
                 user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, user_copy));
                 logging_in_is_successful = true;
+                std::cout << "User with id: " + std::to_string(user_in_db.m_user_id) + " logged in!\n";
             } else {
                 user_connection.send_secured_exception(LOG_IN_FAIL, status.message());
             }
@@ -444,17 +444,6 @@ namespace Net::Server {
         void process_change_old_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
-            /*
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
-                                              CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
-            std::vector<std::string> data_vector = convert_to_text_vector_from_text(request.get_body());
-            send_response_and_return_if_false(data_vector.size() == 2, user_connection, CHANGE_MESSAGE_FAIL,
-                                              "Bad request body format or invalid request type!");
-            send_response_and_return_if_false(is_number(data_vector[0]), user_connection, CHANGE_MESSAGE_FAIL,
-                                              "Message ID should be int!");
-            int old_message_id = std::stoi(data_vector[0]);
-            std::string new_body = data_vector[1];
-            */
             database_interface::Message old_message;
             database_interface::Message new_message;
             try {
@@ -690,13 +679,15 @@ namespace Net::Server {
     };
 
     void
-    UserConnection::accept_client_request(boost::asio::ip::tcp::iostream &client, const std::string &rem_endpoint_str,
+    UserConnection::accept_client_request(const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
         // TODO
-        if (!connection.connection_is_protected || !connection.decrypter.has_value() || client.bad()) {
+        if (!connection.connection_is_protected || !connection.decrypter.has_value() || connection.client.value().bad()) {
             throw std::runtime_error("Bad connection!");
         }
-        EncryptedRequest encrypted_request(client);
+        std::unique_lock lock(*connection.client_connection_in_mutex);
+        EncryptedRequest encrypted_request(connection.client.value());
+        lock.unlock();
         std::cout << "Got request from --->>> " << rem_endpoint_str << "\n";
         DecryptedRequest decrypted_request = encrypted_request.decrypt(connection.decrypter.value());
         connection.server.push_request_to_queue(connection.connection_number, std::move(decrypted_request));
@@ -709,7 +700,9 @@ namespace Net::Server {
         client = boost::asio::ip::tcp::iostream(std::move(socket));
         while (true) {
             try {
+                std::unique_lock lock(*client_connection_in_mutex);
                 EncryptedRequest encrypted_request(client.value());
+                lock.unlock();
                 DecryptedRequest request = encrypted_request.reinterpret_cast_to_decrypted();
                 if (request.request_type != MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
                     continue;
@@ -719,8 +712,10 @@ namespace Net::Server {
                                                                 Cryptographer::Cryptographer::get_rng());
                 DecryptedRequest response_with_key(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY);
                 response_with_key.data["public_key"] = connection.decrypter.value().get_str_publicKey();
+                lock.lock();
                 Net::try_send_request(response_with_key.reinterpret_cast_to_encrypted(), client.value());
                 EncryptedRequest response(client.value());
+                lock.unlock();
                 if (response.reinterpret_cast_to_decrypted().request_type != MAKE_SECURE_CONNECTION_SUCCESS) {
                     continue;
                 }
@@ -734,7 +729,9 @@ namespace Net::Server {
         bool logging_in_is_successful = false;
         while (!logging_in_is_successful) {
             try {
+                std::unique_lock lock(*client_connection_in_mutex);
                 EncryptedRequest encrypted_request(client.value());
+                lock.unlock();
                 DecryptedRequest request = encrypted_request.decrypt(decrypter.value());
                 if (request.request_type == LOG_IN_REQUEST) {
                     server.log_in(connection, request, logging_in_is_successful);
@@ -742,15 +739,16 @@ namespace Net::Server {
                     // Create new user request
                     server.sign_up(connection, request);
                 }
-            } catch (...) {
-                continue;
+            } catch (std::exception &exception) {
+                std::cerr << "Loging in failed with exception: " + static_cast<std::string>(exception.what()) + "\n";
+                return;
             }
         }
         connection_is_active = true;
         std::cout << "Start accepting requests!\n";
         try {
             while (client.value() && connection_is_active) {
-                accept_client_request(client.value(), rem_endpoint.address().to_string(), connection);
+                accept_client_request(rem_endpoint.address().to_string(), connection);
             }
         } catch (...) {
             std::cout << "Connection -> expires, closing the connection!\n";

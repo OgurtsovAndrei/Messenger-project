@@ -25,7 +25,8 @@ find_package(SQLite3 REQUIRED)
 
 add_definitions(-DCMAKE_EXPECTED_SQLite3_VERSION="${SQLite3_VERSION}")
 
-add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
+add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp
+        include/Net/NetServer.hpp)
 add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
 add_executable(Net3 src/general/NetTest/NetTest-3.cpp)
 add_executable(request-refactoring src/general/NetTest/NetTest-request-refactoring.cpp)
