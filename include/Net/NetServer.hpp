@@ -6,7 +6,7 @@
 #define MESSENGER_PROJECT_NETSERVER_HPP
 
 #include <utility>
-#include "NetGeneral.hpp"
+#include "Net/NetGeneral.hpp"
 #include <boost/asio.hpp>
 #include <iostream>
 #include <thread>
@@ -22,7 +22,7 @@
 #include "Status.hpp"
 #include "TextWorker.hpp"
 #include "Cryptographer.hpp"
-#include "User.hpp"
+#include "database/User.hpp"
 #include "DataBaseInterface.hpp"
 
 #define send_response_and_return_if_false(expr, user, assert_request_type, message) if (!(expr)) \

@@ -1,4 +1,4 @@
-#include "../../include/interface/bubble.h"
+#include "interface/bubble.h"
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QPainter>
