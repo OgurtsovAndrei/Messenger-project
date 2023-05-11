@@ -15,7 +15,9 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QPushButton {background-color : #486E65;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}
-QPushButton:pressed { background-color: #96a7a1; }</string>
+QPushButton:pressed { background-color: #96a7a1; }
+QTextEdit {background-color : #294d52;border-width: 2px; 
+border-radius: 5px; padding: 6px;}</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_3">
@@ -66,6 +68,9 @@ QPushButton:pressed { background-color: #96a7a1; }</string>
          <string notr="true">QLineEdit {background-color : #396d75; border-width: 1px; 
 border-radius: 5px; padding: 6px;}</string>
         </property>
+        <property name="text">
+         <string/>
+        </property>
        </widget>
       </item>
       <item row="2" column="0" colspan="2">
@@ -94,12 +99,12 @@ border-radius: 5px; padding: 6px;}</string>
       <property name="verticalSpacing">
        <number>2</number>
       </property>
-      <item row="1" column="1">
+      <item row="2" column="1">
        <layout class="QVBoxLayout" name="sendButtonLayout">
         <item>
          <widget class="QPushButton" name="sendButton">
           <property name="styleSheet">
-           <string notr="true">QPushButton:pressed { background-color: #96a7a1; }</string>
+           <string notr="true"/>
           </property>
           <property name="text">
            <string>Send</string>
@@ -108,7 +113,7 @@ border-radius: 5px; padding: 6px;}</string>
         </item>
        </layout>
       </item>
-      <item row="1" column="0">
+      <item row="2" column="0">
        <widget class="QTextEdit" name="newMessageInput">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
@@ -122,7 +127,7 @@ border-radius: 5px; padding: 6px;}</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0" colspan="2">
+      <item row="1" column="0" colspan="2">
        <widget class="QListWidget" name="messagesList">
         <property name="styleSheet">
          <string notr="true">.QListWidget {background-color : #294d72;border-width: 2px; 
@@ -136,6 +141,18 @@ border-radius: 5px; padding: 6px;}</string>
           <width>10</width>
           <height>10</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <widget class="QPushButton" name="chatName">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {background-color : #3A6476;border-width: 2px; 
+        border-radius: 5px; padding: 6px;}
+QPushButton:pressed { background-color: #96a7a1; }</string>
+        </property>
+        <property name="text">
+         <string/>
         </property>
        </widget>
       </item>

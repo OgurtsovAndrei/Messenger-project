@@ -6,8 +6,8 @@
 #include <vector>
 #include <list>
 #include "User.hpp"
-#include "../Status.hpp"
-#include "../TextWorker.hpp"
+#include "Status.hpp"
+#include "TextWorker.hpp"
 
 namespace database_interface {
 

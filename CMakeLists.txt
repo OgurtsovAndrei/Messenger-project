@@ -80,14 +80,22 @@ target_include_directories(Net1 PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        src/interface/mainwindow.cpp
 #        src/interface/welcWindow.cpp
 #        src/interface/register.cpp
+#        src/interface/bubble.cpp
+#        src/interface/addGroup.cpp
+#        src/interface/chatInfo.cpp
 #
 #        include/interface/welcWindow.h
 #        include/interface/mainwindow.h
 #        include/interface/register.h
+#        include/interface/bubble.h
+#        include/interface/addGroup.h
+#        include/interface/chatInfo.h
 #
 #        src/interface/mainwindow.ui
 #        src/interface/register.ui
 #        src/interface/welcWindow.ui
+#        src/interface/addGroup.ui
+#        src/interface/chatInfo.ui
 #        )
 #
 #add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

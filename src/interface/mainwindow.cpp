@@ -1,11 +1,12 @@
 #include "interface/mainwindow.h"
 #include "./ui_mainwindow.h"
-#include "./ui_addGroup.h"
 #include "NetTest/netClient.hpp"
 #include "Status.hpp"
 #include "interface/addGroup.h"
 #include "interface/bubble.h"
 #include "interface/welcWindow.h"
+#include "interface/chatInfo.h"
+//#include "User.hpp"
 
 #include <QStringListModel>
 #include <QListWidget>
@@ -32,35 +33,6 @@ MainWindow::MainWindow(QWidget *parent)
         ui->newMessageInput->setPlainText("");
     });
 
-//    connect(ui->chatsList, SIGNAL(itemClicked(QListWidgetItem*item)),
-//            this, SLOT([&](QListWidgetItem *item){
-//            if (item != nullptr) {
-//                select_chat_id = chats_id_map[item->text()];
-//            }
-//            update_messages(selected_chat_id);
-//    }));
-
-//    connect(ui->findLine, &QLineEdit::textChanged, this, [&]{
-//        if (ui->findLine->text() != "") {
-//            ui->findButton->setText("Find");
-//            return;
-//        }
-//        ui->findButton->setText("New Group");
-//    });
-
-//    connect(ui->findButton, &QPushButton::clicked, this, [&]{
-//        if (ui->findButton->text() == "Find") {
-//            on_findButton_clicked();
-//            return;
-//        }
-//        addGroup();
-//    })
-
-    //  ui->chatsList->setModel(new QStringListModel(List));
-
-    //    ui->chatsList->setEditTriggers(QAbstractItemView::AnyKeyPressed |
-    //    QAbstractItemView::DoubleClicked); ui->sendButton->setVisible(false);
-    //    ui->newMessageInput->setVisible(false); //or true - later in the code
     /* Проинициализоровать
     * ChatList
     * Messagewindow без send блока
@@ -68,16 +40,16 @@ MainWindow::MainWindow(QWidget *parent)
     *
     */
 
-//    auto *chat_timer = new QTimer(this);
-//    connect(chat_timer, &QTimer::timeout, [&]{
-//      auto [status, chats] = client.get_last_n_dialogs(100);
-//      if (chats.size() != chats_id_map.size()) {
-//          std::cout << "Chats updates...\n";
-//          update_chats();
-//      }
-//    });
-//
-//    chat_timer->start(1000);
+    auto *chat_timer = new QTimer(this);
+    connect(chat_timer, &QTimer::timeout, [&]{
+      auto [status, chats] = client.get_last_n_dialogs(100);
+      if (chats.size() != chats_id_map.size()) {
+          std::cout << "Chats updates...\n";
+          update_chats();
+      }
+    });
+
+    chat_timer->start(10000);
 
     auto *message_timer = new QTimer(this);
     connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
@@ -92,8 +64,20 @@ void MainWindow::update_chats() {
     auto [status, chats] = client.get_last_n_dialogs(100);
     std::cout << chats.size() << "\n";
     for (const auto &chat : chats) {
-        auto users_in_chat = chat;
-        QString new_chat(QString::fromStdString(chat.m_name));
+        QString new_chat;
+        if (chat.m_is_group) {
+            new_chat = QString::fromStdString(chat.m_name);
+        }
+        else {
+//            auto frt_user = (*chat.m_users)[0];
+//            auto sec_user = (*chat.m_users)[1];
+//            if (frt_user.m_user_id == client_id) {
+//                std::swap(frt_user, sec_user);
+//            }
+//            new_chat = QString::fromStdString(frt_user.m_name + " " + frt_user.m_surname);
+            new_chat = QString::fromStdString(chat.m_name );
+
+        }
         ui->chatsList->addItem(new_chat);
         chats_id_map[new_chat] = chat.m_dialog_id;
     }
@@ -103,6 +87,7 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
 {
     if (item != nullptr) {
         select_chat_id = chats_id_map[item->text()];
+        ui->chatName->setText(item->text());
     }
     auto [status, messages] = client.get_n_messages(100, select_chat_id);
     if (ui->messagesList->count() == messages.size()) {
@@ -153,10 +138,27 @@ void MainWindow::on_groupButton_clicked()
    add_gr->show();
 }
 
-int MainWindow::get_client_id() {
+void MainWindow::on_chatName_clicked()
+{
+///   TODO get_dialog_by_id
+    auto [status, chats] = client.get_last_n_dialogs(100);
+    for  (auto &chat : chats) {
+        QString new_chat;
+        if (chat.m_dialog_id == select_chat_id) {
+            auto *ch_info = new ChatInfo(&chat, this);
+            ch_info->show();
+        }
+    }
+//    auto *ch_info = new ChatInfo(this);
+//    ch_info->show();
+}
+
+int MainWindow::get_client_id() const {
     return client_id;
 }
 
 void MainWindow::set_client_id(const int &id) {
     client_id = id;
 }
+
+
