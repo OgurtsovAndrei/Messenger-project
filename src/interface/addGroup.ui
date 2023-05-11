@@ -14,7 +14,9 @@
    <string>Dialog</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QDialog {background: #094747}</string>
+   <string notr="true">QDialog {background: #094747}
+QLineEdit {background-color : #499090; border-width: 1px; 
+border-radius: 5px; padding: 6px;}</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -33,8 +35,7 @@
    <item>
     <widget class="QLineEdit" name="nameGroupLine">
      <property name="styleSheet">
-      <string notr="true">QLineEdit {background-color : #499090; border-width: 1px; 
-border-radius: 5px; padding: 6px;}</string>
+      <string notr="true"/>
      </property>
     </widget>
    </item>
@@ -62,8 +63,8 @@ border-radius: 5px; padding: 6px;}</string>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>228</x>
+     <y>165</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -78,8 +79,8 @@ border-radius: 5px; padding: 6px;}</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>228</x>
+     <y>165</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

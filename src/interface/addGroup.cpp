@@ -2,7 +2,7 @@
 #include "interface/welcWindow.h"
 #include "ui_addGroup.h"
 
-AddGroup::AddGroup(MainWindow *mWin, QWidget *parent) : mainWin(mWin),
+AddGroup::AddGroup(MainWindow *mainWin, QWidget *parent) : mainWin(mainWin),
     QDialog(parent),
     ui(new Ui::AddGroup)
 {
@@ -22,7 +22,7 @@ void AddGroup::on_addGroupBox_accepted()
     }
     unsigned int cl_id = mainWin->get_client_id();
     std::cout << name_group << "\n";
-    if (client.make_dialog("group", "RSA", 1000, true, {cl_id})) {
+    if (client.make_dialog(name_group, "RSA", 1000, true, {cl_id})) {
         mainWin->update_chats();
     }
 }

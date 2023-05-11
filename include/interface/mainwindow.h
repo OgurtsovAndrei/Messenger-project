@@ -17,9 +17,11 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QString get_cur_chat_name() const;
+
     void set_client_id(const int &id);
 
-    int get_client_id();
+    int get_client_id() const;
 
     void update_chats();
 
@@ -40,6 +42,8 @@ private slots:
     void addMessage(const QString &msg, const bool &incoming = false);
 
     void on_groupButton_clicked();
+
+    void on_chatName_clicked();
 
 private:
     Ui::MainWindow *ui;
