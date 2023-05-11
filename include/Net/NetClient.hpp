@@ -326,6 +326,20 @@ namespace Net::Client {
             }
         }
 
+        std::pair<Status, database_interface::Dialog> get_dialog_by_id(int dialog_id) {
+            DecryptedRequest request(GET_DIALOG_BY_ID, json{{"dialog_id", dialog_id}});
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_USER_BY_LOGIN_SUCCESS) {
+                database_interface::Dialog dialog = response.data;
+                return {Status(true, ""), std::move(dialog)};
+            } else {
+                assert(response.get_type() == SIGN_UP_FAIL);
+                return {Status(false, response.data["what"]), database_interface::Dialog{}};
+            }
+        };
+
         Status log_in(std::string login, std::string password) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
