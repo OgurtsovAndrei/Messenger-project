@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 9.0.2, 2023-04-12T00:06:00. -->
+<!-- Written by QtCreator 9.0.2, 2023-05-11T08:28:33. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -386,9 +386,9 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Messenger-project</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.Messenger-project</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">Messenger-project</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Net1</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.Net1</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">Net1</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
@@ -403,9 +403,9 @@
     <valuelist type="QVariantList" key="CustomOutputParsers"/>
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Net1</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.Net1</value>
-    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">Net1</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Messenger-project</value>
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.Messenger-project</value>
+    <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">Messenger-project</value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseLibrarySearchPath">true</value>
