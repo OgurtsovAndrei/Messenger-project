@@ -49,6 +49,8 @@ struct BDInterface {
 
     virtual Status change_dialog(const Dialog &new_dialog) = 0;
 
+    Status get_dialog_by_id(Dialog &dialog);
+
     [[maybe_unused]] virtual Status get_n_users_dialogs_by_time(
         const User &user,
         std::list<Dialog> &next_dialogs,
@@ -118,6 +120,8 @@ struct SQL_BDInterface : BDInterface {
     Status change_dialog(const Dialog &new_dialog) override;
 
     Status add_user_to_dialog(const User &user, Dialog &dialog);
+
+    Status get_dialog_by_id(Dialog &dialog);
 
     Status add_users_to_dialog(const std::vector<User> &users, Dialog &dialog);
 

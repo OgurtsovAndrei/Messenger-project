@@ -338,6 +338,23 @@ Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
     );
 }
 
+Status SQL_BDInterface::get_dialog_by_id(Dialog &dialog){
+    std::string sql = "SELECT id, Name, Encryption, DateTime, OwnerId, IsGroup FROM Dialogs WHERE id=";
+    sql += std::to_string(dialog.m_dialog_id) + ";";
+    char *message_error;
+    std::string string_message;
+    Dialog::m_edit_dialog = &dialog;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), Dialog::callback_get_one_dialog, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    Dialog::m_edit_dialog = nullptr;
+    return Status(
+            exit == SQLITE_OK, "Problem in GET Dialog by id.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+    }
+
 Status SQL_BDInterface::add_users_to_dialog(const std::vector<User> &users, Dialog &dialog){
     for (auto &user : users){
         Status exit = add_user_to_dialog(user, dialog);
