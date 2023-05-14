@@ -36,14 +36,14 @@ int main() {
             return 0;
         }
     } else {
-        std::string login = "New-Login-1";
+        std::string login = "New-Login-239566";
         std::string password =  "New-Password-1";
         std::string surname = "New-Surname-1";
         std::string name = "New-username-1";
         auto status = client.sing_up(name, surname, login, password);
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
         status = client.log_in(login, password);
-        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+        std::cout << "Log in status is: " << (status ? "success" : "fail") << " with user id = : " << status.message() << std::endl;
     }
     for (int i = 0; i < 3; ++i) {
         std::cout << "Iteration #" << i << "\n";
