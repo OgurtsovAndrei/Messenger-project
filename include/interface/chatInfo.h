@@ -13,7 +13,7 @@ class ChatInfo : public QDialog
     Q_OBJECT
 
 public:
-    explicit ChatInfo(database_interface::Dialog *dialog, QWidget *parent = nullptr);
+    explicit ChatInfo(int dialog_id, QWidget *parent = nullptr);
     ~ChatInfo();
 
 private slots:
@@ -21,7 +21,7 @@ private slots:
 
 private:
     Ui::ChatInfo *ui;
-    database_interface::Dialog *dialog;
+    int dialog_id;
 };
 
 #endif // CHATINFO_H
