@@ -387,7 +387,7 @@ namespace Net::Server {
             if (status) {
                 database_interface::User user_copy = new_user;
                 user_copy.m_password_hash.clear();
-                user_connection.send_secured_request(DecryptedRequest(LOG_IN_SUCCESS, user_copy));
+                user_connection.send_secured_request(DecryptedRequest(SIGN_UP_SUCCESS, user_copy));
             } else {
                 user_connection.send_secured_exception(SIGN_UP_FAIL, status.message());
             }
