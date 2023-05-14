@@ -114,7 +114,6 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
-    std::cout << sec_id << "\n";
     if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {client_id, sec_id})) {
         std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
@@ -140,16 +139,8 @@ void MainWindow::on_groupButton_clicked()
 
 void MainWindow::on_chatName_clicked()
 {
-///   TODO get_dialog_by_id
-    auto [status, chats] = client.get_last_n_dialogs(100);
-    for  (auto &chat : chats) {
-        if (chat.m_dialog_id == select_chat_id) {
-            auto *ch_info = new ChatInfo(&chat, this);
-            ch_info->show();
-        }
-    }
-//    auto *ch_info = new ChatInfo(this);
-//    ch_info->show();
+    auto *ch_info = new ChatInfo(select_chat_id, this);
+    ch_info->show();
 }
 
 int MainWindow::get_client_id() const {
