@@ -309,7 +309,8 @@ namespace Net::Client {
         }
 
         Status change_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group) {
-            // TODO
+            // TODO: реализовать
+            // Сделаю, когда попросите
         }
 
         Status add_user_to_dialog(int user_id, int dialog_id) {
