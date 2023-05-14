@@ -23,6 +23,7 @@ namespace database_interface {
 
         static std::vector<User> *m_users;
         static std::list<Dialog> *m_dialogs;
+        static Dialog *m_edit_dialog;
 
         Dialog() = default;
 
@@ -74,6 +75,8 @@ namespace database_interface {
         static int callback_get_dialog_users(void *NotUsed, int argc, char **argv, char **azColName);
 
         static int callback_get_dialogs(void *NotUsed, int argc, char **argv, char **azColName);
+
+        static int callback_get_one_dialog(void *NotUsed, int argc, char **argv, char **azColName);
     };
 
 }  // namespace database_interface

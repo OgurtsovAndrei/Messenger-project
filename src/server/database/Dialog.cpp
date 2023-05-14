@@ -22,6 +22,12 @@ int Dialog::callback_get_dialogs(void *NotUsed, int argc, char **argv, char **az
     return 0;
 }
 
+int Dialog::callback_get_one_dialog(void *NotUsed, int argc, char **argv, char **azColName) {
+    *m_edit_dialog = Dialog(std::stoi(argv[0]), argv[1],argv[2],std::stoi(argv[3]),std::stoi(argv[4]),std::stoi(argv[5]));
+    return 0;
+}
+
+Dialog *Dialog::m_edit_dialog = nullptr;
 std::list<Dialog> *Dialog::m_dialogs = nullptr;
 std::vector<User> *Dialog::m_users = nullptr;
 }  // namespace database_interface
