@@ -43,8 +43,8 @@ Status SQL_BDInterface::make_user(User &user) {
 #else
     rng.reset(new Botan::AutoSeeded_RNG);
 #endif
-    user.m_password_hash = Botan::argon2_generate_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), *(rng.get()), 1, 8192, 1);
-    sql += user.m_password_hash + "');";
+    std::string new_password = Botan::argon2_generate_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), *(rng.get()), 1, 8192, 1);
+    sql += new_password + "');";
     char *message_error;
     std::string string_message;
     int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
