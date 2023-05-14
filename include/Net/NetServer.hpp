@@ -440,6 +440,7 @@ namespace Net::Server {
             database_interface::Message new_message;
             try {
                 nlohmann::from_json(request.data, new_message);
+                new_message.m_user_id = user_connection.user_in_db->m_user_id;
             } catch (std::exception &exception) {
                 user_connection.send_secured_exception(SEND_MESSAGE_FAIL,
                                                        "Not able to send message: cannot parse json message: bad request or invalid message data: " +
