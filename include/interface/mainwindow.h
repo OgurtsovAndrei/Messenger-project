@@ -27,8 +27,6 @@ public:
 
     void update_chats();
 
-    void del_message(QListWidgetItem *item);
-
 private slots:
 
     void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
