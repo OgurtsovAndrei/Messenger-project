@@ -86,6 +86,7 @@ target_include_directories(BD_Test PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        src/interface/bubble.cpp
 #        src/interface/addGroup.cpp
 #        src/interface/chatInfo.cpp
+#        src/interface/mesSetting.cpp
 #
 #        include/interface/welcWindow.h
 #        include/interface/mainwindow.h
@@ -93,12 +94,15 @@ target_include_directories(BD_Test PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        include/interface/bubble.h
 #        include/interface/addGroup.h
 #        include/interface/chatInfo.h
+#        include/interface/clientinfo.h
+#        include/interface/mesSetting.h
 #
 #        src/interface/mainwindow.ui
 #        src/interface/register.ui
 #        src/interface/welcWindow.ui
 #        src/interface/addGroup.ui
 #        src/interface/chatInfo.ui
+#        src/interface/mesSetting.ui
 #        )
 #
 #add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

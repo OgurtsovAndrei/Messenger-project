@@ -56,7 +56,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto *message_timer = new QTimer(this);
     connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
 
-    message_timer->start(10000);
+    message_timer->start(100);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -96,12 +96,12 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
         return ;
     }
     ui->messagesList->clear();
+    std::reverse(messages.begin(), messages.end());
     for (const auto &mess : messages) {
         bool incoming = false;
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
         }
-        std::cout << mess.m_text << "\n";
         addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, incoming);
     }
 }
@@ -165,8 +165,4 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto *mess = new MesSetting(item, this);
     mess->show();
-}
-
-void MainWindow::del_message(QListWidgetItem *item) {
-    ui->messagesList->removeItemWidget(item);
 }

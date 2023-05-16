@@ -21,8 +21,5 @@ MesSetting::~MesSetting()
 void MesSetting::on_delButton_clicked()
 {
     auto status = client.delete_message(mes->type());
-    if (status) {
-        mainWin->update_chats();
-    }
 }
 
