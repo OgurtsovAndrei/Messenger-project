@@ -6,6 +6,7 @@
 #include "interface/bubble.h"
 #include "interface/welcWindow.h"
 #include "interface/chatInfo.h"
+#include "interface/mesSetting.h"
 //#include "User.hpp"
 
 #include <QStringListModel>
@@ -29,7 +30,8 @@ MainWindow::MainWindow(QWidget *parent)
             return;
         }
         Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
-        addMessage(msg);
+        json json_data = json::parse(send_status.message());
+        addMessage(msg, json_data["m_message_id"]);
         ui->newMessageInput->setPlainText("");
     });
 
@@ -71,7 +73,7 @@ void MainWindow::update_chats() {
         else {
 //            auto frt_user = (*chat.m_users)[0];
 //            auto sec_user = (*chat.m_users)[1];
-//            if (frt_user.m_user_id == client_id) {
+//            if (frt_user.m_user_id == get_client_id()) {
 //                std::swap(frt_user, sec_user);
 //            }
 //            new_chat = QString::fromStdString(frt_user.m_name + " " + frt_user.m_surname);
@@ -96,10 +98,11 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     ui->messagesList->clear();
     for (const auto &mess : messages) {
         bool incoming = false;
-        if (mess.m_user_id != client_id) {
+        if (mess.m_user_id != get_client_id()) {
             incoming = true;
         }
-        addMessage(QString::fromStdString(mess.m_text), incoming);
+        std::cout << mess.m_text << "\n";
+        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, incoming);
     }
 }
 
@@ -114,16 +117,16 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
-    if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {client_id, sec_id})) {
+    if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {get_client_id(), sec_id})) {
         std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
     }
     ///TODO search user and start dialog
 }
 
-void MainWindow::addMessage(const QString &msg, const bool &incoming)
+void MainWindow::addMessage(const QString &msg, const int mess_id, const bool &incoming)
 {
-    auto *item = new QListWidgetItem;
+    auto *item = new QListWidgetItem(nullptr, mess_id);
     auto *bub = new Bubble(msg, incoming);
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
@@ -143,12 +146,27 @@ void MainWindow::on_chatName_clicked()
     ch_info->show();
 }
 
-int MainWindow::get_client_id() const {
-    return client_id;
+unsigned int MainWindow::get_client_id() const {
+    return cl_info.cl_id;
 }
 
-void MainWindow::set_client_id(const int &id) {
-    client_id = id;
+void MainWindow::set_client_info(const database_interface::User& cl) {
+    cl_info = ClientInfo(cl.m_name, cl.m_surname, cl.m_login, cl.m_user_id);
+}
+
+void MainWindow::on_profileButton_clicked()
+{
+    auto *ch_info = new ChatInfo(select_chat_id, this);
+    ch_info->show();
 }
 
 
+void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
+{
+    auto *mess = new MesSetting(item, this);
+    mess->show();
+}
+
+void MainWindow::del_message(QListWidgetItem *item) {
+    ui->messagesList->removeItemWidget(item);
+}

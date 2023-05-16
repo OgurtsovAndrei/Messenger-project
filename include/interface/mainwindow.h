@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QMap>
+#include "clientinfo.h"
+#include "database/User.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,19 +21,13 @@ public:
 
     QString get_cur_chat_name() const;
 
-    void set_client_id(const int &id);
+    void set_client_info(const database_interface::User& cl);
 
-    int get_client_id() const;
+    unsigned int get_client_id() const;
 
     void update_chats();
 
-/*
- * fill chats list
- * add chat
- * open chat (fill it)
- * scroll chat
- * send message
-*/
+    void del_message(QListWidgetItem *item);
 
 private slots:
 
@@ -39,17 +35,21 @@ private slots:
 
     void on_findButton_clicked();
 
-    void addMessage(const QString &msg, const bool &incoming = false);
+    void addMessage(const QString &msg, const int mess_id, const bool &incoming = false);
 
     void on_groupButton_clicked();
 
     void on_chatName_clicked();
 
+    void on_profileButton_clicked();
+
+    void on_messagesList_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     Ui::MainWindow *ui;
     QMap<QString, int> chats_id_map;
-    unsigned int client_id;
-    int select_chat_id;
+    ClientInfo cl_info;
+    int select_chat_id = 0;
 
 };
 

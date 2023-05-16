@@ -47,8 +47,11 @@ void Register::on_readyButton_clicked() {
     std::cout << "Logged in -->>" + status.message() + "\n";
 //    client.set_user_id(std::stoi(status.message()));
     auto *win = new MainWindow();
-    win->set_client_id(client.get_user_id_by_login(login).second.m_user_id);
-    win->show();
+    auto [cl_status, cl_info] = client.get_user_id_by_login(login);
+    if (cl_status) {
+        win->set_client_info(cl_info);
+        win->show();
+    }
     this->close();
   } else {
     std::cout << "Log in failed -->>" + status.message() + "\n";

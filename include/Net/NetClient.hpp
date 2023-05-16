@@ -403,7 +403,7 @@ namespace Net::Client {
         };
 
         std::string send_text_request_and_return_response_text(const std::string& message) {
-            send_request(Net::DecryptedRequest(Net::SECURED_REQUEST, json{{"text", message}}).encrypt(encrypter.value()));
+            send_request(Net::DecryptedRequest(Net::SECURED_REQUEST, json{"text", message}).encrypt(encrypter.value()));
             auto response = get_request();
             assert(response.get_type() == RESPONSE_REQUEST_SUCCESS);
             return response.data["text"];
