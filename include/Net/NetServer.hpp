@@ -303,7 +303,7 @@ namespace Net::Server {
                             case GET_DIALOG_BY_ID_FAIL:
                                 break;
                             case GET_USER_BY_ID:
-
+                                process_get_dialog_by_id_request(user_connection, std::move(request));
                                 break;
                             case GET_USER_BY_ID_SUCCESS:
                                 break;
