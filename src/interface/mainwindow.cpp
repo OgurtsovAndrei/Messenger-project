@@ -20,8 +20,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     this->setWindowTitle("ИШО");
-    /// TODO set user info
-    ///
     update_chats();
 
     connect(ui->sendButton, &QPushButton::clicked, this, [&]{
@@ -100,10 +98,13 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     std::reverse(messages.begin(), messages.end());
     for (const auto &mess : messages) {
         bool incoming = false;
-        QString name_sur = QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname);
+        auto [st, us] = client.get_user_by_id(mess.m_user_id);
+        if (!st) {
+            /// TODO
+        }
+        QString name_sur = QString::fromStdString(us.m_name + " " + us.m_surname);
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
-/// TODO            name_sur = client.get_user_by_id();
         }
         addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, name_sur, incoming);
     }
