@@ -99,10 +99,13 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     for (const auto &mess : messages) {
         bool incoming = false;
         auto [st, us] = client.get_user_by_id(mess.m_user_id);
+        auto [st1, us1] = client.get_user_id_by_login("a");
         if (!st) {
             /// TODO
         }
         QString name_sur = QString::fromStdString(us.m_name + " " + us.m_surname);
+        std::cout << us.m_name << "\n";
+        std::cout << us1.m_name << "\n";
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
         }
