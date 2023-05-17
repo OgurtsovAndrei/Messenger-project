@@ -688,7 +688,7 @@ namespace Net::Server {
             Status current_status = bd_connection.get_user_by_id(user);
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_ID_FAIL,
                                               "Get user exception: " + current_status.message());
-            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_ID, user));
+            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_ID_SUCCESS, user));
         }
 
         void process_add_user_to_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
