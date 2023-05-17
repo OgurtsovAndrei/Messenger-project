@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
       if (chats.size() != chats_id_map.size()) {
           std::cout << "Chats updates...\n";
           update_chats();
+          std::cout << "Finish \n";
       }
     });
 
@@ -63,7 +64,6 @@ MainWindow::~MainWindow() { delete ui; }
 void MainWindow::update_chats() {
     ui->chatsList->clear();
     auto [status, chats] = client.get_last_n_dialogs(100);
-    std::cout << chats.size() << "\n";
     for (const auto &chat : chats) {
         QString new_chat;
         if (chat.m_is_group) {
@@ -99,13 +99,11 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     for (const auto &mess : messages) {
         bool incoming = false;
         auto [st, us] = client.get_user_by_id(mess.m_user_id);
-        auto [st1, us1] = client.get_user_id_by_login("a");
         if (!st) {
             /// TODO
         }
         QString name_sur = QString::fromStdString(us.m_name + " " + us.m_surname);
         std::cout << us.m_name << "\n";
-        std::cout << us1.m_name << "\n";
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
         }
