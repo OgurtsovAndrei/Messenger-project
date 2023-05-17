@@ -84,7 +84,7 @@ Status SQL_BDInterface::change_user(const User &new_user) {
 }
 
 Status SQL_BDInterface::get_user_by_id(User &user){
-    std::string sql = "SELECT Name, Surname FROM Users WHERE id=";
+    std::string sql = "SELECT id, Name, Surname FROM Users WHERE id=";
     sql += std::to_string(user.m_user_id) + ";";
     char *message_error;
     std::string string_message;
