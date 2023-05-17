@@ -397,7 +397,21 @@ namespace Net::Client {
                 database_interface::User user = response.data;
                 return {Status(true, ""), std::move(user)};
             } else {
-                assert(response.get_type() == SIGN_UP_FAIL);
+                assert(response.get_type() == GET_USER_BY_LOGIN_FAIL);
+                return {Status(false, response.data["what"]), database_interface::User{}};
+            }
+        };
+
+        std::pair<Status, database_interface::User> get_user_id_by_id(int id) {
+            DecryptedRequest request(GET_USER_BY_ID, json{{"user_id", id}});
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_USER_BY_ID_SUCCESS) {
+                database_interface::User user = response.data;
+                return {Status(true, ""), std::move(user)};
+            } else {
+                assert(response.get_type() == GET_USER_BY_ID_FAIL);
                 return {Status(false, response.data["what"]), database_interface::User{}};
             }
         };
