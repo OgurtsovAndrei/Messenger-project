@@ -18,6 +18,7 @@ void Register::delRegInfo() {
   ui->nameLabel->close();
   ui->snameInput->close();
   ui->snameLabel->close();
+  setFixedSize(430, 200);
   regVersion = false;
 }
 

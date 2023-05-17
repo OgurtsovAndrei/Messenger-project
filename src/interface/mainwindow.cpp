@@ -30,8 +30,9 @@ MainWindow::MainWindow(QWidget *parent)
             return;
         }
         Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
+        QString name_sur = QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname);
         json json_data = json::parse(send_status.message());
-        addMessage(msg, json_data["m_message_id"]);
+        addMessage(msg, json_data["m_message_id"], name_sur);
         ui->newMessageInput->setPlainText("");
     });
 
@@ -99,10 +100,12 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     std::reverse(messages.begin(), messages.end());
     for (const auto &mess : messages) {
         bool incoming = false;
+        QString name_sur = QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname);
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
+/// TODO            name_sur = client.get_user_by_id();
         }
-        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, incoming);
+        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, name_sur, incoming);
     }
 }
 
@@ -124,10 +127,10 @@ void MainWindow::on_findButton_clicked()
     ///TODO search user and start dialog
 }
 
-void MainWindow::addMessage(const QString &msg, const int mess_id, const bool &incoming)
+void MainWindow::addMessage(const QString &msg, const int mess_id, const QString &name_sur, const bool &incoming)
 {
     auto *item = new QListWidgetItem(nullptr, mess_id);
-    auto *bub = new Bubble(msg, incoming);
+    auto *bub = new Bubble(msg, name_sur, incoming);
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
     item->setSizeHint(bub->sizeHint());

@@ -33,7 +33,7 @@ private slots:
 
     void on_findButton_clicked();
 
-    void addMessage(const QString &msg, const int mess_id, const bool &incoming = false);
+    void addMessage(const QString &msg, const int mess_id, const QString &name_sur, const bool &incoming = false);
 
     void on_groupButton_clicked();
 
