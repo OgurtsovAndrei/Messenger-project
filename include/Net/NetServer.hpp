@@ -302,6 +302,13 @@ namespace Net::Server {
                                 break;
                             case GET_DIALOG_BY_ID_FAIL:
                                 break;
+                            case GET_USER_BY_ID:
+
+                                break;
+                            case GET_USER_BY_ID_SUCCESS:
+                                break;
+                            case GET_USER_BY_ID_FAIL:
+                                break;
                         }
                     }
                 })));
@@ -675,6 +682,16 @@ namespace Net::Server {
             user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_LOGIN_SUCCESS, user));
         }
 
+        void process_get_user_by_id_request(UserConnection &user_connection, DecryptedRequest request) {
+            send_response_and_return_if_false(request.data["user_id"].is_number(), user_connection,
+                                              GET_USER_BY_ID_FAIL, "User id should be Integer!");
+            database_interface::User user(static_cast<int>(request.data["user_id"]));
+            Status current_status = bd_connection.get_user_by_id(user);
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_ID_FAIL,
+                                              "Get user exception: " + current_status.message());
+            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_ID, user));
+        }
+
         void process_add_user_to_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               ADD_USER_TO_DIALOG_FAIL, "It is necessary to log in!");
@@ -695,13 +712,11 @@ namespace Net::Server {
                                               ADD_USER_TO_DIALOG_FAIL, "Dialog_id should be the integer!!");
             database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
             // TODO: раскомментировать строчки, когда будет добавлен метод
-//            Status current_status = bd_connection.get_dialog_by_id(current_dialog);
-//            send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
-//                                              "Get_dialog_by_id exception: " + current_status.message());
-//            user_connection.send_secured_request(DecryptedRequest(ADD_USER_TO_DIALOG_SUCCESS, current_dialog));
+            Status current_status = bd_connection.get_dialog_by_id(current_dialog);
+            send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
+                                              "Get_dialog_by_id exception: " + current_status.message());
+            user_connection.send_secured_request(DecryptedRequest(ADD_USER_TO_DIALOG_SUCCESS, current_dialog));
         }
-
-
 
         int find_empty_connection_number() {
             std::cout << "Searching for empty connection number\n";
