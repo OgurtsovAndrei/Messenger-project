@@ -179,7 +179,7 @@ namespace Net::Server {
         [[noreturn]] void run_server(int number_of_thread_in_pool = 1) {
             for (int consumer_id = 0; consumer_id < number_of_thread_in_pool; ++consumer_id) {
                 consumers.push_back(std::move(std::thread([&, this]() mutable {
-                    while (true) {
+                    while (true) { // NOLINT
                         // В очереди хранятся уже расшифрованные request-ы
                         auto [connection_id, request] = request_queue.get_last_or_wait();
                         std::unique_lock sessions_lock(sessions_mutex);
@@ -205,7 +205,6 @@ namespace Net::Server {
                             case RESPONSE_REQUEST_FAIL:
                                 break;
                             case MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY:
-
                                 break;
                             case MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY:
                                 break;
@@ -239,13 +238,13 @@ namespace Net::Server {
                             case DELETE_DIALOG:
                                 break;
                             case SEND_MESSAGE:
-                                process_send_message_request(user_connection, std::move(request));
+                                process_send_message_request(user_connection, request);
                                 break;
                             case CHANGE_MESSAGE:
-                                process_change_old_message_request(user_connection, std::move(request));
+                                process_change_old_message_request(user_connection, request);
                                 break;
                             case DELETE_MESSAGE:
-                                proces_delete_message_request(user_connection, std::move(request));
+                                proces_delete_message_request(user_connection, request);
                                 break;
                             case GET_100_MESSAGES:
                                 process_get_n_messages_request(user_connection, std::move(request));
@@ -303,7 +302,7 @@ namespace Net::Server {
                             case GET_DIALOG_BY_ID_FAIL:
                                 break;
                             case GET_USER_BY_ID:
-                                process_get_dialog_by_id_request(user_connection, std::move(request));
+                                process_get_user_by_id_request(user_connection, std::move(request));
                                 break;
                             case GET_USER_BY_ID_SUCCESS:
                                 break;
@@ -441,7 +440,7 @@ namespace Net::Server {
         std::vector<std::thread> consumers;
         database_interface::SQL_BDInterface bd_connection;
 
-        void process_send_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
+        void process_send_message_request(UserConnection &user_connection, const DecryptedRequest& request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               SEND_MESSAGE_FAIL, "It is necessary to log in!");
             database_interface::Message new_message;
@@ -462,7 +461,7 @@ namespace Net::Server {
             user_connection.send_secured_request(response);
         }
 
-        void process_change_old_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
+        void process_change_old_message_request(UserConnection &user_connection, const DecryptedRequest& request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               CHANGE_MESSAGE_FAIL, "It is necessary to log in!");
             database_interface::Message old_message;
@@ -487,7 +486,7 @@ namespace Net::Server {
             user_connection.send_secured_request(response);
         }
 
-        void proces_delete_message_request(UserConnection &user_connection, const DecryptedRequest &request) {
+        void proces_delete_message_request(UserConnection &user_connection, const DecryptedRequest& request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               DELETE_MESSAGE_FAIL, "It is necessary to log in!");
             database_interface::Message message;
@@ -554,7 +553,7 @@ namespace Net::Server {
                                          user_connection);
         }*/
 
-        void process_get_n_messages_request(UserConnection &user_connection, const DecryptedRequest &request) {
+        void process_get_n_messages_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               GET_100_MESSAGES_FAIL, "It is necessary to log in!");
             database_interface::Dialog current_dialog;

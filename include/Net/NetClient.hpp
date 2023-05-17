@@ -402,7 +402,7 @@ namespace Net::Client {
             }
         };
 
-        std::pair<Status, database_interface::User> get_user_id_by_id(int id) {
+        std::pair<Status, database_interface::User> get_user_by_id(int id) {
             DecryptedRequest request(GET_USER_BY_ID, json{{"user_id", id}});
             send_request(request.encrypt(encrypter.value()));
 
