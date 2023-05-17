@@ -23,10 +23,10 @@ ChatInfo::ChatInfo(int dialog_id, QWidget *parent) : dialog_id(dialog_id),
     ui->userNameLabel->setText(QString::fromStdString(dialog->m_name));
     ui->userNameLabel->setWordWrap(true);
     if (!dialog->m_is_group) {
-        ui->addMemButton->hide();
-        ui->memList->hide();
-        ui->addMemLine->hide();
-        ui->memLabel->hide();
+        ui->addMemButton->close();
+        ui->memList->close();
+        ui->addMemLine->close();
+        ui->memLabel->close();
         setFixedSize(400, 75);
 
     }
