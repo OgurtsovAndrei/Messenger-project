@@ -59,7 +59,13 @@ namespace Cryptographer {
     }
 
     inline std::unique_ptr<Botan::Private_Key>
-    generate_keypair(const size_t bits,
+    generate_keypair_RSA(const size_t bits,
+                     Botan::RandomNumberGenerator &rng) {
+        return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
+    }
+
+    inline std::unique_ptr<Botan::Private_Key>
+    generate_keypair_DSA(const size_t bits,
                      Botan::RandomNumberGenerator &rng) {
         return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
     }
