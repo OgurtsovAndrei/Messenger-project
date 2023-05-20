@@ -9,10 +9,12 @@
 #include <string>
 #include <cassert>
 
+
 #include <botan/aead.h>
 #include <botan/rsa.h>
 #include <botan/types.h>
 #include <botan/auto_rng.h>
+#include <botan/dsa.h>
 #include <botan/secmem.h>
 #include <botan/cipher_mode.h>
 #include <botan/pubkey.h>
@@ -21,6 +23,12 @@
 #include <botan/x509_key.h>
 #include <botan/data_src.h>
 #include "TextWorker.hpp"
+
+#include <botan/auto_rng.h>
+#include <botan/dl_group.h>
+#include <botan/rng.h>
+#include <botan/dh.h>
+#include <botan/dsa.h>
 
 namespace Cryptographer {
     template<typename Out, typename In>
@@ -67,7 +75,15 @@ namespace Cryptographer {
     inline std::unique_ptr<Botan::Private_Key>
     generate_keypair_DSA(const size_t bits,
                      Botan::RandomNumberGenerator &rng) {
-        return std::make_unique<Botan::RSA_PrivateKey>(rng, bits);
+        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, 2048);
+        return std::make_unique<Botan::DSA_PrivateKey>(rng, group);
+    }
+
+    inline std::unique_ptr<Botan::Private_Key>
+    generate_keypair_DH(const size_t bits,
+                         Botan::RandomNumberGenerator &rng) {
+        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, 2048);
+        return std::make_unique<Botan::DH_PrivateKey>(rng, group);
     }
 
 
@@ -148,7 +164,7 @@ namespace Cryptographer {
         };
 
         explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
-                                                          key_pair(generate_keypair(2048 /*  bits */, rng_)) {};
+                                                          key_pair(generate_keypair_DSA(2048 /*  bits */, rng_)) {};
 
         [[nodiscard]] std::string get_str_publicKey() const {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
