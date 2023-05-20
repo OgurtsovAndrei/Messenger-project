@@ -29,6 +29,9 @@
 #include <botan/rng.h>
 #include <botan/dh.h>
 #include <botan/dsa.h>
+#include <botan/elgamal.h>
+#include <botan/ec_group.h>
+#include <botan/gost_3410.h>
 
 namespace Cryptographer {
     template<typename Out, typename In>
@@ -73,17 +76,10 @@ namespace Cryptographer {
     }
 
     inline std::unique_ptr<Botan::Private_Key>
-    generate_keypair_DSA(const size_t bits,
-                     Botan::RandomNumberGenerator &rng) {
-        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, 2048);
-        return std::make_unique<Botan::DSA_PrivateKey>(rng, group);
-    }
-
-    inline std::unique_ptr<Botan::Private_Key>
-    generate_keypair_DH(const size_t bits,
-                         Botan::RandomNumberGenerator &rng) {
-        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, 2048);
-        return std::make_unique<Botan::DH_PrivateKey>(rng, group);
+    generate_keypair_ElGamal(const size_t bits,
+                        Botan::RandomNumberGenerator &rng) {
+        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, bits);
+        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, group);
     }
 
 
@@ -164,7 +160,7 @@ namespace Cryptographer {
         };
 
         explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
-                                                          key_pair(generate_keypair_DSA(2048 /*  bits */, rng_)) {};
+                                                          key_pair(generate_keypair_RSA(1024 /*  bits */, rng_)) {};
 
         [[nodiscard]] std::string get_str_publicKey() const {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
