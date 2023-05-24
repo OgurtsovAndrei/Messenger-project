@@ -20,7 +20,7 @@
 #include <queue>
 #include <condition_variable>
 #include <filesystem>
-
+#include <boost/filesystem.hpp>
 
 #include "Status.hpp"
 #include "TextWorker.hpp"
@@ -686,7 +686,7 @@ namespace Net::Server {
             user_connection.send_secured_request(DecryptedRequest(MAKE_GROPE_SUCCESS, new_dialog));
         }
 
-        static void process_upload_file_request(UserConnection &user_connection, const DecryptedRequest& request) {
+        static void process_upload_file_request(UserConnection &user_connection, const DecryptedRequest &request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               FILE_UPLOAD_FAIL, "It is necessary to log in!");
             FileWorker::File file(FileWorker::empty_file);
@@ -695,25 +695,29 @@ namespace Net::Server {
             } catch (FileWorker::file_exception &exception) {
                 send_response_and_return_if_false(false, user_connection, FILE_UPLOAD_FAIL, exception.what());
             }
-            std::string file_directory_path = "./../bd/Files/users_files/" + user_connection.user_in_db->m_login;
-            if (!std::filesystem::exists(file_directory_path)) {
+//            file_directory_path = "./../db/Files/users_files/" + user_connection.user_in_db->m_login;
+            boost::filesystem::path file_directory_path(
+                    "./../db/Files/users_files/" + user_connection.user_in_db->m_login);
+            if (!(boost::filesystem::exists(file_directory_path))) {
+                std::cout << "Creating user <" << user_connection.user_in_db->m_login << "> directory" << std::endl;
                 // Creating a directory
-                if (!std::filesystem::create_directory(file_directory_path)) {
-                    send_response_and_return_if_false(false, user_connection, FILE_UPLOAD_FAIL, "Cannot create directory for this user, probably invalid users login");
+                if (!(boost::filesystem::create_directory(file_directory_path))) {
+                    send_response_and_return_if_false(false, user_connection, FILE_UPLOAD_FAIL,
+                                                      "Cannot create directory for this user, probably invalid users login");
                 }
             }
-            Status status = file.save(file_directory_path);
+            Status status = file.save(file_directory_path.string());
             send_response_and_return_if_false(status, user_connection, FILE_UPLOAD_FAIL, status.message());
-            user_connection.send_secured_request(DecryptedRequest(FILE_UPLOAD_SUCCESS, json{{"file_name", status.message()}}));
+            user_connection.send_secured_request(DecryptedRequest(FILE_UPLOAD_SUCCESS, status.message()));
         }
 
-        static void process_download_file_request(UserConnection &user_connection, const DecryptedRequest& request) {
+        static void process_download_file_request(UserConnection &user_connection, const DecryptedRequest &request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               FILE_DOWNLOAD_FAIL, "It is necessary to log in!");
             send_response_and_return_if_false(request.data["file_name"].is_string(), user_connection,
                                               FILE_DOWNLOAD_FAIL, "File_name should be a string!");
             std::string file_name = request.data["file_name"];
-            std::string file_directory_path = "./../bd/Files/users_files/" + user_connection.user_in_db->m_login;
+            std::string file_directory_path = "./../db/Files/users_files/" + user_connection.user_in_db->m_login;
             send_response_and_return_if_false(std::filesystem::exists(file_directory_path), user_connection,
                                               FILE_DOWNLOAD_FAIL, "This file does not exist!");
             std::string file_path = file_directory_path + "/" + file_name;
@@ -721,9 +725,9 @@ namespace Net::Server {
                                               FILE_DOWNLOAD_FAIL, "This file does not exist!");
             FileWorker::File file(FileWorker::empty_file);
             try {
-                file = FileWorker::File(file_path);
+                file = FileWorker::File(file_directory_path);
             } catch (FileWorker::file_exception &exception) {
-                send_response_and_return_if_false(false, user_connection, FILE_DOWNLOAD_FAIL, exception.what());
+                send_response_and_return_if_false(false, user_connection, FILE_UPLOAD_FAIL, exception.what());
             }
             user_connection.send_secured_request(DecryptedRequest(FILE_DOWNLOAD_SUCCESS, nlohmann::json(file)));
         }
@@ -746,7 +750,7 @@ namespace Net::Server {
             Status current_status = bd_connection.get_user_by_id(user);
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USER_BY_ID_FAIL,
                                               "Get user exception: " + current_status.message());
-            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_ID_SUCCESS, user));
+            user_connection.send_secured_request(DecryptedRequest(GET_USER_BY_ID, user));
         }
 
         void process_add_user_to_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
@@ -768,7 +772,6 @@ namespace Net::Server {
             send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
                                               ADD_USER_TO_DIALOG_FAIL, "Dialog_id should be the integer!!");
             database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
-            // TODO: раскомментировать строчки, когда будет добавлен метод
             Status current_status = bd_connection.get_dialog_by_id(current_dialog);
             send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
                                               "Get_dialog_by_id exception: " + current_status.message());
@@ -795,7 +798,6 @@ namespace Net::Server {
     void
     UserConnection::accept_client_request(const std::string &rem_endpoint_str,
                                           UserConnection &connection) {
-        // TODO
         if (!connection.connection_is_protected || !connection.decrypter.has_value() ||
             connection.client.value().bad()) {
             throw std::runtime_error("Bad connection!");

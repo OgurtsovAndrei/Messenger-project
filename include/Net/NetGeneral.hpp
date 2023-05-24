@@ -26,7 +26,12 @@ namespace Net {
     enum RequestType {
         TEXT_REQUEST = 1,
         SECURED_REQUEST,
-        FILE,
+        FILE_DOWNLOAD,
+        FILE_DOWNLOAD_SUCCESS,
+        FILE_DOWNLOAD_FAIL,
+        FILE_UPLOAD,
+        FILE_UPLOAD_SUCCESS,
+        FILE_UPLOAD_FAIL,
         RESPONSE_REQUEST_SUCCESS,
         RESPONSE_REQUEST_FAIL,
         MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY,

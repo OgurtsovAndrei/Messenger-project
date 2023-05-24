@@ -25,11 +25,13 @@ add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
 #add_executable(Net3 src/general/NetTest/NetTest-3.cpp)
 add_executable(request-refactoring src/general/NetTest/NetTest-request-refactoring.cpp)
 add_executable(json-test src/general/NetTest/JSON-Test-01.cpp)
+add_executable(crypto-test src/general/CryptoTest/Botan-Test-1.cpp)
 add_executable(FileTest src/general/NetTest/FileTest.cpp include/FileWorker.hpp)
 
 
 target_link_libraries(Net1 libbotan-3.a sqlite3)
 target_link_libraries(Net2 libbotan-3.a)
+target_link_libraries(crypto-test libbotan-3.a)
 #target_link_libraries(Net3 libbotan-3.a)
 target_link_libraries(FileTest libbotan-3.a)
 target_link_libraries(request-refactoring libbotan-3.a)
