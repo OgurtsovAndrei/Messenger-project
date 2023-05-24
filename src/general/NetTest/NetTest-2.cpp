@@ -54,7 +54,7 @@ int main() {
         }
         usleep(100'000);
     }
-    if (true) {
+    if (false) {
         auto pair = client.get_last_n_dialogs(100);
         if (pair.first) {
             for (const auto &dialog: pair.second) {
@@ -102,6 +102,37 @@ int main() {
             }
             std::cout << "---------------------------------------------------- \n";
         }
+    }
+
+    if (true) {
+        std::cout << "---------- File section ----------" << std::endl;
+        FileWorker::File file(FileWorker::empty_file);
+        try {
+            file = FileWorker::File("./../bd/Files/Lena.bmp");
+        } catch (FileWorker::file_exception &exception) {
+            std::cerr << exception.what() << std::endl;
+            return 0;
+        }
+        std::cout << "File was read!\n";
+        file.change_name("Lena_sent.bmp");
+        std::cout << "File name was changes!\n";
+        Status send_status = client.upload_file(file);
+        std::cout << "File was sent!\n";
+        if (send_status) {
+            std::cout << "Sent file name = " + send_status.message() << std::endl;
+        } else {
+            std::cerr << send_status.message() << std::endl;
+            goto file_section;
+        }
+        {
+            std::cout << "Sending receive file request!\n";
+            auto [receive_status, received_file] = client.download_file(send_status.message());
+            received_file.change_name("Lena_after_receive.bmp");
+            Status save_status = received_file.save("./../bd/Files/saved");
+            std::cout << "File was received!\n";
+            assert(save_status);
+        }
+        file_section:;
     }
     client.close_connection();
 }

@@ -30,6 +30,11 @@ int main()
     json json_file(file);
     std::cout << json_file.dump(4) << std::endl;
 
-    FileWorker::File returned_file(json_file, FileWorker::parseJson);
+    FileWorker::File returned_file(json_file, FileWorker::parse_JSON);
     assert(returned_file == file);
+    auto status = file.save("./../bd/Files/saved");
+    if (!status.correct()) {
+        std::cerr << "Cannot save_file: " << status.message() << std::endl;
+    }
+    return 0;
 }
