@@ -15,6 +15,7 @@ run_file() {
 # ANSI escape sequence for colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+ORANGE='\033[0;33m'
 RESET='\033[0m'
 
 # Recursive function to traverse directories
@@ -54,4 +55,10 @@ traverse_directories() {
 }
 
 # Start the traversal from the current directory
+
+SECONDS=0
+
 traverse_directories "."
+
+duration=$SECONDS
+echo -e "${ORANGE}Elapsed time: $duration seconds.${RESET}"

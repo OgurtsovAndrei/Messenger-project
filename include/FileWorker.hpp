@@ -17,22 +17,23 @@ namespace FileWorker {
     struct ParseJSON {
     } parse_JSON;
 
-    struct EmptyFile {} empty_file;
+    struct EmptyFile {
+    } empty_file;
 
     struct file_exception : std::runtime_error {
-        explicit file_exception(const std::string& str) : std::runtime_error(str) {}
+        explicit file_exception(const std::string &str) : std::runtime_error(str) {}
     };
 
     struct bad_file_name_exception : file_exception {
-        explicit bad_file_name_exception(const std::string& string) : file_exception(string) {};
+        explicit bad_file_name_exception(const std::string &string) : file_exception(string) {};
     };
 
     struct invalid_file_format_exception : file_exception {
-        explicit invalid_file_format_exception(const std::string& string) : file_exception(string) {};
+        explicit invalid_file_format_exception(const std::string &string) : file_exception(string) {};
     };
 
     struct read_file_exception : file_exception {
-        explicit read_file_exception(const std::string& string) : file_exception(string) {};
+        explicit read_file_exception(const std::string &string) : file_exception(string) {};
     };
 
     struct File {
@@ -48,15 +49,16 @@ namespace FileWorker {
         }
 
         explicit File(const std::string &file_path) {
-            std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary | std::ios::ate);
-            file.exceptions(std::ios_base::failbit | std::ios_base::badbit);
             try {
+                std::ifstream file(file_path, std::ios_base::in | std::ios_base::binary | std::ios::ate);
+                file.exceptions(std::ios_base::failbit | std::ios_base::badbit);
                 std::size_t file_size = file.tellg();
                 file.seekg(0, std::ios::beg);
                 data = std::vector<uint8_t>(file_size);
                 file.read(reinterpret_cast<char *>(data.data()), static_cast<long>(file_size));
-            } catch (std::ios_base::failure &exception) {
-                throw read_file_exception("Unable to rad the file: " + std::string(exception.what()));
+//            } catch (std::ios_base::failure &exception) { ENSURE: it should throws exactly this exception (sometimes it throes std::bad_alloc, if path is empty)
+            } catch (std::exception &exception) {
+                throw read_file_exception("Unable to read the file: " + std::string(exception.what()));
             }
             file_name = remove_extra_file_name_head(file_path);
         }
@@ -95,7 +97,7 @@ namespace FileWorker {
             return file_name;
         }
 
-        Status change_name(const std::string& new_name) {
+        Status change_name(const std::string &new_name) {
             if (check_file_name_is_correct(new_name)) {
                 file_name = new_name;
                 return Status(true);
@@ -111,10 +113,11 @@ namespace FileWorker {
             return Botan::base64_encode(data);
         }
 
-        explicit File(const std::string& name, std::vector<uint8_t> data_) : file_name(remove_extra_file_name_head(name)),
-                                                                      data(std::move(data_)) {}
+        explicit File(const std::string &name, std::vector<uint8_t> data_) : file_name(
+                remove_extra_file_name_head(name)),
+                                                                             data(std::move(data_)) {}
 
-        static std::string remove_extra_file_name_head (const std::string& name) {
+        static std::string remove_extra_file_name_head(const std::string &name) {
             // Throws the exception!
             auto slash_id = name.find_last_of("\n\t /\"");
             if (slash_id == std::string::npos) {
