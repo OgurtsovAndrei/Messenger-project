@@ -144,12 +144,13 @@ Status SQL_BDInterface::change_user(const User &new_user) {
         return user_params;
     }
      std::string sql =
-         "REPLACE INTO Users (id, Name, Surname, Login, PasswordHash) VALUES(";
+         "REPLACE INTO Users (id, Name, Surname, Login, PasswordHash, Encryption) VALUES(";
      sql += std::to_string(new_user.m_user_id) + ", '";
      sql += new_user.m_name + "', '";
      sql += new_user.m_surname + "', '";
      sql += new_user.m_login + "', '";
-     sql += make_hash(new_user.m_password_hash) + "');";
+     sql += make_hash(new_user.m_password_hash) + "', '";
+    sql += new_user.m_encryption + "');";
      char *message_error;
      std::string string_message;
      int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
@@ -383,9 +384,8 @@ Status SQL_BDInterface::close_dialog_request(
 
 Status SQL_BDInterface::make_dialog(Dialog &dialog){
     std::string sql =
-            "INSERT INTO Dialogs (Name, Encryption, DateTime, OwnerId, IsGroup) VALUES ('";
-    sql += dialog.m_name + "', '";
-    sql += dialog.m_encryption + "', ";
+            "INSERT INTO Dialogs (Name, DateTime, OwnerId, IsGroup) VALUES ('";
+    sql += dialog.m_name + "', ";
     sql += std::to_string(time(NULL)) + ", ";
     sql += std::to_string(dialog.m_owner_id) + ", ";
     sql += std::to_string(dialog.m_is_group) + ");";
@@ -418,10 +418,9 @@ Status SQL_BDInterface::make_dialog(Dialog &dialog){
 
 Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
     std::string sql =
-            "REPLACE INTO Dialogs (id, Name, Encryption, DateTime, OwnerId, IsGroup) VALUES(";
+            "REPLACE INTO Dialogs (id, Name, DateTime, OwnerId, IsGroup) VALUES(";
     sql += std::to_string(new_dialog.m_dialog_id) + ", '";
-    sql += new_dialog.m_name + "', '";
-    sql += new_dialog.m_encryption + "', ";
+    sql += new_dialog.m_name + "', ";
     sql += std::to_string(time(NULL)) + ", ";
     sql += std::to_string(new_dialog.m_owner_id) + ", ";
     sql += std::to_string(new_dialog.m_is_group) + ");";
@@ -466,7 +465,7 @@ Status SQL_BDInterface::get_dialog_by_id(Dialog &dialog){
     if (Status dialog_params = check_dialog_id(dialog,  "get_dialog_by_id user"); !dialog_params.correct()){
         return dialog_params;
     }
-    std::string sql = "SELECT id, Name, Encryption, DateTime, OwnerId, IsGroup FROM Dialogs WHERE id=";
+    std::string sql = "SELECT id, Name, DateTime, OwnerId, IsGroup FROM Dialogs WHERE id=";
     sql += std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
     std::string string_message;
@@ -631,6 +630,12 @@ Status SQL_BDInterface::make_message(Message &message){
 
 Status SQL_BDInterface::change_message(const Message &new_message){
     if (Status message_params = check_message_id(new_message,  "change_message message"); !message_params.correct()){
+        return message_params;
+    }
+    if (Status message_params = check_dialog_id(Dialog(new_message.m_dialog_id),  "change_message message"); !message_params.correct()){
+        return message_params;
+    }
+    if (Status message_params = check_message_id(User(new_message.m_user_id),  "change_message message"); !message_params.correct()){
         return message_params;
     }
     std::string sql =

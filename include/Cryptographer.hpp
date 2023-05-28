@@ -80,13 +80,6 @@ namespace Cryptographer {
     }
 
     inline std::unique_ptr<Botan::Private_Key>
-    generate_keypair_ElGamal(const size_t bits,
-                             Botan::RandomNumberGenerator &rng) {
-        auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, bits);
-        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, Botan::DL_Group("dsa/jce/1024"));
-    }
-
-    inline std::unique_ptr<Botan::Private_Key>
     generate_keypair_DSA(const size_t bits,
                              Botan::RandomNumberGenerator &rng) {
         return std::make_unique<Botan::ElGamal_PrivateKey>(rng, Botan::DL_Group("dsa/jce/1024"));
