@@ -32,6 +32,10 @@
 #include <botan/elgamal.h>
 #include <botan/ec_group.h>
 #include <botan/gost_3410.h>
+#include <botan/dlies.h>
+#include <botan/ecdsa.h>
+#include <botan/ecies.h>
+
 
 namespace Cryptographer {
     template<typename Out, typename In>
@@ -77,17 +81,30 @@ namespace Cryptographer {
 
     inline std::unique_ptr<Botan::Private_Key>
     generate_keypair_ElGamal(const size_t bits,
-                        Botan::RandomNumberGenerator &rng) {
+                             Botan::RandomNumberGenerator &rng) {
         auto group = Botan::DL_Group(rng, Botan::DL_Group::Strong, bits);
-        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, group);
+        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, Botan::DL_Group("dsa/jce/1024"));
+    }
+
+    inline std::unique_ptr<Botan::Private_Key>
+    generate_keypair_DSA(const size_t bits,
+                             Botan::RandomNumberGenerator &rng) {
+        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, Botan::DL_Group("dsa/jce/1024"));
+    }
+
+    inline std::unique_ptr<Botan::Private_Key>
+    generate_keypair_DH(const size_t bits,
+                         Botan::RandomNumberGenerator &rng) {
+        return std::make_unique<Botan::ElGamal_PrivateKey>(rng, Botan::DL_Group("dsa/jce/1024"));
     }
 
 
     inline EncryptedData encrypt(const Botan::secure_vector<uint8_t> &data,
                           Botan::Public_Key *pubkey,
                           Botan::RandomNumberGenerator &rng) {
+        // Создаём симметричный ключ, которым будем шифровать основной текст
         auto sym_cipher = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", Botan::Cipher_Dir::Encryption);
-
+        // Куда записываем результат
         EncryptedData d;
 
         // prepare random key material for the symmetric encryption/authentication
@@ -101,6 +118,7 @@ namespace Cryptographer {
         sym_cipher->finish(d.ciphertext);
 
         // encrypt the symmetric key using RSA
+        // Botan::ECIES_Encryptor asym_cipher(rng, Botan::ECIES_System_Params());
         Botan::PK_Encryptor_EME asym_cipher(*pubkey, rng, "EME-OAEP(SHA-256,MGF1)");
         d.encryptedKey = asym_cipher.encrypt(key, rng);
 
@@ -160,7 +178,7 @@ namespace Cryptographer {
         };
 
         explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
-                                                          key_pair(generate_keypair_RSA(1024 /*  bits */, rng_)) {};
+                                                          key_pair(generate_keypair_DH(1024 /*  bits */, rng_)) {};
 
         [[nodiscard]] std::string get_str_publicKey() const {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
