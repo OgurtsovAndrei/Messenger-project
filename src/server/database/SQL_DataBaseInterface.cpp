@@ -1,5 +1,6 @@
 #include <sqlite3.h>
 #include <iostream>
+#include <string>
 #include <ctime>
 #include "../../../include/database/DataBaseInterface.hpp"
 #include <botan/argon2.h>
@@ -30,21 +31,84 @@ Status SQL_BDInterface::close() {
     return Status(exit == SQLITE_OK, "Problem in database close\n");
 }
 
-// User
-Status SQL_BDInterface::make_user(User &user) {
-    std::string sql =
-        "INSERT INTO Users (Name, Surname, Login, PasswordHash) VALUES ('";
-    sql += user.m_name + "', '";
-    sql += user.m_surname + "', '";
-    sql += user.m_login + "', '";
+std::string make_hash(const std::string &password){
     std::unique_ptr<Botan::RandomNumberGenerator> rng;
 #if defined(BOTAN_HAS_SYSTEM_RNG)
     rng.reset(new Botan::System_RNG);
 #else
     rng.reset(new Botan::AutoSeeded_RNG);
 #endif
-    std::string new_password = Botan::argon2_generate_pwhash(user.m_password_hash.c_str(), user.m_password_hash.size(), *(rng.get()), 1, 8192, 1);
-    sql += new_password + "');";
+    return Botan::argon2_generate_pwhash(password.c_str(), password.size(), *(rng.get()), 1, 8192, 1);
+}
+
+Status check_user_id(const User &user, const std::string &where){
+    if (user.m_user_id < 0){
+        return Status(0, "User should have id in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_user_name(const User &user, const std::string &where){
+    if (user.m_name == ""){
+        return Status(0, "User should have name in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_user_surname(const User &user, const std::string &where){
+    if (user.m_surname == ""){
+        return Status(0, "User should have surname in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_user_login(const User &user, const std::string &where){
+    if (user.m_login == ""){
+        return Status(0, "User should have login in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_user_password_hash(const User &user, const std::string &where){
+    if (user.m_password_hash == ""){
+        return Status(0, "User should have password hash in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_message_id(const Message &message, const std::string &where){
+    if (message.m_message_id < 0){
+        return Status(0, "Message should have id in " + where);
+    }
+    return Status(1, "");
+}
+
+Status check_dialog_id(const Dialog &dialog, const std::string &where){
+    if (dialog.m_dialog_id < 0){
+        return Status(0, "Dialog should have id in " + where);
+    }
+    return Status(1, "");
+}
+// User
+Status SQL_BDInterface::make_user(User &user) {
+    if (Status user_params = check_user_name(user,  "MAKE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_surname(user,  "MAKE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_login(user,  "MAKE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_password_hash(user,  "MAKE user"); !user_params.correct()){
+        return user_params;
+    }
+    std::string sql =
+        "INSERT INTO Users (Name, Surname, Login, PasswordHash) VALUES ('";
+    sql += user.m_name + "', '";
+    sql += user.m_surname + "', '";
+    sql += user.m_login + "', '";
+    sql += make_hash(user.m_password_hash) + "');";
     char *message_error;
     std::string string_message;
     int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
@@ -64,13 +128,28 @@ Status SQL_BDInterface::make_user(User &user) {
 }
 
 Status SQL_BDInterface::change_user(const User &new_user) {
+    if (Status user_params = check_user_id(new_user,  "CHANGE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_name(new_user,  "CHANGE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_surname(new_user,  "CHANGE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_login(new_user,  "CHANGE user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_password_hash(new_user,  "CHANGE user"); !user_params.correct()){
+        return user_params;
+    }
      std::string sql =
          "REPLACE INTO Users (id, Name, Surname, Login, PasswordHash) VALUES(";
      sql += std::to_string(new_user.m_user_id) + ", '";
      sql += new_user.m_name + "', '";
      sql += new_user.m_surname + "', '";
      sql += new_user.m_login + "', '";
-     sql += new_user.m_password_hash + "');";
+     sql += make_hash(new_user.m_password_hash) + "');";
      char *message_error;
      std::string string_message;
      int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
@@ -84,6 +163,9 @@ Status SQL_BDInterface::change_user(const User &new_user) {
 }
 
 Status SQL_BDInterface::get_user_by_id(User &user){
+    if (Status user_params = check_user_id(user, "get_user_by_id user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "SELECT id, Name, Surname FROM Users WHERE id=";
     sql += std::to_string(user.m_user_id) + ";";
     char *message_error;
@@ -101,6 +183,12 @@ Status SQL_BDInterface::get_user_by_id(User &user){
 }
 
 Status SQL_BDInterface::get_user_by_log_pas(User &user) {
+    if (Status user_params = check_user_login(user,  "get_user_by_log_pas user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_password_hash(user,  "get_user_by_log_pas user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "SELECT id, Name, Surname, PasswordHash FROM Users WHERE Login='";
     sql += user.m_login + "';";
     char *message_error;
@@ -124,6 +212,9 @@ Status SQL_BDInterface::get_user_by_log_pas(User &user) {
 }
 
 Status SQL_BDInterface::get_user_id_by_log(User &user){
+    if (Status user_params = check_user_login(user,  "get_user_id_by_log user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "SELECT id, Name, Surname FROM Users WHERE Login='";
     sql += user.m_login + "';";
     char *message_error;
@@ -140,6 +231,9 @@ Status SQL_BDInterface::get_user_id_by_log(User &user){
 }
 
 Status SQL_BDInterface::del_user(const User &user) {
+    if (Status user_params = check_user_id(user,  "del_user user"); !user_params.correct()){
+        return user_params;
+    }
     Status res = del_user_dialogs(user);
     if (!res.correct()){
         return Status(false, "Can not DEL User Dialogs. It return:\n" + res.message());
@@ -166,6 +260,9 @@ Status SQL_BDInterface::del_user(const User &user) {
 }
 
 Status SQL_BDInterface::del_user_dialogs(const User &user){
+    if (Status user_params = check_user_id(user,  "del_user_dialogs user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "DELETE FROM UsersAndDialogs WHERE ";
     sql += "UserId=" + std::to_string(user.m_user_id) + ";";
     char *message_error;
@@ -180,6 +277,9 @@ Status SQL_BDInterface::del_user_dialogs(const User &user){
 }
 
 Status SQL_BDInterface::del_user_messages(const User &user){
+    if (Status user_params = check_user_id(user,  "del_user_messages user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "DELETE FROM Messages WHERE ";
     sql += "UserId=" + std::to_string(user.m_user_id) + ";";
     char *message_error;
@@ -194,6 +294,9 @@ Status SQL_BDInterface::del_user_messages(const User &user){
 }
 
 Status SQL_BDInterface::del_user_requests(const User &user){
+    if (Status user_params = check_user_id(user,  "del_user_requests user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "DELETE FROM RequestForDialog WHERE ";
     sql += "FromUserId=" + std::to_string(user.m_user_id) + " OR ";
     sql += "ToUserId=" + std::to_string(user.m_user_id) + ";";
@@ -212,6 +315,12 @@ Status SQL_BDInterface::make_dialog_request(
     const User &from_user,
     const User &to_user
 ) {
+    if (Status user_params = check_user_id(from_user,  "make_dialog_request from_user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_id(to_user,  "make_dialog_request to_user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql =
         "INSERT INTO RequestForDialog (FromUserId, ToUserId) VALUES (";
     sql += std::to_string(from_user.m_user_id) + ", ";
@@ -228,6 +337,9 @@ Status SQL_BDInterface::make_dialog_request(
 }
 
 Status SQL_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests){
+    if (Status user_params = check_user_id(user,  "get_user_dialog_requests user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "SELECT Users.id, Users.Name, Users.Surname FROM RequestForDialog INNER JOIN Users ON FromUserId = Users.id WHERE ToUserId=";
     sql += std::to_string(user.m_user_id) + ";";
     char *message_error;
@@ -249,6 +361,12 @@ Status SQL_BDInterface::close_dialog_request(
     const User &from_user,
     const User &to_user
 ) {
+    if (Status user_params = check_user_id(from_user,  "close_dialog_request from_user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status user_params = check_user_id(to_user,  "close_dialog_request to_user"); !user_params.correct()){
+        return user_params;
+    }
     std::string sql = "DELETE FROM Users WHERE ";
     sql += "FromUserId=" + std::to_string(from_user.m_user_id) + " AND ";
     sql += "ToUserId=" + std::to_string(to_user.m_user_id) + ";";
@@ -320,6 +438,12 @@ Status SQL_BDInterface::change_dialog(const Dialog &new_dialog){
 };
 
 Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
+    if (Status user_params = check_user_id(user,  "add_user_to_dialog user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status dialog_params = check_dialog_id(dialog,  "add_user_to_dialog user"); !dialog_params.correct()){
+        return dialog_params;
+    }
     Status update = update_dialog_time(dialog);
     if (!update.correct()){
         return Status(false, "Problem in UPDATE in ADD User to Dialog.\nMessage: " + update.message());
@@ -339,6 +463,9 @@ Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
 }
 
 Status SQL_BDInterface::get_dialog_by_id(Dialog &dialog){
+    if (Status dialog_params = check_dialog_id(dialog,  "get_dialog_by_id user"); !dialog_params.correct()){
+        return dialog_params;
+    }
     std::string sql = "SELECT id, Name, Encryption, DateTime, OwnerId, IsGroup FROM Dialogs WHERE id=";
     sql += std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
@@ -366,6 +493,9 @@ Status SQL_BDInterface::add_users_to_dialog(const std::vector<User> &users, Dial
 }
 
 Status SQL_BDInterface::get_users_in_dialog(const Dialog &dialog, std::vector<User> &users){
+    if (Status dialog_params = check_dialog_id(dialog,  "get_users_in_dialog dialog"); !dialog_params.correct()){
+        return dialog_params;
+    }
     std::string sql = "SELECT UserId FROM UsersAndDialogs WHERE DialogId=";
     sql += std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
@@ -383,6 +513,9 @@ Status SQL_BDInterface::get_users_in_dialog(const Dialog &dialog, std::vector<Us
 }
 
 Status SQL_BDInterface::update_dialog_time(const Dialog &dialog){
+    if (Status dialog_params = check_dialog_id(dialog,  "update_dialog_time dialog"); !dialog_params.correct()){
+        return dialog_params;
+    }
     std::string sql = "UPDATE Dialogs\nSET DateTime=";
     sql += std::to_string(time(NULL)) + "\n";
     sql += "WHERE id=" + std::to_string(dialog.m_dialog_id) + ";";
@@ -398,6 +531,9 @@ Status SQL_BDInterface::update_dialog_time(const Dialog &dialog){
 }
 
 Status SQL_BDInterface::del_dialog(const Dialog &dialog){
+    if (Status dialog_params = check_dialog_id(dialog,  "del_dialog dialog"); !dialog_params.correct()){
+        return dialog_params;
+    }
     Status res = del_all_massages_in_dialog(dialog);
     if (!res.correct()){
         return Status(false, "Can not del dialog messages. It return:\n" + res.message());
@@ -420,6 +556,9 @@ Status SQL_BDInterface::del_dialog(const Dialog &dialog){
 }
 
 Status SQL_BDInterface::del_all_massages_in_dialog(const Dialog &dialog){
+    if (Status dialog_params = check_dialog_id(dialog,  "del_all_massages_in_dialog dialog"); !dialog_params.correct()){
+        return dialog_params;
+    }
     std::string sql = "DELETE FROM Messages WHERE ";
     sql += "DialogId=" + std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
@@ -434,6 +573,9 @@ Status SQL_BDInterface::del_all_massages_in_dialog(const Dialog &dialog){
 }
 
 Status SQL_BDInterface::del_all_users_in_dialog(const Dialog &dialog){
+    if (Status dialog_params = check_dialog_id(dialog,  "del_all_users_in_dialog dialog"); !dialog_params.correct()){
+        return dialog_params;
+    }
     std::string sql = "DELETE FROM UsersAndDialogs WHERE ";
     sql += "DialogId=" + std::to_string(dialog.m_dialog_id) + ";";
     char *message_error;
@@ -488,6 +630,9 @@ Status SQL_BDInterface::make_message(Message &message){
 }
 
 Status SQL_BDInterface::change_message(const Message &new_message){
+    if (Status message_params = check_message_id(new_message,  "change_message message"); !message_params.correct()){
+        return message_params;
+    }
     std::string sql =
             "REPLACE INTO Messages (id, DateTime, Text, File, DialogId, UserId) VALUES(";
     sql += std::to_string(new_message.m_message_id) + ", '";
@@ -509,6 +654,9 @@ Status SQL_BDInterface::change_message(const Message &new_message){
 }
 
 Status SQL_BDInterface::get_message_by_id(Message &message) {
+    if (Status message_params = check_message_id(message,  "get_message_by_id message"); !message_params.correct()){
+        return message_params;
+    }
     std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE id=";
     sql += std::to_string(message.m_message_id) + ";";
     char *message_error;
@@ -526,6 +674,9 @@ Status SQL_BDInterface::get_message_by_id(Message &message) {
 }
 
 Status SQL_BDInterface::del_message(const Message &message){
+    if (Status message_params = check_message_id(message,  "del_message message"); !message_params.correct()){
+        return message_params;
+    }
     std::string sql = "DELETE FROM Messages WHERE ";
     sql += "id=" + std::to_string(message.m_message_id) + ";";
     char *message_error;

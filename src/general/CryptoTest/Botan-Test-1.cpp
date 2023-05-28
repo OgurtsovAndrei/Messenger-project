@@ -18,7 +18,7 @@
 #include <botan/data_src.h>
 //#include <botan/vector>
 
-#include "Cryptographer.hpp"
+#include "./../../../include/Cryptographer.hpp"
 
 using namespace Cryptographer;
 
@@ -72,12 +72,11 @@ int main()
 //    const auto new_plaintext_after_save_key = decrypt(ciphertext, *pvk, rng);
 //    std::cout << as<std::string>(new_plaintext_after_save_key) << std::endl;*/
 
-   std::string encrypted_data = decrypter.encrypt_text_to_text(plaintext);
-
-    std::cout << as<std::string>(decrypter.decrypt_data(encrypted_data)) << std::endl;
-
+//    auto x = decrypter.encrypt_text_to_encrypted_data_block(plaintext);
+    std::cout << as<std::string>(decrypter.decrypt_data(decrypter.encrypt_text_to_encrypted_data_block(plaintext))) << std::endl;
+//
     std::string text_to_send = decrypter.encrypt_text_to_text(plaintext);
-
+//
     std::cout << as<std::string>(decrypter.decrypt_data(text_to_send)) << std::endl;
 
     return 0;
