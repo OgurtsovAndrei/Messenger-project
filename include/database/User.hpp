@@ -15,8 +15,9 @@ struct User {
     std::string m_surname;
     std::string m_login;
     std::string m_password_hash;
+    std::string m_encryption;
 
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, m_user_id, m_name, m_surname, m_login, m_password_hash);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, m_user_id, m_name, m_surname, m_login, m_password_hash, m_encryption);
 
     static std::vector<User> *m_requests;
     static User *m_edit_user;
@@ -31,13 +32,15 @@ struct User {
         std::string surname,
         std::string login,
         std::string password_hash,
+        std::string encryption,
         int user_id = -1
     )
         : m_user_id(user_id),
           m_name(std::move(name)),
           m_surname(std::move(surname)),
           m_login(std::move(login)),
-          m_password_hash(std::move(password_hash)) {
+          m_password_hash(std::move(password_hash)),
+          m_encryption(std::move(encryption)) {
     }
 
     explicit User(std::string login, std::string password_hash)
