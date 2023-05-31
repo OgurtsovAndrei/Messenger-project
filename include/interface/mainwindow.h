@@ -25,6 +25,8 @@ public:
 
     unsigned int get_client_id() const;
 
+    std::string get_client_name_surname() const;
+
     void update_chats();
 
 private slots:

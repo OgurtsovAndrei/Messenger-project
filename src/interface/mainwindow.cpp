@@ -7,6 +7,7 @@
 #include "interface/welcWindow.h"
 #include "interface/chatInfo.h"
 #include "interface/mesSetting.h"
+#include "interface/popUp.h"
 //#include "User.hpp"
 
 #include <QStringListModel>
@@ -28,18 +29,11 @@ MainWindow::MainWindow(QWidget *parent)
             return;
         }
         Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
-        QString name_sur = QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname);
+        QString name_sur = QString::fromStdString(get_client_name_surname());
         json json_data = json::parse(send_status.message());
         addMessage(msg, json_data["m_message_id"], name_sur);
         ui->newMessageInput->setPlainText("");
     });
-
-    /* Проинициализоровать
-    * ChatList
-    * Messagewindow без send блока
-    * Поставить таймер с update
-    *
-    */
 
     auto *chat_timer = new QTimer(this);
     connect(chat_timer, &QTimer::timeout, [&]{
@@ -118,7 +112,11 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     auto [status, sec_client] = client.get_user_id_by_login(find_chat);
+    std::cout << "AAAAA" << status.message() << "\n";
     if (!status) {
+        std::cout << status.message() << "\n";
+        auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
+        popUp->show();
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
@@ -126,7 +124,6 @@ void MainWindow::on_findButton_clicked()
         std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
     }
-    ///TODO search user and start dialog
 }
 
 void MainWindow::addMessage(const QString &msg, const int mess_id, const QString &name_sur, const bool &incoming)
@@ -161,7 +158,7 @@ void MainWindow::set_client_info(const database_interface::User& cl) {
 
 void MainWindow::on_profileButton_clicked()
 {
-    auto *ch_info = new ChatInfo(select_chat_id, this);
+    auto *ch_info = new ChatInfo(this);
     ch_info->show();
 }
 
@@ -170,4 +167,9 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto *mess = new MesSetting(item, this);
     mess->show();
+}
+
+
+std::string MainWindow::get_client_name_surname() const {
+    return cl_info.cl_name + " " + cl_info.cl_surname;
 }
