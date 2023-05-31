@@ -14,10 +14,10 @@
 
 namespace FileWorker {
 
-    struct ParseJSON {
+    inline struct ParseJSON {
     } parse_JSON;
 
-    struct EmptyFile {
+    inline struct EmptyFile {
     } empty_file;
 
     struct file_exception : std::runtime_error {
