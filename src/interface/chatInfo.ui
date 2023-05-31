@@ -43,17 +43,29 @@ QListWidget {background-color : #076060; border-radius : 0px; border-width: 2px;
    <property name="spacing">
     <number>10</number>
    </property>
-   <item row="0" column="1" colspan="2">
-    <widget class="QLabel" name="userNameLabel">
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt;&quot;&gt;Name Surname&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   <item row="1" column="2">
+    <widget class="QComboBox" name="encrOptions">
+     <property name="currentText">
+      <string>RSA </string>
      </property>
-     <property name="buddy">
-      <cstring>userNameLabel</cstring>
-     </property>
+     <item>
+      <property name="text">
+       <string>RSA </string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Encr2</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Encr3</string>
+      </property>
+     </item>
     </widget>
    </item>
-   <item row="1" column="0" colspan="3">
+   <item row="2" column="0" colspan="3">
     <layout class="QGridLayout" name="gridLayout_2">
      <property name="leftMargin">
       <number>1</number>
@@ -132,6 +144,17 @@ QListWidget {background-color : #076060; border-radius : 0px; border-width: 2px;
      </item>
     </layout>
    </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QLabel" name="encrLabel">
+     <property name="styleSheet">
+      <string notr="true">QLabel {background: #094747; border-radius : 2px; border-width: 2px; padding: 6px; font: 14pt}
+</string>
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;change encryption type&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QLabel" name="userIconLabel">
      <property name="sizePolicy">
@@ -151,6 +174,16 @@ QListWidget {background-color : #076060; border-radius : 0px; border-width: 2px;
      </property>
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Icon&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QLabel" name="userNameLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt;&quot;&gt;Name Surname&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="buddy">
+      <cstring>userNameLabel</cstring>
      </property>
     </widget>
    </item>

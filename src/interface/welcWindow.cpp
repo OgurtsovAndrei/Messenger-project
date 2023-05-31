@@ -11,12 +11,10 @@ WelcWindow::WelcWindow(QWidget *parent) :
 
     this->setWindowTitle("ИШО");
 
-    connect(ui->logInButton, &QPushButton::clicked, [&](){
+    connect(ui->logInButton, &QPushButton::clicked, this, [&](){
         ui->logInButton->setDown(true);
         on_regButton_clicked();
     });
-
-    client.make_secure_connection();
 }
 
 WelcWindow::~WelcWindow()
