@@ -324,6 +324,13 @@ namespace Net::Server {
                                 break;
                             case FILE_UPLOAD_FAIL:
                                 break;
+                            case GET_USERS_IN_DIALOG:
+                                process_get_users_in_dialog_request(user_connection, request);
+                                break;
+                            case GET_USERS_IN_DIALOG_SUCCESS:
+                                break;
+                            case GET_USERS_IN_DIALOG_FAIL:
+                                break;
                         }
                     }
                 })));
@@ -773,6 +780,26 @@ namespace Net::Server {
             send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
                                               "Get_dialog_by_id exception: " + current_status.message());
             user_connection.send_secured_request(DecryptedRequest(ADD_USER_TO_DIALOG_SUCCESS, current_dialog));
+        }
+
+        void process_get_users_in_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              GET_USERS_IN_DIALOG_FAIL, "It is necessary to log in!");
+            send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
+                                              GET_USERS_IN_DIALOG_FAIL, "Dialog_id should be the integer!!");
+            database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
+            std::vector<database_interface::User> users;
+            Status current_status = bd_connection.get_users_in_dialog(current_dialog, users);
+            // AWARE: костыль, надо, чтобы это добавили  в DB
+            for (auto &user : users) {
+                auto get_user_status = bd_connection.get_user_by_id(user);
+                user.m_password_hash = "";
+                send_response_and_return_if_false(get_user_status.correct(), user_connection, GET_USERS_IN_DIALOG_FAIL,
+                                                  "Get_users_in_dialog exception: Get user data by uer id exception: " + get_user_status.message());
+            }
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_USERS_IN_DIALOG_FAIL,
+                                              "Get_users_in_dialog exception: " + current_status.message());
+            user_connection.send_secured_request(DecryptedRequest(GET_USERS_IN_DIALOG_SUCCESS, json(users)));
         }
 
         int find_empty_connection_number() {

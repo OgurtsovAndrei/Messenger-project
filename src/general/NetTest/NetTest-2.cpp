@@ -104,7 +104,7 @@ int main() {
         }
     }
 
-    if (true) {
+    if (false) {
         std::cout << "---------- File section ----------" << std::endl;
         FileWorker::File file(FileWorker::empty_file);
         try {
@@ -133,6 +133,20 @@ int main() {
             assert(save_status);
         }
         file_section:;
+    }
+
+    if (true) {
+        std::cout << "========== Det users in dialog section ==========\n";
+        int dialog_id = 3;
+        auto [status, users] = client.get_users_in_dialog(dialog_id);
+        if (status) {
+            std::cout << "Users in dialog with id: " + std::to_string(dialog_id) + "" << std::endl;
+            for (const auto& user : users) {
+                std::cout << json(user).dump(3) << std::endl;
+            }
+        } else {
+            std::cerr << status.message() << std::endl;
+        }
     }
     client.close_connection();
 }

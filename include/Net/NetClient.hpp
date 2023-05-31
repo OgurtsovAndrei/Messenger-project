@@ -341,16 +341,34 @@ namespace Net::Client {
             }
         }
 
-        Status change_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group) {
+        [[maybe_unused]] Status change_dialog(const std::string& dialog_name, const std::string& encryption, int current_time, int is_group) {
             // TODO: реализовать
             // Сделаю, когда попросите
             return Status(false);
         }
 
+        std::pair<Status, std::vector<database_interface::User>> get_users_in_dialog(int dialog_id) {
+            DecryptedRequest request(GET_USERS_IN_DIALOG, json{{"dialog_id", dialog_id}});
+            send_request(request.encrypt(encrypter.value()));
+
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_USERS_IN_DIALOG_SUCCESS) {
+                std::vector<database_interface::User> users;
+                try {
+                    users = response.data;
+                } catch (std::exception &exception) {
+                    return {Status(false, std::string("Parse get_users_in_dialog response exception: ") + exception.what()), {}};
+                }
+                return {Status(true, ""), users};
+            } else {
+                assert(response.get_type() == GET_USERS_IN_DIALOG_FAIL);
+                return {Status(false, response.data["what"]), {}};
+            }
+        }
+
         Status add_user_to_dialog(int user_id, int dialog_id) {
             DecryptedRequest request(ADD_USER_TO_DIALOG, json{{"user_id", user_id},{"dialog_id", dialog_id}});
             send_request(request.encrypt(encrypter.value()));
-
             DecryptedRequest response = get_request();
             if (response.get_type() == ADD_USER_TO_DIALOG_SUCCESS) {
                 database_interface::User user = response.data;
