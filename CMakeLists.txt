@@ -95,6 +95,7 @@ target_include_directories(Net1 PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        src/interface/addGroup.cpp
 #        src/interface/chatInfo.cpp
 #        src/interface/mesSetting.cpp
+#        src/interface/popUp.cpp
 #
 #        include/interface/welcWindow.h
 #        include/interface/mainwindow.h
@@ -104,6 +105,7 @@ target_include_directories(Net1 PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        include/interface/chatInfo.h
 #        include/interface/clientinfo.h
 #        include/interface/mesSetting.h
+#        include/interface/popUp.h
 #
 #        src/interface/mainwindow.ui
 #        src/interface/register.ui
@@ -111,6 +113,7 @@ target_include_directories(Net1 PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        src/interface/addGroup.ui
 #        src/interface/chatInfo.ui
 #        src/interface/mesSetting.ui
+#        src/interface/popUp.ui
 #        )
 #
 #add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

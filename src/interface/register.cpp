@@ -32,28 +32,31 @@ void Register::on_cancelButton_clicked() {
 }
 
 void Register::on_readyButton_clicked() {
-  // TODO check if password okay
-//  Net::Client::Client client("localhost", "12345");
-//  client.make_secure_connection();
-//    PopUp *popUp = new PopUp("hi i am error", this);
-//    popUp->show();
   Status status;
-  std::string login = ui->logInput->text().toStdString();
-  if (regVersion) {
-    status = client.sing_up(ui->nameInput->text().toStdString(),
-                            ui->snameInput->text().toStdString(),
-                            login,
-                            ui->pasInput->text().toStdString());
+  QString login = ui->logInput->text();
+  QString pas = ui->pasInput->text();
+  if (incorrect_log_or_pas(login, pas)) {
+    return;
   }
-  if ((regVersion && status) || (!regVersion && !status)) {
-    status = client.log_in(login,ui->pasInput->text().toStdString());
+  if (regVersion) {
+    QString name = ui->nameInput->text();
+    QString sname = ui->snameInput->text();
+    if (incorrect_name_or_surname(name, sname)) {
+      return;
+    }
+    status = client.sing_up(name.toStdString(),
+                            sname.toStdString(),
+                            login.toStdString(),
+                            pas.toStdString());
+  }
+  if ((regVersion && status) || (!regVersion)) {
+    status = client.log_in(login.toStdString(), pas.toStdString());
   }
   std::cout << bool(status) << " " << status.message() << "\n";
   if (status) {
     std::cout << "Logged in -->>" + status.message() + "\n";
-//    client.set_user_id(std::stoi(status.message()));
     auto *win = new MainWindow();
-    auto [cl_status, cl_info] = client.get_user_id_by_login(login);
+    auto [cl_status, cl_info] = client.get_user_id_by_login(login.toStdString());
     if (cl_status) {
         win->set_client_info(cl_info);
         win->show();
@@ -63,4 +66,38 @@ void Register::on_readyButton_clicked() {
     std::cout << "Log in failed -->>" + status.message() + "\n";
     std::cout << "log in isn't correct. Please try again or register" << "\n";
   }
+}
+
+bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
+    std::string popUp_msg;
+//    if (0 < pas.size() && pas.size() < 8) {
+//        popUp_msg += "Password must contain at least 8 characters.\n";
+//    }
+    if (pas.contains('\\') || pas.contains('/')) {
+        popUp_msg += "'\\' and '/' characters are not allowed in the password.\n";
+    }
+    if (pas.isEmpty() || log.isEmpty()) {
+        popUp_msg = "password and login are not allowed to be empty.\n";
+    }
+    if (!popUp_msg.empty()) {
+        popUp_msg += "Please try again";
+        auto *popUp = new PopUp(popUp_msg);
+        popUp->adjustSize();
+        popUp->show();
+        return true;
+    }
+    return false;
+}
+
+bool Register::incorrect_name_or_surname(const QString &name, const QString &sname) {
+    std::string popUp_msg;
+    if (name.isEmpty() || sname.isEmpty()) {
+        popUp_msg = "name and surname are not allowed to be empty.\n";
+        popUp_msg += "Please try again";
+        auto *popUp = new PopUp(popUp_msg);
+        popUp->adjustSize();
+        popUp->show();
+        return true;
+    }
+    return false;
 }

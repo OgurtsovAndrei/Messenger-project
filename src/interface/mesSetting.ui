@@ -17,7 +17,8 @@
    </sizepolicy>
   </property>
   <property name="styleSheet">
-   <string notr="true">QPushButton {background-color : #486E65;border-width: 1px; border-style: solid; border-radius: 0px; padding: 6px; border-color: #284E45}</string>
+   <string notr="true">QPushButton {background-color : #486E65;border-width: 1px; border-style: solid; border-radius: 0px; padding: 6px; border-color: #284E45}
+QPushButton:pressed { background-color: #587E75; }</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">
@@ -52,7 +53,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="editButton">
      <property name="text">
       <string>Edit</string>
      </property>

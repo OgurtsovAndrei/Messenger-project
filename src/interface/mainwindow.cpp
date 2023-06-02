@@ -23,22 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle("ИШО");
     update_chats();
 
-    connect(ui->sendButton, &QPushButton::clicked, this, [&]{
-        QString msg = ui->newMessageInput->toPlainText();
-        if (msg.isEmpty()) {
-            return;
-        }
-        Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
-        QString name_sur = QString::fromStdString(get_client_name_surname());
-        json json_data = json::parse(send_status.message());
-        addMessage(msg, json_data["m_message_id"], name_sur);
-        ui->newMessageInput->setPlainText("");
-    });
-
     auto *chat_timer = new QTimer(this);
-    connect(chat_timer, &QTimer::timeout, [&]{
+    connect(chat_timer, &QTimer::timeout, this, [&]{
       auto [status, chats] = client.get_last_n_dialogs(100);
-      if (chats.size() != chats_id_map.size()) {
+      if (chats.size() != ui->chatsList->count()) {
           std::cout << "Chats updates...\n";
           update_chats();
           std::cout << "Finish \n";
@@ -55,13 +43,35 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::update_chats() {
+void MainWindow::on_sendButton_clicked()
+{
+    QString msg = ui->newMessageInput->toPlainText();
+    if (msg.isEmpty()) {
+        auto *popUp = new PopUp("Message must not be empty", this);
+        popUp->show();
+        return;
+    }
+    if (ui->sendButton->text() == "Edit") {
+        auto status = client.change_sent_message(change_msg_id, msg.toStdString());
+        std::cout << "status" << status.message() << "\n";
+        ui->sendButton->setText("Send");
+        ui->newMessageInput->setPlainText("");
+        return;
+    }
+    Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
+    QString name_sur = QString::fromStdString(get_client_name_surname());
+    json json_data = json::parse(send_status.message());
+    addMessage(msg, json_data["m_message_id"], name_sur, json_data["m_user_id"]);
+    ui->newMessageInput->setPlainText("");
+}
+
+void MainWindow::update_chats(int n) {
     ui->chatsList->clear();
-    auto [status, chats] = client.get_last_n_dialogs(100);
+    auto [status, chats] = client.get_last_n_dialogs(n);
     for (const auto &chat : chats) {
-        QString new_chat;
+        auto chat_item = new QListWidgetItem(nullptr, chat.m_dialog_id);
         if (chat.m_is_group) {
-            new_chat = QString::fromStdString(chat.m_name);
+            chat_item->setText(QString::fromStdString(chat.m_name));
         }
         else {
 //            auto frt_user = (*chat.m_users)[0];
@@ -70,21 +80,20 @@ void MainWindow::update_chats() {
 //                std::swap(frt_user, sec_user);
 //            }
 //            new_chat = QString::fromStdString(frt_user.m_name + " " + frt_user.m_surname);
-            new_chat = QString::fromStdString(chat.m_name );
+            chat_item->setText(QString::fromStdString(chat.m_name ));
 
         }
-        ui->chatsList->addItem(new_chat);
-        chats_id_map[new_chat] = chat.m_dialog_id;
+        ui->chatsList->addItem(chat_item);
     }
 }
 
 void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
 {
     if (item != nullptr) {
-        select_chat_id = chats_id_map[item->text()];
+        select_chat_id = item->type();
         ui->chatName->setText(item->text());
     }
-    auto [status, messages] = client.get_n_messages(100, select_chat_id);
+    auto [status, messages] = client.get_n_messages(200, select_chat_id);
     if (ui->messagesList->count() == messages.size()) {
         return ;
     }
@@ -94,14 +103,15 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
         bool incoming = false;
         auto [st, us] = client.get_user_by_id(mess.m_user_id);
         if (!st) {
-            /// TODO
+            auto *popUp = new PopUp("Problems with displaying some messages.", this);
+            popUp->show();
+            continue;
         }
         QString name_sur = QString::fromStdString(us.m_name + " " + us.m_surname);
-        std::cout << us.m_name << "\n";
         if (mess.m_user_id != get_client_id()) {
             incoming = true;
         }
-        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, name_sur, incoming);
+        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, name_sur, mess.m_user_id, incoming);
     }
 }
 
@@ -112,28 +122,37 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     auto [status, sec_client] = client.get_user_id_by_login(find_chat);
-    std::cout << "AAAAA" << status.message() << "\n";
     if (!status) {
         std::cout << status.message() << "\n";
         auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
-        popUp->show();
+//        popUp->show();
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
     if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {get_client_id(), sec_id})) {
-        std::cout << client.get_last_n_dialogs(100, select_chat_id).second.size() << "\n";
         update_chats();
     }
 }
 
-void MainWindow::addMessage(const QString &msg, const int mess_id, const QString &name_sur, const bool &incoming)
+void MainWindow::addMessage(const QString &msg, const int mess_id, const QString &name_sur, unsigned int ow_id, const bool &incoming)
 {
     auto *item = new QListWidgetItem(nullptr, mess_id);
-    auto *bub = new Bubble(msg, name_sur, incoming);
+    auto *bub = new Bubble(msg, name_sur, ow_id, incoming);
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
     item->setSizeHint(bub->sizeHint());
     ui->messagesList->scrollToBottom();
+}
+
+void MainWindow::change_message(QListWidgetItem *mes) {
+    auto bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(mes));
+    if (bub->get_owner_id() != get_client_id()) {
+        auto *popUp = new PopUp("You cannot edit another user's messages", this);
+        popUp->show();
+        return ;
+    }
+    ui->sendButton->setText("Edit");
+    ui->newMessageInput->setText(bub->get_msg_text());
 }
 
 void MainWindow::on_groupButton_clicked()
@@ -156,12 +175,15 @@ void MainWindow::set_client_info(const database_interface::User& cl) {
     cl_info = ClientInfo(cl.m_name, cl.m_surname, cl.m_login, cl.m_user_id);
 }
 
+void MainWindow::set_change_msg_is(int msg_id) {
+    change_msg_id = msg_id;
+}
+
 void MainWindow::on_profileButton_clicked()
 {
     auto *ch_info = new ChatInfo(this);
     ch_info->show();
 }
-
 
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
@@ -169,7 +191,7 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
     mess->show();
 }
 
-
 std::string MainWindow::get_client_name_surname() const {
     return cl_info.cl_name + " " + cl_info.cl_surname;
 }
+

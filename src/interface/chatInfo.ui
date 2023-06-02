@@ -45,6 +45,13 @@ QListWidget {background-color : #076060; border-radius : 0px; border-width: 2px;
    </property>
    <item row="1" column="2">
     <widget class="QComboBox" name="encrOptions">
+     <property name="styleSheet">
+      <string notr="true">QComboBox::drop-down {background: #73B7A8; width: 20px; border-width: 1px; border-radius: 6px; padding: 0px;}
+QComboBox, QComboBox:on {border-width: 1px; border-radius: 6px; padding: 0px 0px 0px 6px;}
+QComboBox:!editable {background: #3C867C;}
+QComboBox:editable { background: #4C968C;}
+QComboBox QAbstractItemView { border: 2px #DDDDDD; border-radius: 6px; background-color: #3D9589;}</string>
+     </property>
      <property name="currentText">
       <string>RSA </string>
      </property>

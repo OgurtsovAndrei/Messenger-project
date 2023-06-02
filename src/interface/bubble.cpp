@@ -5,7 +5,7 @@
 #include <QPainterPath>
 #include <iostream>
 
-Bubble::Bubble(const QString &msg, const QString &cl_name_sur, const bool &incoming) : lbl(new QLabel), lbl_name(new QLabel), bubLayout(new QVBoxLayout)
+Bubble::Bubble(const QString &msg, const QString &cl_name_sur, unsigned int owner_id, const bool &incoming) : lbl(new QLabel), lbl_name(new QLabel), bubLayout(new QVBoxLayout), owner_id(owner_id)
 {
 /// TODO addicon
     lbl->setStyleSheet(
@@ -31,4 +31,12 @@ Bubble::Bubble(const QString &msg, const QString &cl_name_sur, const bool &incom
     }
     bubLayout->setSpacing(2);
     setLayout(bubLayout);
+}
+
+QString Bubble::get_msg_text() {
+    return lbl->text();
+}
+
+unsigned int Bubble::get_owner_id() {
+    return owner_id;
 }

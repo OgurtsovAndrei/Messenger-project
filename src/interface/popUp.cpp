@@ -3,7 +3,7 @@
 #include "QScreen"
 #include "QApplication"
 
-PopUp::PopUp(std::string error_msg, QWidget *parent) :
+PopUp::PopUp(const std::string& error_msg, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PopUp)
 {
@@ -14,6 +14,7 @@ PopUp::PopUp(std::string error_msg, QWidget *parent) :
     int y = (screenRect.height() - height()) / 2;
     this->move(x, y);
     ui->msgLabel->setText(QString::fromStdString(error_msg));
+    ui->msgLabel->adjustSize();
     ui->msgLabel->setAlignment(Qt::AlignCenter);
     ui->msgLabel->setWordWrap(true);
 }
