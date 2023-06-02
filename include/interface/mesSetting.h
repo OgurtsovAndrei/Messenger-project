@@ -20,6 +20,8 @@ public:
 private slots:
     void on_delButton_clicked();
 
+    void on_editButton_clicked();
+
 private:
     Ui::MesSetting *ui;
     QListWidgetItem *mes;

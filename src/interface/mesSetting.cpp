@@ -21,5 +21,14 @@ MesSetting::~MesSetting()
 void MesSetting::on_delButton_clicked()
 {
     auto status = client.delete_message(mes->type());
+    close();
+}
+
+
+void MesSetting::on_editButton_clicked()
+{
+    mainWin->set_change_msg_is(mes->type());
+    mainWin->change_message(mes);
+    close();
 }
 

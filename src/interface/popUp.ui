@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>257</width>
-    <height>151</height>
+    <width>251</width>
+    <height>134</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>200</horstretch>
+    <verstretch>200</verstretch>
+   </sizepolicy>
   </property>
   <property name="tabletTracking">
    <bool>true</bool>
@@ -38,6 +44,12 @@
    </item>
    <item>
     <widget class="QLabel" name="msgLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>200</horstretch>
+       <verstretch>200</verstretch>
+      </sizepolicy>
+     </property>
      <property name="styleSheet">
       <string notr="true">QLabel {border-radius : 10px; border-width: 2px; padding: 6px;}</string>
      </property>

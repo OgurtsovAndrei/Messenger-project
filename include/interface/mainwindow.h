@@ -27,7 +27,11 @@ public:
 
     std::string get_client_name_surname() const;
 
-    void update_chats();
+    void update_chats(int n = 100);
+
+    void change_message(QListWidgetItem *mes);
+
+    void set_change_msg_is(int msg_id);
 
 private slots:
 
@@ -35,7 +39,7 @@ private slots:
 
     void on_findButton_clicked();
 
-    void addMessage(const QString &msg, const int mess_id, const QString &name_sur, const bool &incoming = false);
+    void addMessage(const QString &msg, const int mess_id, const QString &name_sur, unsigned int ow_id, const bool &incoming = false);
 
     void on_groupButton_clicked();
 
@@ -45,11 +49,14 @@ private slots:
 
     void on_messagesList_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_sendButton_clicked();
+
 private:
     Ui::MainWindow *ui;
-    QMap<QString, int> chats_id_map;
     ClientInfo cl_info;
-    int select_chat_id = 0;
+    int select_chat_id = -1;
+    int num_submited_mes = 0;
+    int change_msg_id = -1;
 
 };
 
