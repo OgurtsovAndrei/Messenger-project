@@ -35,6 +35,8 @@ struct BDInterface {
 
     virtual Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) = 0;
 
+    virtual Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) = 0;
+
     virtual Status get_user_id_by_log(User &user) = 0;
 
     virtual Status del_user(const User &user) = 0;
@@ -107,6 +109,8 @@ struct SQL_BDInterface : BDInterface {
     Status get_user_id_by_log(User &user) override;
 
     Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
+
+    Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) override;
 
     Status del_user(const User &user) override;
 
@@ -247,6 +251,10 @@ struct Mock_BDInterface : BDInterface {
     Status close_dialog_request(const User &from_user, const User &to_user) override;
 
     Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
+
+    Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) override{
+        return Status(true, "");
+    }
 
     // Dialog
     Status make_dialog(Dialog &dialog) override;

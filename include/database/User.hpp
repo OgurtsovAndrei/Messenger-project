@@ -22,6 +22,7 @@ struct User {
     static std::vector<User> *m_requests;
     static User *m_edit_user;
     static std::string *m_encryption_name;
+    static std::vector<std::pair<int, std::string>> *m_encryption_pair_id_name;
 
     explicit User() = default;
 
@@ -76,6 +77,8 @@ struct User {
     static int request_callback(void *NotUsed, int argc, char **argv, char **azColName);
 
     static int callback_for_encryption_name(void *NotUsed, int argc, char **argv, char **azColName);
+
+    static int callback_for_all_encryption_names(void *NotUsed, int argc, char **argv, char **azColName);
 };
 
 }  // namespace database_interface

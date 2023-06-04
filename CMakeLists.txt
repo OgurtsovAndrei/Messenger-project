@@ -19,7 +19,7 @@ include_directories(src/install-lib/botan-install)
 include_directories(src/general)
 include_directories(src/server/database)
 include_directories(/usr/local/include/nlohmann)
-include_directories(nlohmann/single_include)
+include_directories(nlohmann/include)
 include_directories(bd)
 
 find_package(SQLite3 REQUIRED)
