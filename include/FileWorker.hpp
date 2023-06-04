@@ -9,7 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <botan/base64.h>
-#include <nlohmann/json.hpp>
+#include <./../nlohmann/single_include/nlohmann/json.hpp>
 #include <Status.hpp>
 
 namespace FileWorker {

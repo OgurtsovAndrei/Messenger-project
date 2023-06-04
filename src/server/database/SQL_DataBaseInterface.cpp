@@ -255,6 +255,21 @@ Status SQL_BDInterface::get_encryption_name_by_id(int encryption_id, std::string
     );
 }
 
+Status SQL_BDInterface::get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) {
+    std::string sql = "SELECT id, Encryption FROM Encryptions;";
+    char *message_error;
+    std::string string_message;
+    User::m_encryption_pair_id_name = &encryption_pair_id_name;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), User::User::callback_for_all_encryption_names, 0, &message_error);
+    User::m_encryption_pair_id_name = nullptr;
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    return Status(exit == SQLITE_OK && encryption_pair_id_name.size() > 0, "Problem in GET Encryption.\nMessage: " + string_message +
+                                     "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::del_user(const User &user) {
     if (Status user_params = check_user_id(user,  "del_user user"); !user_params.correct()){
         return user_params;
