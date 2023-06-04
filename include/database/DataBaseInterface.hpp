@@ -25,11 +25,15 @@ struct BDInterface {
     virtual Status close() = 0;
 
     // User
+    virtual Status check_user_exist_by_log(User &user);
+
     virtual Status make_user(User &user) = 0;
 
     virtual Status change_user(const User &new_user) = 0;
 
     virtual Status get_user_by_log_pas(User &user) = 0;
+
+    virtual Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) = 0;
 
     virtual Status get_user_id_by_log(User &user) = 0;
 
@@ -49,7 +53,7 @@ struct BDInterface {
 
     virtual Status change_dialog(const Dialog &new_dialog) = 0;
 
-    Status get_dialog_by_id(Dialog &dialog);
+    virtual Status get_dialog_by_id(Dialog &dialog) = 0;
 
     [[maybe_unused]] virtual Status get_n_users_dialogs_by_time(
         const User &user,
@@ -90,6 +94,8 @@ struct SQL_BDInterface : BDInterface {
     Status close() override;
 
     // User
+    Status check_user_exist_by_log(User &user) override;
+
     Status make_user(User &user) override;
 
     Status change_user(const User &new_user) override;
@@ -99,6 +105,8 @@ struct SQL_BDInterface : BDInterface {
     Status get_user_by_log_pas(User &user) override;
 
     Status get_user_id_by_log(User &user) override;
+
+    Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
 
     Status del_user(const User &user) override;
 
@@ -220,6 +228,8 @@ struct Mock_BDInterface : BDInterface {
     }
 
     // User
+    Status check_user_exist_by_log(User &user) override;
+
     Status make_user(User &user) override;
 
     Status change_user(const User &new_user) override;
@@ -235,6 +245,8 @@ struct Mock_BDInterface : BDInterface {
     Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
 
     Status close_dialog_request(const User &from_user, const User &to_user) override;
+
+    Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
 
     // Dialog
     Status make_dialog(Dialog &dialog) override;
@@ -270,6 +282,10 @@ struct Mock_BDInterface : BDInterface {
             }
         }
         return Status(true, "Get n dialogs in mock_bd");
+    }
+
+    Status get_dialog_by_id(Dialog &dialog) override{
+        return Status(true, "");
     }
 
     Status del_dialog(const Dialog &dialog) override;

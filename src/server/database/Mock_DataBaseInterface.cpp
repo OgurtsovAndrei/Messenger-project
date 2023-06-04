@@ -78,6 +78,21 @@ Status Mock_BDInterface::close_dialog_request(
     return Status(false, "Can not find request in mock_bd");
 }
 
+Status Mock_BDInterface::check_user_exist_by_log(User &user) {
+    return Status(users[user.m_login].m_user_id != -1, "Make user doesn't exist");
+}
+
+Status Mock_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name){
+    if (encryption_id == 1) {
+        encryption_name == "RSA";
+    } else if (encryption_id == 2){
+        encryption_name == "DSA";
+    } else {
+        encryption_name == "DH";
+    }
+    return Status(true, "find encryption");
+}
+
 // Dialog
 Status Mock_BDInterface::make_dialog(Dialog &dialog) {
     dialog.m_dialog_id = last_dialog_id++;
