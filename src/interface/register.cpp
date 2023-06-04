@@ -76,6 +76,9 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
     if (pas.contains('\\') || pas.contains('/')) {
         popUp_msg += "'\\' and '/' characters are not allowed in the password.\n";
     }
+    if (log.contains('\\') || log.contains('/')) {
+        popUp_msg += "'\\' and '/' characters are not allowed in the login.\n";
+    }
     if (pas.isEmpty() || log.isEmpty()) {
         popUp_msg = "password and login are not allowed to be empty.\n";
     }
