@@ -25,7 +25,7 @@ struct BDInterface {
     virtual Status close() = 0;
 
     // User
-    virtual Status check_user_exist_by_log(User &user);
+    virtual Status check_user_exist_by_log(User &user) = 0;
 
     virtual Status make_user(User &user) = 0;
 
@@ -129,7 +129,7 @@ struct SQL_BDInterface : BDInterface {
 
     Status add_user_to_dialog(const User &user, Dialog &dialog);
 
-    Status get_dialog_by_id(Dialog &dialog);
+    Status get_dialog_by_id(Dialog &dialog) override;
 
     Status add_users_to_dialog(const std::vector<User> &users, Dialog &dialog);
 
