@@ -140,13 +140,19 @@ namespace Net {
     struct EncryptedRequest {
 
         explicit EncryptedRequest(boost::asio::ip::tcp::iostream &connection) {
+            std::cout << "Here2.1\n";
             std::string request_string_size = read_n_and_get_string(REQUEST_STRING_SIZE_IN_CHARS, connection);
+            std::cout << "Here2.2\n";
             if (!is_number(request_string_size)) {std::cout << "<<" <<  request_string_size << ">>\n"; }
+            std::cout << "Here2.3\n";
             if (!is_number(request_string_size)) {
                 throw std::runtime_error("Bad connection! Expected request length, but received bytes are not number!");
             }
+            std::cout << "Here2.4\n";
             int request_size = std::stoi(request_string_size);
+            std::cout << "Here2.5\n";
             data_string = read_n_and_get_string(request_size, connection);
+            std::cout << "Here2.6\n";
         }
 
         [[nodiscard]] DecryptedRequest decrypt(Cryptographer::Decrypter &decrypter) const {
