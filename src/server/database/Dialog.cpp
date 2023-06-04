@@ -28,7 +28,7 @@ int Dialog::callback_get_one_dialog(void *NotUsed, int argc, char **argv, char *
     if (argc % 5 != 0){
         return 1;
     }
-    *m_edit_dialog = Dialog(std::stoi(argv[0]), argv[1], ,std::stoi(argv[3]),std::stoi(argv[4]),std::stoi(argv[5]));
+    *m_edit_dialog = Dialog(std::stoi(argv[0]), argv[1], std::stoi(argv[2]),std::stoi(argv[3]),std::stoi(argv[4]));
     return 0;
 }
 

@@ -89,6 +89,13 @@ Status check_dialog_id(const Dialog &dialog, const std::string &where){
     }
     return Status(1, "");
 }
+
+Status SQL_BDInterface::check_user_exist_by_log(User &user){
+    User tmp_user(user.m_user_id);
+    Status exit = get_user_id_by_log(tmp_user);
+    return Status(tmp_user.m_user_id != -1, "User doesn't exist\n");
+}
+
 // User
 Status SQL_BDInterface::make_user(User &user) {
     if (Status user_params = check_user_name(user,  "MAKE user"); !user_params.correct()){
@@ -117,7 +124,7 @@ Status SQL_BDInterface::make_user(User &user) {
     if (exit == SQLITE_OK) {
         Status select = get_user_by_log_pas(user);
         return Status(
-            select.correct(),
+            select.correct() && user.m_user_id != -1,
             "Problem in MAKE User in SELECT User.\nMessage: " + select.message()
         );
     }
@@ -150,7 +157,7 @@ Status SQL_BDInterface::change_user(const User &new_user) {
      sql += new_user.m_surname + "', '";
      sql += new_user.m_login + "', '";
      sql += make_hash(new_user.m_password_hash) + "', '";
-    sql += new_user.m_encryption + "');";
+    sql += std::to_string(new_user.m_encryption) + "');";
      char *message_error;
      std::string string_message;
      int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
@@ -178,7 +185,7 @@ Status SQL_BDInterface::get_user_by_id(User &user){
     sqlite3_free(message_error);
     User::m_edit_user = nullptr;
     return Status(
-            exit == SQLITE_OK, "Problem in GET User by id.\nMessage: " + string_message +
+            exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User by id.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
     );
 }
@@ -190,7 +197,7 @@ Status SQL_BDInterface::get_user_by_log_pas(User &user) {
     if (Status user_params = check_user_password_hash(user,  "get_user_by_log_pas user"); !user_params.correct()){
         return user_params;
     }
-    std::string sql = "SELECT id, Name, Surname, PasswordHash FROM Users WHERE Login='";
+    std::string sql = "SELECT id, Name, Surname, PasswordHash, Encryption FROM Users WHERE Login='";
     sql += user.m_login + "';";
     char *message_error;
     std::string string_message;
@@ -205,6 +212,7 @@ Status SQL_BDInterface::get_user_by_log_pas(User &user) {
         user.m_user_id = tmp_user.m_user_id;
         user.m_name = tmp_user.m_name;
         user.m_surname = tmp_user.m_surname;
+        user.m_encryption = tmp_user.m_encryption;
     }
     return Status(
         exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User.\nMessage: " + string_message +
@@ -226,8 +234,24 @@ Status SQL_BDInterface::get_user_id_by_log(User &user){
     User::m_edit_user = nullptr;
     chars_to_string(message_error, string_message);
     sqlite3_free(message_error);
-    return Status(exit == SQLITE_OK, "Problem in GET User id by login.\nMessage: " + string_message +
+    return Status(exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User id by login.\nMessage: " + string_message +
                                "\n SQL command: " + sql + "\n"
+    );
+}
+
+Status SQL_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name) {
+    std::string sql = "SELECT Encryption FROM Encryptions WHERE id=";
+    sql += std::to_string(encryption_id) + ";";
+    char *message_error;
+    std::string string_message;
+    User::m_encryption_name = &encryption_name;
+    int exit =
+            sqlite3_exec(m_bd, sql.c_str(), User::callback_for_encryption_name, 0, &message_error);
+    User::m_encryption_name = nullptr;
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    return Status(exit == SQLITE_OK, "Problem in GET Encryption.\nMessage: " + string_message +
+                                                             "\n SQL command: " + sql + "\n"
     );
 }
 
@@ -408,7 +432,7 @@ Status SQL_BDInterface::make_dialog(Dialog &dialog){
     sqlite3_free(message_error);
     if (exit != SQLITE_OK){
         return Status(
-                exit == SQLITE_OK, "Problem in MAKE Dialog in find id.\nMessage: " + string_message +
+                exit == SQLITE_OK && dialog.m_dialog_id != -1, "Problem in MAKE Dialog in find id.\nMessage: " + string_message +
                                    "\n SQL command: " + sql + "\n"
         );
     }
@@ -635,13 +659,13 @@ Status SQL_BDInterface::change_message(const Message &new_message){
     if (Status message_params = check_dialog_id(Dialog(new_message.m_dialog_id),  "change_message message"); !message_params.correct()){
         return message_params;
     }
-    if (Status message_params = check_message_id(User(new_message.m_user_id),  "change_message message"); !message_params.correct()){
+    if (Status message_params = check_user_id(User(new_message.m_user_id),  "change_message message"); !message_params.correct()){
         return message_params;
     }
     std::string sql =
             "REPLACE INTO Messages (id, DateTime, Text, File, DialogId, UserId) VALUES(";
-    sql += std::to_string(new_message.m_message_id) + ", '";
-    sql += std::to_string(new_message.m_date_time) + ", '";
+    sql += std::to_string(new_message.m_message_id) + ", ";
+    sql += std::to_string(time(NULL)) + ", '";
     sql += new_message.m_text + "', '";
     sql += new_message.m_file_path + "', ";
     sql += std::to_string(new_message.m_dialog_id) + ", ";

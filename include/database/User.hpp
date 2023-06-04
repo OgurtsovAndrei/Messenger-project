@@ -15,12 +15,13 @@ struct User {
     std::string m_surname;
     std::string m_login;
     std::string m_password_hash;
-    std::string m_encryption;
+    int m_encryption;
 
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(User, m_user_id, m_name, m_surname, m_login, m_password_hash, m_encryption);
 
     static std::vector<User> *m_requests;
     static User *m_edit_user;
+    static std::string *m_encryption_name;
 
     explicit User() = default;
 
@@ -28,11 +29,25 @@ struct User {
     }
 
     explicit User(
+            std::string name,
+            std::string surname,
+            std::string login,
+            std::string password_hash,
+            int user_id = -1
+    )
+            : m_user_id(user_id),
+              m_name(std::move(name)),
+              m_surname(std::move(surname)),
+              m_login(std::move(login)),
+              m_password_hash(std::move(password_hash)) {
+    }
+
+    explicit User(
         std::string name,
         std::string surname,
         std::string login,
         std::string password_hash,
-        std::string encryption,
+        int encryption,
         int user_id = -1
     )
         : m_user_id(user_id),
@@ -40,7 +55,7 @@ struct User {
           m_surname(std::move(surname)),
           m_login(std::move(login)),
           m_password_hash(std::move(password_hash)),
-          m_encryption(std::move(encryption)) {
+          m_encryption(encryption) {
     }
 
     explicit User(std::string login, std::string password_hash)
@@ -59,6 +74,8 @@ struct User {
     static int get_all_params(void *NotUsed, int argc, char **argv, char **azColName);
 
     static int request_callback(void *NotUsed, int argc, char **argv, char **azColName);
+
+    static int callback_for_encryption_name(void *NotUsed, int argc, char **argv, char **azColName);
 };
 
 }  // namespace database_interface

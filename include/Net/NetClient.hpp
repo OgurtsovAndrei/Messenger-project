@@ -284,12 +284,11 @@ namespace Net::Client {
             }
         }*/
 
-        Status make_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group, const std::vector<unsigned int>& user_ids) {
+        Status make_dialog(std::string dialog_name, int current_time, int is_group, const std::vector<unsigned int>& user_ids) {
             database_interface::Dialog new_dialog;
             nlohmann::json dialog_json;
 
             new_dialog.m_name = std::move(dialog_name);
-            new_dialog.m_encryption = std::move(encryption);
             new_dialog.m_date_time = current_time;
             new_dialog.m_is_group = is_group;
 
@@ -308,7 +307,7 @@ namespace Net::Client {
             }
         }
 
-        Status change_dialog(std::string dialog_name, std::string encryption, int current_time, int is_group) {
+        Status change_dialog(std::string dialog_name, int current_time, int is_group) {
             // TODO: реализовать
             // Сделаю, когда попросите
         }
