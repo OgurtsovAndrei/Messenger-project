@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>130</width>
-    <height>60</height>
+    <height>90</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -56,6 +56,13 @@ QPushButton:pressed { background-color: #587E75; }</string>
     <widget class="QPushButton" name="editButton">
      <property name="text">
       <string>Edit</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="downloadButton">
+     <property name="text">
+      <string>Download file</string>
      </property>
     </widget>
    </item>

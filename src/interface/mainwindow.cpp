@@ -8,6 +8,8 @@
 #include "interface/chatInfo.h"
 #include "interface/mesSetting.h"
 #include "interface/popUp.h"
+#include "FileWorker.hpp"
+#include <filesystem>
 //#include "User.hpp"
 
 #include <QStringListModel>
@@ -15,6 +17,9 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QLabel>
+#include <QFile>
+#include <QFileDialog>
+#include <QTextStream>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -38,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto *message_timer = new QTimer(this);
     connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
 
-    message_timer->start(100);
+    message_timer->start(10000);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -46,9 +51,15 @@ MainWindow::~MainWindow() { delete ui; }
 void MainWindow::on_sendButton_clicked()
 {
     QString msg = ui->newMessageInput->toPlainText();
-    if (msg.isEmpty()) {
-        auto *popUp = new PopUp("Message must not be empty", this);
-        popUp->show();
+    if (msg.isEmpty() && select_chat_id == -1) {
+        return;
+    }
+    if (msg.isEmpty() && select_chat_id != -1) {
+        show_popUp("Message must not be empty");
+        return;
+    }
+    if (select_chat_id == -1) {
+        show_popUp("Choose a chat please");
         return;
     }
     if (ui->sendButton->text() == "Edit") {
@@ -59,9 +70,8 @@ void MainWindow::on_sendButton_clicked()
         return;
     }
     Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
-    QString name_sur = QString::fromStdString(get_client_name_surname());
     json json_data = json::parse(send_status.message());
-    addMessage(msg, json_data["m_message_id"], name_sur, json_data["m_user_id"]);
+    addMessage(msg, json_data["m_message_id"], cl_info);
     ui->newMessageInput->setPlainText("");
 }
 
@@ -99,19 +109,14 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     }
     ui->messagesList->clear();
     std::reverse(messages.begin(), messages.end());
-    for (const auto &mess : messages) {
-        bool incoming = false;
-        auto [st, us] = client.get_user_by_id(mess.m_user_id);
+    for (const auto &msg : messages) {
+        auto [st, user] = client.get_user_by_id(msg.m_user_id);
         if (!st) {
-            auto *popUp = new PopUp("Problems with displaying some messages.", this);
-            popUp->show();
+            show_popUp("Problems displaying messages from some users.");
             continue;
         }
-        QString name_sur = QString::fromStdString(us.m_name + " " + us.m_surname);
-        if (mess.m_user_id != get_client_id()) {
-            incoming = true;
-        }
-        addMessage(QString::fromStdString(mess.m_text), mess.m_message_id, name_sur, mess.m_user_id, incoming);
+        ClientInfo sec_user_info(user);
+        addMessage(QString::fromStdString(msg.m_text), msg.m_message_id, sec_user_info);
     }
 }
 
@@ -134,21 +139,34 @@ void MainWindow::on_findButton_clicked()
     }
 }
 
-void MainWindow::addMessage(const QString &msg, const int mess_id, const QString &name_sur, unsigned int ow_id, const bool &incoming)
+void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const ClientInfo &sec_user_info, bool isFile)
 {
-    auto *item = new QListWidgetItem(nullptr, mess_id);
-    auto *bub = new Bubble(msg, name_sur, ow_id, incoming);
+    bool incoming = false;
+    if (sec_user_info.cl_id != get_client_id()) {
+        incoming = true;
+    }
+    auto *item = new QListWidgetItem(nullptr, isFile);
+    Bubble *bub;
+    if (isFile) {
+        bub = new Bubble(msg, extract_file_name(msg), msg_id, cl_info, incoming);
+    }
+    else {
+        bub = new Bubble(msg, msg_id, sec_user_info, incoming);
+    }
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
     item->setSizeHint(bub->sizeHint());
     ui->messagesList->scrollToBottom();
 }
 
-void MainWindow::change_message(QListWidgetItem *mes) {
-    auto bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(mes));
+void MainWindow::change_message(QListWidgetItem *msg) {
+    if (msg->type()) { // msg->type() = isFile
+        show_popUp("Sorry, you can't edit files");
+        return ;
+    }
+    auto bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(msg));
     if (bub->get_owner_id() != get_client_id()) {
-        auto *popUp = new PopUp("You cannot edit another user's messages", this);
-        popUp->show();
+        show_popUp("You cannot edit another user's messages");
         return ;
     }
     ui->sendButton->setText("Edit");
@@ -163,6 +181,9 @@ void MainWindow::on_groupButton_clicked()
 
 void MainWindow::on_chatName_clicked()
 {
+    if (select_chat_id == -1) {
+        return;
+    }
     auto *ch_info = new ChatInfo(select_chat_id, this);
     ch_info->show();
 }
@@ -185,13 +206,58 @@ void MainWindow::on_profileButton_clicked()
     ch_info->show();
 }
 
-void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
+void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *msg)
 {
-    auto *mess = new MesSetting(item, this);
+    auto *mess = new MesSetting(msg, this);
+    if (msg->type()) { // msg->type() = isFile
+       mess
+    }
     mess->show();
+}
+
+void show_popUp(const std::string &err_msg) {
+    auto *popUp = new PopUp(err_msg);
+    popUp->show();
 }
 
 std::string MainWindow::get_client_name_surname() const {
     return cl_info.cl_name + " " + cl_info.cl_surname;
 }
 
+void MainWindow::on_fileButton_clicked() {
+    if (select_chat_id == -1) {
+        show_popUp("Choose a chat please");
+        return;
+    }
+    QString file_path = QFileDialog::getOpenFileName(this, "Choose File");
+    if (file_path.isEmpty()) {
+        return;
+    }
+//    ui->newMessageInput->setPlainText("File '" + extract_file_name(file_path) + "' has been selected");
+//    std::cout << "we are upload file correct" << '\n';
+    FileWorker::File file(file_path.toStdString());
+    auto st = client.upload_file(file);
+    if (!st) {
+        show_popUp("We were unable to send the file.\n Don't worry that's on us.");
+    }
+//    connect(ui->sendButton, &QPushButton::clicked, this, [&]{
+//        std::cout << "we are upload file correct" << '\n';
+//            FileWorker::File file(file_path.toStdString());
+//            auto st = client.upload_file(file);
+//            if (!st) {
+//                show_popUp("We were unable to send the file.\n Don't worry that's on us.");
+//            }
+//        });
+
+
+//    std::cout << "filename=" << filename.toStdString() << "\n";
+}
+
+QString extract_file_name(const QString &file_path) {
+    QRegularExpression re("(/([^/]*$))");
+    QRegularExpressionMatch match_file_name = re.match(file_path);
+    if (!match_file_name.hasMatch()) {
+        show_popUp("File doesn't contain name");
+    }
+    return match_file_name.captured(2);
+}

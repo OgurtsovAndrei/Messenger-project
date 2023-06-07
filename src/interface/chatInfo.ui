@@ -47,7 +47,7 @@ QListWidget {background-color : #076060; border-radius : 0px; border-width: 2px;
     <widget class="QComboBox" name="encrOptions">
      <property name="styleSheet">
       <string notr="true">QComboBox::drop-down {background: #73B7A8; width: 20px; border-width: 1px; border-radius: 6px; padding: 0px;}
-QComboBox, QComboBox:on {border-width: 1px; border-radius: 6px; padding: 0px 0px 0px 6px;}
+QComboBox, QComboBox:on {border-width: 1px; border-radius: 6px; padding: 1px 1px 1px 6px;}
 QComboBox:!editable {background: #3C867C;}
 QComboBox:editable { background: #4C968C;}
 QComboBox QAbstractItemView { border: 2px #DDDDDD; border-radius: 6px; background-color: #3D9589;}</string>
@@ -188,6 +188,9 @@ QComboBox QAbstractItemView { border: 2px #DDDDDD; border-radius: 6px; backgroun
     <widget class="QLabel" name="userNameLabel">
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt;&quot;&gt;Name Surname&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
      </property>
      <property name="buddy">
       <cstring>userNameLabel</cstring>
