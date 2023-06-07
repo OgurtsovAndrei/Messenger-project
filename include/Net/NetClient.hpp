@@ -408,6 +408,57 @@ namespace Net::Client {
             }
         }
 
+        std::pair<Status, std::string> get_encryption_by_id(int encryption_id) {
+            DecryptedRequest request(GET_ENCRYPTION, json{{"encryption_id", encryption_id}});
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_ENCRYPTION_SUCCESS) {
+                std::string encryption;
+                try {
+                    encryption = response.data;
+                } catch (std::exception &exception) {
+                    return {Status(false, std::string("Parse get_all_encryption response exception: ") + exception.what()), {}};
+                }
+                return {Status(true, ""), encryption};
+            } else {
+                assert(response.get_type() == GET_ENCRYPTION_FAIL);
+                return {Status(false, response.data["what"]), {}};
+            }
+        }
+
+        std::pair<Status, std::vector<std::pair<int, std::string>>> get_all_encryption() {
+            DecryptedRequest request(GET_ALL_ENCRYPTION);
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == GET_ALL_ENCRYPTION_SUCCESS) {
+                std::vector<std::pair<int, std::string>> encryption;
+                try {
+                    encryption = response.data;
+                } catch (std::exception &exception) {
+                    return {Status(false, std::string("Parse get_all_encryption response exception: ") + exception.what()), {}};
+                }
+                return {Status(true, ""), encryption};
+            } else {
+                assert(response.get_type() == GET_ALL_ENCRYPTION_FAIL);
+                return {Status(false, response.data["what"]), {}};
+            }
+        }
+
+        std::pair<Status, bool> check_login(std::string login) {
+            assert(login.find_first_of("\t\n ") == std::string::npos);
+            database_interface::User user(std::move(login));
+            DecryptedRequest request(CHECK_LOGIN, user);
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == CHECK_LOGIN_SUCCESS) {
+                user = response.data;
+                return {Status(true, std::to_string(user.m_user_id)), user.m_user_id != -1};
+            } else {
+                assert(response.get_type() == CHECK_LOGIN_FAIL);
+                return {Status(false, response.data["what"]), false};
+            }
+        }
+
         Status close_connection() {
             send_request(DecryptedRequest(Net::CLOSE_CONNECTION).encrypt(encrypter.value()));
             connection->close();

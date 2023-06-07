@@ -310,6 +310,27 @@ namespace Net::Server {
                                 break;
                             case GET_USER_BY_ID_FAIL:
                                 break;
+                            case GET_ENCRYPTION:
+                                process_get_encryption_by_id_request(user_connection, std::move(request));
+                                break;
+                            case GET_ENCRYPTION_SUCCESS:
+                                break;
+                            case GET_ENCRYPTION_FAIL:
+                                break;
+                            case GET_ALL_ENCRYPTION:
+                                process_get_all_encryption_request(user_connection, std::move(request));
+                                break;
+                            case GET_ALL_ENCRYPTION_SUCCESS:
+                                break;
+                            case GET_ALL_ENCRYPTION_FAIL:
+                                break;
+                            case CHECK_LOGIN:
+                                process_check_login_request(user_connection, std::move(request));
+                                break;
+                            case CHECK_LOGIN_SUCCESS:
+                                break;
+                            case CHECK_LOGIN_FAIL:
+                                break;
                             case FILE_DOWNLOAD:
                                 process_download_file_request(user_connection, request);
                                 break;
@@ -800,6 +821,48 @@ namespace Net::Server {
             send_response_and_return_if_false(current_status.correct(), user_connection, GET_USERS_IN_DIALOG_FAIL,
                                               "Get_users_in_dialog exception: " + current_status.message());
             user_connection.send_secured_request(DecryptedRequest(GET_USERS_IN_DIALOG_SUCCESS, json(users)));
+        }
+
+        void process_get_encryption_by_id_request(UserConnection &user_connection, DecryptedRequest request) {
+            send_response_and_return_if_false(request.data["encryption_id"].is_number(), user_connection,
+                                              GET_ENCRYPTION_FAIL, "Encryption_id should be the integer!!");
+            int encryption_id = static_cast<int>(request.data["encryption_id"]);
+            std::string encryption_name = "";
+            auto status = bd_connection.get_encryption_name_by_id(encryption_id, encryption_name);
+            if (status) {
+                user_connection.send_secured_request(DecryptedRequest(GET_ENCRYPTION_SUCCESS, encryption_name));
+            } else {
+                user_connection.send_secured_exception(GET_ENCRYPTION_FAIL, status.message());
+            }
+        }
+
+        void process_get_all_encryption_request(UserConnection &user_connection, DecryptedRequest request) {
+            std::vector<std::pair<int, std::string>> encryption_id_name;
+            auto status = bd_connection.get_encryption_pairs_id_name(encryption_id_name);
+            if (status) {
+                user_connection.send_secured_request(DecryptedRequest(GET_ALL_ENCRYPTION_SUCCESS, encryption_id_name));
+            } else {
+                user_connection.send_secured_exception(GET_ALL_ENCRYPTION_FAIL, status.message());
+            }
+        }
+
+        void process_check_login_request(UserConnection &user_connection, DecryptedRequest request) {
+            database_interface::User user_in_db;
+            try {
+                nlohmann::from_json(request.data, user_in_db);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(CHECK_LOGIN_FAIL,
+                                                       "Not able to check login: cannot parse json user: bad request or invalid user data: " +
+                                                       static_cast<std::string>(exception.what()));
+            }
+            send_response_and_return_if_false(user_in_db.m_login.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection, CHECK_LOGIN_FAIL, "Login should contain only one word!");
+            auto status = bd_connection.get_user_id_by_log(user_in_db);
+            if (status) {
+                user_connection.send_secured_request(DecryptedRequest(CHECK_LOGIN_SUCCESS, user_in_db));
+            } else {
+                user_connection.send_secured_exception(CHECK_LOGIN_FAIL, status.message());
+            }
         }
 
         int find_empty_connection_number() {
