@@ -13,7 +13,7 @@ class ChatInfo : public QDialog
     Q_OBJECT
 
 public:
-    explicit ChatInfo(int dialog_id, QWidget *parent = nullptr);
+    explicit ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent = nullptr);
     explicit ChatInfo(MainWindow *mainWin, QWidget *parent = nullptr);
     ~ChatInfo();
 

@@ -2,8 +2,11 @@
 #include "interface/welcWindow.h"
 #include "ui_chatInfo.h"
 #include "database/Dialog.hpp"
+#include "interface/popUp.h"
 
-ChatInfo::ChatInfo(int dialog_id, QWidget *parent) : dialog_id(dialog_id),
+ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
+    dialog_id(dialog_id),
+    mainWin(mainWin),
     QDialog(parent),
     ui(new Ui::ChatInfo)
 {
@@ -11,26 +14,25 @@ ChatInfo::ChatInfo(int dialog_id, QWidget *parent) : dialog_id(dialog_id),
     ui->encrLabel->close();
     ui->encrOptions->close();
     this->setWindowTitle("Chat Info");
-    auto [status, chats] = client.get_last_n_dialogs(100);
-    database_interface::Dialog *dialog;
-    for  (auto &chat : chats) {
-        if (chat.m_dialog_id == dialog_id) {
-            dialog = &chat;
+    auto [status, dialog] = client.get_dialog_by_id(dialog_id);
+    if (!status) {
+        auto *popUp = new PopUp("This dialog is corrupted.\nFor help, please contact at.\nWe will try to help you");
+        popUp->show();
+        return ;
+    }
+    ui->userNameLabel->setWordWrap(true);
+    if (dialog.m_is_group) {
+        ui->userNameLabel->setText(QString::fromStdString(dialog.m_name));
+        auto [st, users] = client.get_users_in_dialog(dialog_id);
+        for (const auto &user : users) {
+            auto user_name = new QListWidgetItem(QString::fromStdString(user.m_name + " " + user.m_surname), nullptr);
+            ui->memList->addItem(user_name);
         }
     }
-//    auto [status, dialog] = client.get_dialog_by_id(dialog_id);
-//    if (!status) {
-//        return ; /// TODO fail message
-//    }
-    ui->userNameLabel->setText(QString::fromStdString(dialog->m_name));
-    ui->userNameLabel->setWordWrap(true);
-    if (!dialog->m_is_group) {
+    else {
+        ui->userNameLabel->setText(mainWin->get_sec_user_name_surname(dialog_id));
         close_group_buttons();
         setFixedHeight(75);
-    }
-    else {
-//        get_users_in_dialog
-//        ui->memList->addItem(client_name)
     }
 }
 
@@ -40,7 +42,7 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
     QDialog(parent), ui(new Ui::ChatInfo)
 {
     ui->setupUi(this);
-    QString cl_name_surname = QString::fromStdString(mainWin->get_client_name_surname());
+    QString cl_name_surname = mainWin->get_client_name_surname();
     this->setWindowTitle(cl_name_surname);
     ui->userNameLabel->setText(cl_name_surname);
     ui->userNameLabel->setWordWrap(true);

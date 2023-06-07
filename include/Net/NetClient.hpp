@@ -351,11 +351,12 @@ namespace Net::Client {
             send_request(request.encrypt(encrypter.value()));
 
             DecryptedRequest response = get_request();
-            if (response.get_type() == GET_USER_BY_LOGIN_SUCCESS) {
+            if (response.get_type() == GET_DIALOG_BY_ID_SUCCESS) {
                 database_interface::Dialog dialog = response.data;
                 return {Status(true, ""), std::move(dialog)};
             } else {
-                assert(response.get_type() == SIGN_UP_FAIL);
+                std::cout << response.get_type() << "\n";
+                assert(response.get_type() == GET_DIALOG_BY_ID_FAIL);
                 return {Status(false, response.data["what"]), database_interface::Dialog{}};
             }
         };

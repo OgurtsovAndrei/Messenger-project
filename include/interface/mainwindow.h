@@ -29,7 +29,9 @@ public:
 
     void set_change_msg_is(int msg_id);
 
-    [[nodiscard]] std::string get_client_name_surname() const;
+    [[nodiscard]] QString get_client_name_surname() const;
+
+    [[nodiscard]] QString get_sec_user_name_surname(int dialog_id) const;
 
 private slots:
 
