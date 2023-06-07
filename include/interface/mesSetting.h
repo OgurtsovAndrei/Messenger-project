@@ -14,7 +14,7 @@ class MesSetting : public QWidget
     Q_OBJECT
 
 public:
-    explicit MesSetting(QListWidgetItem *msg, MainWindow *mainWin, QWidget *parent = nullptr);
+    explicit MesSetting(QListWidgetItem *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
     ~MesSetting();
 
 private slots:
@@ -23,10 +23,6 @@ private slots:
     void on_editButton_clicked();
 
     void on_downloadButton_clicked();
-
-    void close_downoload();
-
-    void close_edit();
 
 private:
     Ui::MesSetting *ui;
