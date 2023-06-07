@@ -145,7 +145,7 @@ struct SQL_BDInterface : BDInterface {
         int n = 10,
         int last_dialog_date_time = 2121283574
     ) override {
-        std::string sql = "SELECT Dialogs.id, Name, Encryption, DateTime, OwnerId, IsGroup FROM UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE UserId=";
+        std::string sql = "SELECT Dialogs.id, Name, DateTime, OwnerId, IsGroup FROM UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE UserId=";
         sql += std::to_string(user.m_user_id) + " AND DateTime < ";
         sql += std::to_string(last_dialog_date_time) + " ORDER BY DateTime DESC LIMIT ";
         sql += std::to_string(n) + ";";
