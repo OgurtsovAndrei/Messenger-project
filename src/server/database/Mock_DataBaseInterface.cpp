@@ -84,11 +84,11 @@ Status Mock_BDInterface::check_user_exist_by_log(User &user) {
 
 Status Mock_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name){
     if (encryption_id == 1) {
-        encryption_name == "RSA";
+        encryption_name = "RSA";
     } else if (encryption_id == 2){
-        encryption_name == "DSA";
+        encryption_name = "DSA";
     } else {
-        encryption_name == "DH";
+        encryption_name = "DH";
     }
     return Status(true, "find encryption");
 }
