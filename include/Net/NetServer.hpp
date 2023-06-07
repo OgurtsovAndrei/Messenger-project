@@ -794,13 +794,12 @@ namespace Net::Server {
 
         void process_get_dialog_by_id_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
-                                              ADD_USER_TO_DIALOG_FAIL, "Dialog_id should be the integer!!");
+                                              GET_DIALOG_BY_ID_FAIL, "Dialog_id should be the integer!!");
             database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
-            // TODO: раскомментировать строчки, когда будет добавлен метод
             Status current_status = bd_connection.get_dialog_by_id(current_dialog);
-            send_response_and_return_if_false(current_status.correct(), user_connection, ADD_USER_TO_DIALOG_FAIL,
+            send_response_and_return_if_false(current_status.correct(), user_connection, GET_DIALOG_BY_ID_FAIL,
                                               "Get_dialog_by_id exception: " + current_status.message());
-            user_connection.send_secured_request(DecryptedRequest(ADD_USER_TO_DIALOG_SUCCESS, current_dialog));
+            user_connection.send_secured_request(DecryptedRequest(GET_DIALOG_BY_ID_SUCCESS, current_dialog));
         }
 
         void process_get_users_in_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
@@ -905,24 +904,16 @@ namespace Net::Server {
         client = boost::asio::ip::tcp::iostream(std::move(socket));
         while (true) {
             try {
-                std::cout << "Here1\n";
                 std::unique_lock lock(*client_connection_in_mutex);
-                std::cout << "Here2\n";
                 EncryptedRequest encrypted_request(client.value());
-                std::cout << "Here3\n";
                 lock.unlock();
-                std::cout << "Here4\n";
                 DecryptedRequest request = encrypted_request.reinterpret_cast_to_decrypted();
-                std::cout << "Here5\n";
                 if (request.request_type != MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
                     continue;
                 }
-                std::cout << "Here6\n";
                 connection.decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng());
-                std::cout << "Here7\n";
                 connection.encrypter = Cryptographer::Encrypter(request.data["public_key"],
                                                                 Cryptographer::Cryptographer::get_rng());
-                std::cout << "Here8\n";
                 DecryptedRequest response_with_key(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY);
                 response_with_key.data["public_key"] = connection.decrypter.value().get_str_publicKey();
                 lock.lock();

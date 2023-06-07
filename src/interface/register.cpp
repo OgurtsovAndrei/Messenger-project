@@ -52,7 +52,6 @@ void Register::on_readyButton_clicked() {
   if ((regVersion && status) || (!regVersion)) {
     status = client.log_in(login.toStdString(), pas.toStdString());
   }
-  std::cout << bool(status) << " " << status.message() << "\n";
   if (status) {
     std::cout << "Logged in -->>" + status.message() + "\n";
     auto *win = new MainWindow();

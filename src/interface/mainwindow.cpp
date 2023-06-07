@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto *message_timer = new QTimer(this);
     connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
 
-    message_timer->start(10000);
+    message_timer->start(100);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -78,23 +78,13 @@ void MainWindow::on_sendButton_clicked()
 void MainWindow::update_chats(int n) {
     ui->chatsList->clear();
     auto [status, chats] = client.get_last_n_dialogs(n);
-    std::cout << "update-chats: " << bool(status) << " chats: " << chats.size() << "\n";
-    std::cout << "status-message: " << status.message() << "\n";
     for (const auto &chat : chats) {
         auto chat_item = new QListWidgetItem(nullptr, chat.m_dialog_id);
         if (chat.m_is_group) {
             chat_item->setText(QString::fromStdString(chat.m_name));
         }
         else {
-            auto [st, users] = client.get_users_in_dialog(chat.m_dialog_id);
-//            assert(users.size == 2);
-            for (const auto& us : users) {
-                if (us.m_user_id != get_client_id()) {
-                    chat_item->setText(QString::fromStdString(us.m_name + " " + us.m_surname));
-                    break ;
-                }
-            }
-
+            chat_item->setText(get_sec_user_name_surname(chat.m_dialog_id));
         }
         ui->chatsList->addItem(chat_item);
     }
@@ -196,7 +186,8 @@ unsigned int MainWindow::get_client_id() const {
 }
 
 void MainWindow::set_client_info(const database_interface::User& cl) {
-    cl_info = ClientInfo(cl.m_name, cl.m_surname, cl.m_login, cl.m_user_id);
+    cl_info = ClientInfo(cl);
+    update_chats();
 }
 
 void MainWindow::set_change_msg_is(int msg_id) {
@@ -220,8 +211,8 @@ void show_popUp(const std::string &err_msg) {
     popUp->show();
 }
 
-std::string MainWindow::get_client_name_surname() const {
-    return cl_info.cl_name + " " + cl_info.cl_surname;
+QString MainWindow::get_client_name_surname() const {
+    return QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname);
 }
 
 void MainWindow::on_fileButton_clicked() {
@@ -236,6 +227,7 @@ void MainWindow::on_fileButton_clicked() {
 //    ui->newMessageInput->setPlainText("File '" + extract_file_name(file_path) + "' has been selected");
 //    std::cout << "we are upload file correct" << '\n';
     FileWorker::File file(file_path.toStdString());
+    std::cout << "filepath: "<< file_path.toStdString() << "\n";
     auto st = client.upload_file(file);
     if (!st) {
         show_popUp("We were unable to send the file.\n Don't worry that's on us.");
@@ -251,6 +243,19 @@ void MainWindow::on_fileButton_clicked() {
 
 
 //    std::cout << "filename=" << filename.toStdString() << "\n";
+}
+
+QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
+    auto [status, users] = client.get_users_in_dialog(dialog_id);
+    if (!status || users.size() != 2) {
+        show_popUp("This dialog is corrupted.\nFor help, please contact at.\nWe will try to help you");
+    }
+    for (const auto& us : users) {
+        if (us.m_user_id != get_client_id()) {
+            return QString::fromStdString(us.m_name + " " + us.m_surname);
+        }
+    }
+    return get_client_name_surname();
 }
 
 QString extract_file_name(const QString &file_path) {
