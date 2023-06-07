@@ -86,7 +86,7 @@ void MainWindow::update_chats(int n) {
             chat_item->setText(QString::fromStdString(chat.m_name));
         }
         else {
-            auto [status, users] = client.get_users_in_dialog(chat.m_dialog_id);
+            auto [st, users] = client.get_users_in_dialog(chat.m_dialog_id);
 //            assert(users.size == 2);
             for (const auto& us : users) {
                 if (us.m_user_id != get_client_id()) {
@@ -130,9 +130,7 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     auto [status, sec_client] = client.get_user_id_by_login(find_chat);
-    std::cout << bool(status) << " " << status.message() << "\n";
     if (!status) {
-        std::cout << status.message() << "\n";
         auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
 //        popUp->show();
         return;
@@ -140,7 +138,6 @@ void MainWindow::on_findButton_clicked()
     unsigned int sec_id = sec_client.m_user_id;
     std::string dialog_name = cl_info.cl_login + "+" + sec_client.m_login;
     if (client.make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
-        std::cout << sec_id << " sec id" << "\n";
         update_chats();
     }
 }
