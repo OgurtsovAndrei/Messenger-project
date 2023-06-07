@@ -78,19 +78,22 @@ void MainWindow::on_sendButton_clicked()
 void MainWindow::update_chats(int n) {
     ui->chatsList->clear();
     auto [status, chats] = client.get_last_n_dialogs(n);
+    std::cout << "update-chats: " << bool(status) << " chats: " << chats.size() << "\n";
+    std::cout << "status-message: " << status.message() << "\n";
     for (const auto &chat : chats) {
         auto chat_item = new QListWidgetItem(nullptr, chat.m_dialog_id);
         if (chat.m_is_group) {
             chat_item->setText(QString::fromStdString(chat.m_name));
         }
         else {
-//            auto frt_user = (*chat.m_users)[0];
-//            auto sec_user = (*chat.m_users)[1];
-//            if (frt_user.m_user_id == get_client_id()) {
-//                std::swap(frt_user, sec_user);
-//            }
-//            new_chat = QString::fromStdString(frt_user.m_name + " " + frt_user.m_surname);
-            chat_item->setText(QString::fromStdString(chat.m_name ));
+            auto [status, users] = client.get_users_in_dialog(chat.m_dialog_id);
+//            assert(users.size == 2);
+            for (const auto& us : users) {
+                if (us.m_user_id != get_client_id()) {
+                    chat_item->setText(QString::fromStdString(us.m_name + " " + us.m_surname));
+                    break ;
+                }
+            }
 
         }
         ui->chatsList->addItem(chat_item);
@@ -127,6 +130,7 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     auto [status, sec_client] = client.get_user_id_by_login(find_chat);
+    std::cout << bool(status) << " " << status.message() << "\n";
     if (!status) {
         std::cout << status.message() << "\n";
         auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
@@ -134,7 +138,9 @@ void MainWindow::on_findButton_clicked()
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
-    if (client.make_dialog(sec_client.m_name, "RSA", 1000, false, {get_client_id(), sec_id})) {
+    std::string dialog_name = cl_info.cl_login + "+" + sec_client.m_login;
+    if (client.make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
+        std::cout << sec_id << " sec id" << "\n";
         update_chats();
     }
 }
@@ -208,10 +214,7 @@ void MainWindow::on_profileButton_clicked()
 
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *msg)
 {
-    auto *mess = new MesSetting(msg, this);
-    if (msg->type()) { // msg->type() = isFile
-       mess
-    }
+    auto *mess = new MesSetting(msg, this, msg->type()); // msg->type() = isFile
     mess->show();
 }
 
