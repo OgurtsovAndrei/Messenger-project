@@ -338,7 +338,6 @@ namespace Net::Client {
             send_request(request.encrypt(encrypter.value()));
             DecryptedRequest response = get_request();
             if (response.get_type() == ADD_USER_TO_DIALOG_SUCCESS) {
-                database_interface::User user = response.data;
                 return Status(true, "");
             } else {
                 assert(response.get_type() == ADD_USER_TO_DIALOG_FAIL);
