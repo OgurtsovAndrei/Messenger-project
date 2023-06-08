@@ -208,6 +208,7 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *msg)
 
 void show_popUp(const std::string &err_msg) {
     auto *popUp = new PopUp(err_msg);
+    popUp->adjustSize();
     popUp->show();
 }
 
