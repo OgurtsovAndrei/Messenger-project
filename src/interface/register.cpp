@@ -48,7 +48,7 @@ void Register::on_readyButton_clicked() {
     win->show();
     this->close();
   } else {
-      show_popUp("Incorrect login or password. Please try again\n");
+      show_popUp("Incorrect login or password. Please try again.\n");
   }
 }
 
@@ -60,14 +60,20 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
     if (pas.contains('\\') || pas.contains('/')) {
         popUp_msg += "'\\' and '/' characters are not allowed in the password.\n";
     }
+    if (pas.contains(" ")) {
+        popUp_msg += "Password can't contain spaces.\n";
+    }
     if (log.contains('\\') || log.contains('/')) {
         popUp_msg += "'\\' and '/' characters are not allowed in the login.\n";
+    }
+    if (log.contains(" ")) {
+        popUp_msg += "Login can't contain spaces.\n";
     }
     if (pas.isEmpty() || log.isEmpty()) {
         popUp_msg = "password and login are not allowed to be empty.\n";
     }
     if (!popUp_msg.empty()) {
-        popUp_msg += "Please try again\n";
+        popUp_msg += "Please try again.\n";
         show_popUp(popUp_msg);
         return true;
     }
@@ -77,8 +83,13 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
 bool Register::incorrect_name_or_surname(const QString &name, const QString &sname) {
     std::string popUp_msg;
     if (name.isEmpty() || sname.isEmpty()) {
-        popUp_msg = "name and surname are not allowed to be empty.\n";
-        popUp_msg += "Please try again\n";
+        popUp_msg += "Name and surname are not allowed to be empty.\n";
+    }
+    if (name.contains(" ") || sname.contains(" ")) {
+        popUp_msg += "Name and Surname can't contain spaces.\n";
+    }
+    if (!popUp_msg.empty()) {
+        popUp_msg += "Please try again.\n";
         show_popUp(popUp_msg);
         return true;
     }
@@ -93,16 +104,17 @@ bool Register::sign_up() {
     if (incorrect_name_or_surname(name, sname)) {
         return false;
     }
-//    if (client.get_user_id_by_login(login.toStdString()).first) {
-//        show_popUp("This login is already in use.\nPlease try again");
-//        return false;
-//    }
     auto sign_status = client.sign_up(name.toStdString(),
                                  sname.toStdString(),
                                  login.toStdString(),
                                  pas.toStdString());
     if (!sign_status) {
-        show_popUp("There were problems with sign up.\n");
+        std::string err = "There were problems with sign up.\n";
+        std::cout << sign_status.message() << "\n";
+        if (sign_status.message() == "Problem in MAKE User.\nMessage: login is already taken\n") {
+            err = "This login is already in use.\nPlease try again.\n";
+        }
+        show_popUp(err);
         return false;
     }
     return true;

@@ -16,6 +16,7 @@
 #include <random>
 #include <mutex>
 #include <optional>
+#include <string>
 
 #include "Net/NetGeneral.hpp"
 #include "Cryptographer.hpp"
@@ -474,23 +475,25 @@ namespace Net::Client {
             }
         }
 
-        Status change_user(int old_id, std::string new_name, std::string new_surname, std::string new_login, std::string new_password, int new_encrypt_id) {
-            assert(new_login.find_first_of("\t\n ") == std::string::npos);
-            assert(new_password.find_first_of("\t\n ") == std::string::npos);
-            database_interface::User user;
-            user.m_user_id = old_id;
-            user.m_name = std::move(new_name);
-            user.m_surname = std::move(new_surname);
-            user.m_login = std::move(new_login);
-            user.m_password_hash = std::move(new_password);
-            user.m_encryption = new_encrypt_id;
-            send_request(DecryptedRequest(CHANGE_USER, user).encrypt(encrypter.value()));
+        std::pair<Status, database_interface::User> change_user(int old_id, std::string changing_param, std::string new_param, int new_encrypt) {
+            assert(new_param.find_first_of("\t\n ") == std::string::npos);
+            assert(changing_param == "name" || changing_param == "surname" || changing_param == "login" || changing_param == "password" || changing_param == "encryption");
+            if (changing_param == "encryption") {
+                DecryptedRequest request(CHANGE_USER, json{{"old_id", old_id}, {"changing_in", std::move(changing_param)}, {"new_parametr", new_encrypt}});
+                send_request(request.encrypt(encrypter.value()));
+            }
+            else {
+                DecryptedRequest request(CHANGE_USER, json{{"old_id", old_id}, {"changing_in", std::move(changing_param)}, {"new_parametr", std::move(new_param)}});
+                send_request(request.encrypt(encrypter.value()));
+            }
+
             auto response = get_request();
             if (response.get_type() == CHANGE_USER_SUCCESS) {
-                return Status(true);
+                database_interface::User user = response.data;
+                return {Status(true), user};
             } else {
                 assert(response.get_type() == CHANGE_USER_FAIL);
-                return Status(false, response.data["what"]);
+                return {Status(false, response.data["what"]), database_interface::User{}};
             }
         }
 

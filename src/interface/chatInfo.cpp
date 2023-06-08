@@ -103,8 +103,11 @@ void ChatInfo::close_group_buttons() {
 
 void ChatInfo::on_encrOptions_activated(int index)
 {
-    main
-    ///TODO set_encryption_from(
-    ///
+    auto [status, new_cl_info] = client.change_user(mainWin->get_client_id(), "encryption", "", index + 1);
+    if (!status) {
+        show_popUp("There were problems with changing encryption.\n");
+        return ;
+    }
+    mainWin->set_client_info(new_cl_info);
 }
 

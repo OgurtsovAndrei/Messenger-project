@@ -35,6 +35,8 @@ public:
 
     [[nodiscard]] QString get_sec_user_name_surname(int dialog_id) const;
 
+    [[nodiscard]] ClientInfo get_client_info() const;
+
 private slots:
 
     void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);

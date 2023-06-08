@@ -28,22 +28,22 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle("ИШО");
     update_chats();
 
-    auto *chat_timer = new QTimer(this);
-    connect(chat_timer, &QTimer::timeout, this, [&]{
-      auto [status, chats] = client.get_last_n_dialogs(100);
-      if (chats.size() != ui->chatsList->count()) {
-          std::cout << "Chats updates...\n";
-          update_chats();
-          std::cout << "Finish \n";
-      }
-    });
-
-    chat_timer->start(10000);
-
-    auto *message_timer = new QTimer(this);
-    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
-
-    message_timer->start(100);
+//    auto *chat_timer = new QTimer(this);
+//    connect(chat_timer, &QTimer::timeout, this, [&]{
+//      auto [status, chats] = client.get_last_n_dialogs(100);
+//      if (chats.size() != ui->chatsList->count()) {
+//          std::cout << "Chats updates...\n";
+//          update_chats();
+//          std::cout << "Finish \n";
+//      }
+//    });
+//
+//    chat_timer->start(10000);
+//
+//    auto *message_timer = new QTimer(this);
+//    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
+//
+//    message_timer->start(100);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -261,6 +261,10 @@ QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
 
 int MainWindow::get_cl_encryption_id() const {
     return cl_info.cl_encryption_id;
+}
+
+ClientInfo MainWindow::get_client_info() const {
+    return cl_info;
 }
 
 QString extract_file_name(const QString &file_path) {

@@ -759,37 +759,47 @@ namespace Net::Server {
         void process_change_user_request(UserConnection &user_connection, const DecryptedRequest &request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               CHANGE_USER_FAIL, "It is necessary to log in!");
-            database_interface::User old_user;
-            database_interface::User new_user;
+
+            database_interface::User old_user = *user_connection.user_in_db;
+            database_interface::User new_user = old_user;
+            std::string change_in;
             try {
-                nlohmann::from_json(request.data, old_user);
-                nlohmann::from_json(request.data, new_user);
+                nlohmann::from_json(request.data["old_id"], new_user.m_user_id);
+                nlohmann::from_json(request.data["changing_in"], change_in);
+                if (change_in == "name") {
+                    nlohmann::from_json(request.data["new_parametr"], new_user.m_name);
+                } else if (change_in == "surname") {
+                    nlohmann::from_json(request.data["new_parametr"], new_user.m_surname);
+                } else if (change_in == "login") {
+                    nlohmann::from_json(request.data["new_parametr"], new_user.m_login);
+                } else if (change_in == "password") {
+                    nlohmann::from_json(request.data["new_parametr"], new_user.m_password_hash);
+                } else if (change_in == "encryption") {
+                    nlohmann::from_json(request.data["new_parametr"], new_user.m_encryption);
+                }
             } catch (std::exception &exception) {
                 user_connection.send_secured_exception(CHANGE_USER_FAIL,
                                                        "Not able to change user info: cannot parse json user: bad request or invalid user data: " +
                                                            static_cast<std::string>(exception.what()));
             }
-            send_response_and_return_if_false(user_connection.get_user_in_db_ref()->m_user_id == new_user.m_user_id,
+            send_response_and_return_if_false(old_user.m_user_id == new_user.m_user_id,
                                               user_connection,
                                               CHANGE_USER_FAIL, "You can't make change for another user!")
             send_response_and_return_if_false(new_user.m_login.find_first_of("\t\n ") == std::string::npos,
                                               user_connection,
                                               CHANGE_USER_FAIL, "Login should contain only one word!");
-
             send_response_and_return_if_false(new_user.m_password_hash.find_first_of("\t\n ") == std::string::npos,
                                               user_connection,
                                               CHANGE_USER_FAIL, "Password should contain only one word!");
-            Status status = bd_connection.get_user_by_id(old_user);
-            send_response_and_return_if_false(status.correct(), user_connection, CHANGE_USER_FAIL,
-                                              "Invalid User ID: " + status.message());
-            status = bd_connection.change_user(new_user);
+
+            Status status = bd_connection.change_user(new_user);
             if (status) {
-                old_user = new_user;
+                old_user = std::move(new_user);
                 old_user.m_password_hash.clear();
                 user_connection.send_secured_request(DecryptedRequest(CHANGE_USER_SUCCESS, old_user));
                 std::cout << "User with id: " + std::to_string(old_user.m_user_id) + " was changed!\n";
             } else {
-                user_connection.send_secured_exception(CHANGE_USER_SUCCESS, "Change user exception: " + status.message());
+                user_connection.send_secured_exception(CHANGE_USER_FAIL, "Change user exception: " + status.message());
             }
         }
 
