@@ -93,11 +93,11 @@ bool Register::sign_up() {
     if (incorrect_name_or_surname(name, sname)) {
         return false;
     }
-    if (!client.check_login(login.toStdString())) {
-        show_popUp("This login is already in use.\nPlease try again");
-        return false;
-    }
-    auto sign_status = client.sing_up(name.toStdString(),
+//    if (client.get_user_id_by_login(login.toStdString()).first) {
+//        show_popUp("This login is already in use.\nPlease try again");
+//        return false;
+//    }
+    auto sign_status = client.sign_up(name.toStdString(),
                                  sname.toStdString(),
                                  login.toStdString(),
                                  pas.toStdString());

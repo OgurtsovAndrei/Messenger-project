@@ -413,28 +413,13 @@ namespace Net::Client {
             }
         }
 
-        Status check_login(std::string login) {
-            assert(login.find_first_of("\t\n ") == std::string::npos);
-            database_interface::User user(std::move(login));
-            DecryptedRequest request(CHECK_LOGIN, user);
-            send_request(request.encrypt(encrypter.value()));
-            DecryptedRequest response = get_request();
-            if (response.get_type() == CHECK_LOGIN_SUCCESS) {
-                user = response.data;
-                return Status((user.m_user_id != -1), std::to_string(user.m_user_id));
-            } else {
-                assert(response.get_type() == CHECK_LOGIN_FAIL);
-                return Status(false, response.data["what"]);
-            }
-        }
-
         Status close_connection() {
             send_request(DecryptedRequest(Net::CLOSE_CONNECTION).encrypt(encrypter.value()));
             connection->close();
             return Status{true};
         }
 
-        Status sing_up(std::string name, std::string surname, std::string login, std::string password) {
+        Status sign_up(std::string name, std::string surname, std::string login, std::string password) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
             // Password is not really a password, but its hash.

@@ -25,8 +25,6 @@ struct BDInterface {
     virtual Status close() = 0;
 
     // User
-    virtual Status check_user_exist_by_log(User &user) = 0;
-
     virtual Status make_user(User &user) = 0;
 
     virtual Status change_user(const User &new_user) = 0;
@@ -96,7 +94,6 @@ struct SQL_BDInterface : BDInterface {
     Status close() override;
 
     // User
-    Status check_user_exist_by_log(User &user) override;
 
     Status make_user(User &user) override;
 
@@ -232,8 +229,6 @@ struct Mock_BDInterface : BDInterface {
     }
 
     // User
-    Status check_user_exist_by_log(User &user) override;
-
     Status make_user(User &user) override;
 
     Status change_user(const User &new_user) override;

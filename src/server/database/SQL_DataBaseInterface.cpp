@@ -90,11 +90,6 @@ Status check_dialog_id(const Dialog &dialog, const std::string &where){
     return Status(1, "");
 }
 
-Status SQL_BDInterface::check_user_exist_by_log(User &user){
-    User tmp_user(user.m_login);
-    Status exit = get_user_id_by_log(tmp_user);
-    return Status(tmp_user.m_user_id != -1, "User doesn't exist\n");
-}
 
 // User
 Status SQL_BDInterface::make_user(User &user) {
