@@ -32,38 +32,23 @@ void Register::on_cancelButton_clicked() {
 }
 
 void Register::on_readyButton_clicked() {
-  Status status;
   QString login = ui->logInput->text();
   QString pas = ui->pasInput->text();
   if (incorrect_log_or_pas(login, pas)) {
     return;
   }
-  if (regVersion) {
-    QString name = ui->nameInput->text();
-    QString sname = ui->snameInput->text();
-    if (incorrect_name_or_surname(name, sname)) {
-      return;
-    }
-    status = client.sing_up(name.toStdString(),
-                            sname.toStdString(),
-                            login.toStdString(),
-                            pas.toStdString());
+  if (regVersion && !sign_up()) {
+      return ;
   }
-  if ((regVersion && status) || (!regVersion)) {
-    status = client.log_in(login.toStdString(), pas.toStdString());
-  }
-  if (status) {
-    std::cout << "Logged in -->>" + status.message() + "\n";
+  auto [log_status, cl_user] = client.log_in(login.toStdString(), pas.toStdString());
+  if (log_status) {
+    std::cout << "Logged in -->>" + log_status.message() + "\n";
     auto *win = new MainWindow();
-    auto [cl_status, cl_info] = client.get_user_id_by_login(login.toStdString());
-    if (cl_status) {
-        win->set_client_info(cl_info);
-        win->show();
-    }
+    win->set_client_info(cl_user);
+    win->show();
     this->close();
   } else {
-    std::cout << "Log in failed -->>" + status.message() + "\n";
-    std::cout << "log in isn't correct. Please try again or register" << "\n";
+      show_popUp("Incorrect login or password. Please try again");
   }
 }
 
@@ -83,9 +68,7 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
     }
     if (!popUp_msg.empty()) {
         popUp_msg += "Please try again";
-        auto *popUp = new PopUp(popUp_msg);
-        popUp->adjustSize();
-        popUp->show();
+        show_popUp(popUp_msg);
         return true;
     }
     return false;
@@ -96,10 +79,31 @@ bool Register::incorrect_name_or_surname(const QString &name, const QString &sna
     if (name.isEmpty() || sname.isEmpty()) {
         popUp_msg = "name and surname are not allowed to be empty.\n";
         popUp_msg += "Please try again";
-        auto *popUp = new PopUp(popUp_msg);
-        popUp->adjustSize();
-        popUp->show();
+        show_popUp(popUp_msg);
         return true;
     }
     return false;
+}
+
+bool Register::sign_up() {
+    QString name = ui->nameInput->text();
+    QString sname = ui->snameInput->text();
+    QString login = ui->logInput->text();
+    QString pas = ui->pasInput->text();
+    if (incorrect_name_or_surname(name, sname)) {
+        return false;
+    }
+    if (!client.check_login(login.toStdString())) {
+        show_popUp("This login is already in use.\nPlease try again");
+        return false;
+    }
+    auto sign_status = client.sing_up(name.toStdString(),
+                                 sname.toStdString(),
+                                 login.toStdString(),
+                                 pas.toStdString());
+    if (!sign_status) {
+        show_popUp("There were problems with sign up.\nFor help, please contact at.\nWe will try to help you");
+        return false;
+    }
+    return true;
 }

@@ -361,7 +361,7 @@ namespace Net::Client {
             }
         };
 
-        Status log_in(std::string login, std::string password) {
+        std::pair<Status, database_interface::User> log_in(std::string login, std::string password) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             assert(password.find_first_of("\t\n ") == std::string::npos);
             database_interface::User user(std::move(login), std::move(password));
@@ -370,10 +370,10 @@ namespace Net::Client {
             DecryptedRequest response = get_request();
             if (response.get_type() == LOG_IN_SUCCESS) {
                 user = response.data;
-                return Status(true, std::to_string(user.m_user_id));
+                return {Status(true, ""), std::move(user)};
             } else {
                 assert(response.get_type() == LOG_IN_FAIL);
-                return Status(false, response.data["what"]);
+                return {Status(false, response.data["what"]), database_interface::User{}};
             }
         }
 
@@ -413,7 +413,7 @@ namespace Net::Client {
             }
         }
 
-        std::pair<Status, bool> check_login(std::string login) {
+        Status check_login(std::string login) {
             assert(login.find_first_of("\t\n ") == std::string::npos);
             database_interface::User user(std::move(login));
             DecryptedRequest request(CHECK_LOGIN, user);
@@ -421,10 +421,10 @@ namespace Net::Client {
             DecryptedRequest response = get_request();
             if (response.get_type() == CHECK_LOGIN_SUCCESS) {
                 user = response.data;
-                return {Status(true, std::to_string(user.m_user_id)), user.m_user_id != -1};
+                return Status((user.m_user_id != -1), std::to_string(user.m_user_id));
             } else {
                 assert(response.get_type() == CHECK_LOGIN_FAIL);
-                return {Status(false, response.data["what"]), false};
+                return Status(false, response.data["what"]);
             }
         }
 
@@ -454,6 +454,26 @@ namespace Net::Client {
                 return Status(true, std::to_string(user.m_user_id));
             } else {
                 assert(response.get_type() == SIGN_UP_FAIL);
+                return Status(false, response.data["what"]);
+            }
+        }
+
+        Status change_user(int old_id, std::string new_name, std::string new_surname, std::string new_login, std::string new_password, int new_encrypt_id) {
+            assert(new_login.find_first_of("\t\n ") == std::string::npos);
+            assert(new_password.find_first_of("\t\n ") == std::string::npos);
+            database_interface::User user;
+            user.m_user_id = old_id;
+            user.m_name = std::move(new_name);
+            user.m_surname = std::move(new_surname);
+            user.m_login = std::move(new_login);
+            user.m_password_hash = std::move(new_password);
+            user.m_encryption = new_encrypt_id;
+            send_request(DecryptedRequest(CHANGE_USER, user).encrypt(encrypter.value()));
+            auto response = get_request();
+            if (response.get_type() == CHANGE_USER_SUCCESS) {
+                return Status(true);
+            } else {
+                assert(response.get_type() == CHANGE_USER_FAIL);
                 return Status(false, response.data["what"]);
             }
         }

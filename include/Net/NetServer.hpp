@@ -352,6 +352,13 @@ namespace Net::Server {
                                 break;
                             case GET_USERS_IN_DIALOG_FAIL:
                                 break;
+                            case CHANGE_USER:
+                                process_change_user_request(user_connection, request);
+                                break;
+                            case CHANGE_USER_SUCCESS:
+                                break;
+                            case CHANGE_USER_FAIL:
+                                break;
                         }
                     }
                 })));
@@ -754,6 +761,43 @@ namespace Net::Server {
                 send_response_and_return_if_false(false, user_connection, FILE_DOWNLOAD_FAIL, exception.what());
             }
             user_connection.send_secured_request(DecryptedRequest(FILE_DOWNLOAD_SUCCESS, nlohmann::json(file)));
+        }
+
+        void process_change_user_request(UserConnection &user_connection, const DecryptedRequest &request) {
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
+                                              CHANGE_USER_FAIL, "It is necessary to log in!");
+            database_interface::User old_user;
+            database_interface::User new_user;
+            try {
+                nlohmann::from_json(request.data, old_user);
+                nlohmann::from_json(request.data, new_user);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(CHANGE_USER_FAIL,
+                                                       "Not able to change user info: cannot parse json user: bad request or invalid user data: " +
+                                                           static_cast<std::string>(exception.what()));
+            }
+            send_response_and_return_if_false(user_connection.get_user_in_db_ref()->m_user_id == new_user.m_user_id,
+                                              user_connection,
+                                              CHANGE_USER_FAIL, "You can't make change for another user!")
+            send_response_and_return_if_false(new_user.m_login.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
+                                              CHANGE_USER_FAIL, "Login should contain only one word!");
+
+            send_response_and_return_if_false(new_user.m_password_hash.find_first_of("\t\n ") == std::string::npos,
+                                              user_connection,
+                                              CHANGE_USER_FAIL, "Password should contain only one word!");
+            Status status = bd_connection.get_user_by_id(old_user);
+            send_response_and_return_if_false(status.correct(), user_connection, CHANGE_USER_FAIL,
+                                              "Invalid User ID: " + status.message());
+            status = bd_connection.change_user(new_user);
+            if (status) {
+                old_user = new_user;
+                old_user.m_password_hash.clear();
+                user_connection.send_secured_request(DecryptedRequest(CHANGE_USER_SUCCESS, old_user));
+                std::cout << "User with id: " + std::to_string(old_user.m_user_id) + " was changed!\n";
+            } else {
+                user_connection.send_secured_exception(CHANGE_USER_SUCCESS, "Change user exception: " + status.message());
+            }
         }
 
         void process_get_user_by_login_request(UserConnection &user_connection, DecryptedRequest request) {

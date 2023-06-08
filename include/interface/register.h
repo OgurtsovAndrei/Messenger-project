@@ -22,6 +22,8 @@ private slots:
 
     void on_readyButton_clicked();
 
+    bool sign_up();
+
     bool incorrect_log_or_pas(const QString &log, const QString &pas);
 
     bool incorrect_name_or_surname(const QString &name, const QString &sname);
