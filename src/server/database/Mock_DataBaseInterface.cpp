@@ -78,9 +78,6 @@ Status Mock_BDInterface::close_dialog_request(
     return Status(false, "Can not find request in mock_bd");
 }
 
-Status Mock_BDInterface::check_user_exist_by_log(User &user) {
-    return Status(users[user.m_login].m_user_id != -1, "Make user doesn't exist");
-}
 
 Status Mock_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name){
     if (encryption_id == 1) {

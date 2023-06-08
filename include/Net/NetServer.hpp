@@ -324,13 +324,6 @@ namespace Net::Server {
                                 break;
                             case GET_ALL_ENCRYPTION_FAIL:
                                 break;
-                            case CHECK_LOGIN:
-                                process_check_login_request(user_connection, std::move(request));
-                                break;
-                            case CHECK_LOGIN_SUCCESS:
-                                break;
-                            case CHECK_LOGIN_FAIL:
-                                break;
                             case FILE_DOWNLOAD:
                                 process_download_file_request(user_connection, request);
                                 break;
@@ -886,25 +879,6 @@ namespace Net::Server {
                 user_connection.send_secured_request(DecryptedRequest(GET_ALL_ENCRYPTION_SUCCESS, encryption_id_name));
             } else {
                 user_connection.send_secured_exception(GET_ALL_ENCRYPTION_FAIL, status.message());
-            }
-        }
-
-        void process_check_login_request(UserConnection &user_connection, DecryptedRequest request) {
-            database_interface::User user_in_db;
-            try {
-                nlohmann::from_json(request.data, user_in_db);
-            } catch (std::exception &exception) {
-                user_connection.send_secured_exception(CHECK_LOGIN_FAIL,
-                                                       "Not able to check login: cannot parse json user: bad request or invalid user data: " +
-                                                       static_cast<std::string>(exception.what()));
-            }
-            send_response_and_return_if_false(user_in_db.m_login.find_first_of("\t\n ") == std::string::npos,
-                                              user_connection, CHECK_LOGIN_FAIL, "Login should contain only one word!");
-            auto status = bd_connection.get_user_id_by_log(user_in_db);
-            if (status) {
-                user_connection.send_secured_request(DecryptedRequest(CHECK_LOGIN_SUCCESS, user_in_db));
-            } else {
-                user_connection.send_secured_exception(CHECK_LOGIN_FAIL, status.message());
             }
         }
 

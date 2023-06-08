@@ -122,7 +122,7 @@ void MainWindow::on_findButton_clicked()
     auto [status, sec_client] = client.get_user_id_by_login(find_chat);
     if (!status) {
         auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
-//        popUp->show();
+        popUp->show();
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
