@@ -105,6 +105,10 @@ Status SQL_BDInterface::make_user(User &user) {
     if (Status user_params = check_user_password_hash(user,  "MAKE user"); !user_params.correct()){
         return user_params;
     }
+    database_interface::User user_log_exist(user.m_login);
+    if (get_user_id_by_log(user_log_exist)) {
+        return Status(false, "Problem in MAKE User.\nMessage: login is already taken\n");
+    }
     std::string sql =
         "INSERT INTO Users (Name, Surname, Login, PasswordHash) VALUES ('";
     sql += user.m_name + "', '";
