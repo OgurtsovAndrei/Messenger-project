@@ -23,6 +23,8 @@ public:
 
     [[nodiscard]] unsigned int get_client_id() const;
 
+    [[nodiscard]] int get_cl_encryption_id() const;
+
     void update_chats(int n = 100);
 
     void change_message(QListWidgetItem *msg);

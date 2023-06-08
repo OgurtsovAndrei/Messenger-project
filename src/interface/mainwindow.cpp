@@ -55,11 +55,11 @@ void MainWindow::on_sendButton_clicked()
         return;
     }
     if (msg.isEmpty() && select_chat_id != -1) {
-        show_popUp("Message must not be empty");
+        show_popUp("Message must not be empty\n");
         return;
     }
     if (select_chat_id == -1) {
-        show_popUp("Choose a chat please");
+        show_popUp("Choose a chat please\n");
         return;
     }
     if (ui->sendButton->text() == "Edit") {
@@ -105,7 +105,7 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
     for (const auto &msg : messages) {
         auto [st, user] = client.get_user_by_id(msg.m_user_id);
         if (!st) {
-            show_popUp("Problems displaying messages from some users.");
+            show_popUp("Problems displaying messages from some users.\n");
             continue;
         }
         ClientInfo sec_user_info(user);
@@ -154,12 +154,12 @@ void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const Clien
 
 void MainWindow::change_message(QListWidgetItem *msg) {
     if (msg->type()) { // msg->type() = isFile
-        show_popUp("Sorry, you can't edit files");
+        show_popUp("Sorry, you can't edit files\n");
         return ;
     }
     auto bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(msg));
     if (bub->get_owner_id() != get_client_id()) {
-        show_popUp("You cannot edit another user's messages");
+        show_popUp("You cannot edit another user's messages\n");
         return ;
     }
     ui->sendButton->setText("Edit");
@@ -207,7 +207,7 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *msg)
 }
 
 void show_popUp(const std::string &err_msg) {
-    auto *popUp = new PopUp(err_msg);
+    auto *popUp = new PopUp(err_msg + "For help, please contact us.\nWe will try to solve your problem");
     popUp->adjustSize();
     popUp->show();
 }
@@ -218,7 +218,7 @@ QString MainWindow::get_client_name_surname() const {
 
 void MainWindow::on_fileButton_clicked() {
     if (select_chat_id == -1) {
-        show_popUp("Choose a chat please");
+        show_popUp("Choose a chat please\n");
         return;
     }
     QString file_path = QFileDialog::getOpenFileName(this, "Choose File");
@@ -231,7 +231,7 @@ void MainWindow::on_fileButton_clicked() {
     std::cout << "filepath: "<< file_path.toStdString() << "\n";
     auto st = client.upload_file(file);
     if (!st) {
-        show_popUp("We were unable to send the file.\n Don't worry that's on us.");
+        show_popUp("We were unable to send the file.\n ");
     }
 //    connect(ui->sendButton, &QPushButton::clicked, this, [&]{
 //        std::cout << "we are upload file correct" << '\n';
@@ -249,7 +249,7 @@ void MainWindow::on_fileButton_clicked() {
 QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
     auto [status, users] = client.get_users_in_dialog(dialog_id);
     if (!status || users.size() != 2) {
-        show_popUp("This dialog is corrupted.\nFor help, please contact at.\nWe will try to help you");
+        show_popUp("This dialog is corrupted.\n");
     }
     for (const auto& us : users) {
         if (us.m_user_id != get_client_id()) {
@@ -259,11 +259,15 @@ QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
     return get_client_name_surname();
 }
 
+int MainWindow::get_cl_encryption_id() const {
+    return cl_info.cl_encryption_id;
+}
+
 QString extract_file_name(const QString &file_path) {
     QRegularExpression re("(/([^/]*$))");
     QRegularExpressionMatch match_file_name = re.match(file_path);
     if (!match_file_name.hasMatch()) {
-        show_popUp("File doesn't contain name");
+        show_popUp("File doesn't contain name.\n");
     }
     return match_file_name.captured(2);
 }

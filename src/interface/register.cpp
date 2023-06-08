@@ -48,7 +48,7 @@ void Register::on_readyButton_clicked() {
     win->show();
     this->close();
   } else {
-      show_popUp("Incorrect login or password. Please try again");
+      show_popUp("Incorrect login or password. Please try again\n");
   }
 }
 
@@ -67,7 +67,7 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
         popUp_msg = "password and login are not allowed to be empty.\n";
     }
     if (!popUp_msg.empty()) {
-        popUp_msg += "Please try again";
+        popUp_msg += "Please try again\n";
         show_popUp(popUp_msg);
         return true;
     }
@@ -78,7 +78,7 @@ bool Register::incorrect_name_or_surname(const QString &name, const QString &sna
     std::string popUp_msg;
     if (name.isEmpty() || sname.isEmpty()) {
         popUp_msg = "name and surname are not allowed to be empty.\n";
-        popUp_msg += "Please try again";
+        popUp_msg += "Please try again\n";
         show_popUp(popUp_msg);
         return true;
     }
@@ -102,7 +102,7 @@ bool Register::sign_up() {
                                  login.toStdString(),
                                  pas.toStdString());
     if (!sign_status) {
-        show_popUp("There were problems with sign up.\nFor help, please contact at.\nWe will try to help you");
+        show_popUp("There were problems with sign up.\n");
         return false;
     }
     return true;

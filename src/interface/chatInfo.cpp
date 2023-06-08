@@ -3,6 +3,7 @@
 #include "ui_chatInfo.h"
 #include "database/Dialog.hpp"
 #include "interface/popUp.h"
+#include "algorithm"
 
 ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     dialog_id(dialog_id),
@@ -44,6 +45,21 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
     ui->setupUi(this);
     QString cl_name_surname = mainWin->get_client_name_surname();
     this->setWindowTitle(cl_name_surname);
+    auto [status, all_encr] = client.get_all_encryption();
+    if (!status) {
+        show_popUp("There were problems with new type of encryption.\n");
+        return ;
+    }
+    std::sort(all_encr.begin(), all_encr.end());
+    for (auto [i, encr_name] : all_encr) {
+        ui->encrOptions->addItem(QString::fromStdString(encr_name));
+    }
+    int encr_index = mainWin->get_cl_encryption_id() - 1;
+    if (ui->encrOptions->count() <= encr_index) {
+        show_popUp("Extra number of encryption.\n");
+        return ;
+    }
+    ui->encrOptions->setCurrentIndex(encr_index);
     ui->userNameLabel->setText(cl_name_surname);
     ui->userNameLabel->setWordWrap(true);
     close_group_buttons();
@@ -63,14 +79,16 @@ void ChatInfo::on_addMemButton_clicked()
         return;
     }
     auto [status, sec_client] = client.get_user_id_by_login(add_mem.toStdString());
-    if (status) {
-        auto add_st = client.add_user_to_dialog(sec_client.m_user_id, dialog_id);
-//        if (add_st) {
-//            ui->memList->addItem(add_mem);
-//        }
-//        else {
-//        }
-////        TODO message
+    if (!status) {
+        show_popUp("User with login '" + sec_client.m_login + "' doesn't exist");
+        return ;
+    }
+    auto add_st = client.add_user_to_dialog(sec_client.m_user_id, dialog_id);
+    if (add_st) {
+        ui->memList->addItem(QString::fromStdString(sec_client.m_name + " " + sec_client.m_surname));
+    }
+    else {
+        show_popUp("There were problems with add new member.\n");
     }
 }
 
@@ -85,6 +103,7 @@ void ChatInfo::close_group_buttons() {
 
 void ChatInfo::on_encrOptions_activated(int index)
 {
+    main
     ///TODO set_encryption_from(
     ///
 }
