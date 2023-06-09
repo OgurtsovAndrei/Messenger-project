@@ -27,7 +27,7 @@ public:
 
     void update_chats(int n = 100);
 
-    void change_message(QListWidgetItem *msg);
+    void change_message(QWidget *msg);
 
     void set_change_msg_is(int msg_id);
 
@@ -35,11 +35,9 @@ public:
 
     [[nodiscard]] QString get_sec_user_name_surname(int dialog_id) const;
 
-    [[nodiscard]] ClientInfo get_client_info() const;
-
 private slots:
 
-    void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
+    void on_chatsList_itemClicked(QListWidgetItem *item = nullptr, bool wasEdit = false);
 
     void on_findButton_clicked();
 

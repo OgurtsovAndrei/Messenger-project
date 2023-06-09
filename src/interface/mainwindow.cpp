@@ -28,22 +28,22 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowTitle("ИШО");
     update_chats();
 
-//    auto *chat_timer = new QTimer(this);
-//    connect(chat_timer, &QTimer::timeout, this, [&]{
-//      auto [status, chats] = client.get_last_n_dialogs(100);
-//      if (chats.size() != ui->chatsList->count()) {
-//          std::cout << "Chats updates...\n";
-//          update_chats();
-//          std::cout << "Finish \n";
-//      }
-//    });
-//
-//    chat_timer->start(10000);
-//
-//    auto *message_timer = new QTimer(this);
-//    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
-//
-//    message_timer->start(100);
+    auto *chat_timer = new QTimer(this);
+    connect(chat_timer, &QTimer::timeout, this, [&]{
+      auto [status, chats] = client.get_last_n_dialogs(100);
+      if (chats.size() != ui->chatsList->count()) {
+          std::cout << "Chats updates...\n";
+          update_chats();
+          std::cout << "Finish \n";
+      }
+    });
+
+    chat_timer->start(10000);
+
+    auto *message_timer = new QTimer(this);
+    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
+
+    message_timer->start(100);
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -64,7 +64,7 @@ void MainWindow::on_sendButton_clicked()
     }
     if (ui->sendButton->text() == "Edit") {
         auto status = client.change_sent_message(change_msg_id, msg.toStdString());
-        std::cout << "status" << status.message() << "\n";
+        on_chatsList_itemClicked(nullptr, true);
         ui->sendButton->setText("Send");
         ui->newMessageInput->setPlainText("");
         return;
@@ -90,14 +90,14 @@ void MainWindow::update_chats(int n) {
     }
 }
 
-void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
+void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item, bool wasEdit)
 {
     if (item != nullptr) {
         select_chat_id = item->type();
         ui->chatName->setText(item->text());
     }
     auto [status, messages] = client.get_n_messages(200, select_chat_id);
-    if (ui->messagesList->count() == messages.size()) {
+    if (!wasEdit && ui->messagesList->count() == messages.size()) {
         return ;
     }
     ui->messagesList->clear();
@@ -152,12 +152,8 @@ void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const Clien
     ui->messagesList->scrollToBottom();
 }
 
-void MainWindow::change_message(QListWidgetItem *msg) {
-    if (msg->type()) { // msg->type() = isFile
-        show_popUp("Sorry, you can't edit files\n");
-        return ;
-    }
-    auto bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(msg));
+void MainWindow::change_message(QWidget *msg) {
+    auto bub = dynamic_cast<Bubble*>(msg);
     if (bub->get_owner_id() != get_client_id()) {
         show_popUp("You cannot edit another user's messages\n");
         return ;
@@ -200,9 +196,10 @@ void MainWindow::on_profileButton_clicked()
     ch_info->show();
 }
 
-void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *msg)
+void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
-    auto *mess = new MesSetting(msg, this, msg->type()); // msg->type() = isFile
+    auto *msg = ui->messagesList->itemWidget(item);
+    auto *mess = new MesSetting(msg, this, item->type()); // msg->type() = isFile
     mess->show();
 }
 
@@ -261,10 +258,6 @@ QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
 
 int MainWindow::get_cl_encryption_id() const {
     return cl_info.cl_encryption_id;
-}
-
-ClientInfo MainWindow::get_client_info() const {
-    return cl_info;
 }
 
 QString extract_file_name(const QString &file_path) {

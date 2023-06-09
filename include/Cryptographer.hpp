@@ -179,6 +179,10 @@ namespace Cryptographer {
                 key_pair = generate_keypair_DH(1024 /*  bits */, rng_);
             }
         };
+        ~Decrypter() = default;
+
+        explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
+                                                          key_pair(generate_keypair_DH(1024 /*  bits */, rng_)) {};
 
         [[nodiscard]] std::string get_str_publicKey() const {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
@@ -223,6 +227,8 @@ namespace Cryptographer {
             public_key = std::move(other.public_key);
             return *this;
         };
+
+        ~Encrypter() = default;
 
         explicit Encrypter(const std::string &public_key_str, Botan::AutoSeeded_RNG &rng_) : rng(rng_) {
             Botan::SecureVector<uint8_t> publicKeyBytes(Botan::base64_decode(public_key_str));

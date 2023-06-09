@@ -61,15 +61,17 @@ target_include_directories(BD_Test PRIVATE ${SQLite3_INCLUDE_DIRS})
 #set(CMAKE_CXX_STANDARD 20)
 #set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -v ")
 #
 ##for server compiling
 #find_package(Threads REQUIRED)
 #
-#find_package(Boost 1.78 REQUIRED system)
-#include_directories(/usr/local/include) #boost
-#link_directories(/usr/local/lib)
+#find_package(Boost REQUIRED system)
+#include_directories(/opt/homebrew/Cellar/boost/1.81.0_1/include/) #boost
+#link_directories(/opt/homebrew/Cellar/boost/1.81.0_1/lib)
 #
 #include_directories(/usr/local/include/botan-3) #botan
+#link_directories(/usr/local/lib)
 #
 #include_directories(/opt/homebrew/opt/sqlite/include)  # sqlite3 -I
 #link_directories(/opt/homebrew/opt/sqlite/lib)  # -L

@@ -14,7 +14,7 @@ class MesSetting : public QWidget
     Q_OBJECT
 
 public:
-    explicit MesSetting(QListWidgetItem *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
+    explicit MesSetting(QWidget *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
     ~MesSetting();
 
 private slots:
@@ -26,7 +26,8 @@ private slots:
 
 private:
     Ui::MesSetting *ui;
-    QListWidgetItem *msg;
+    QWidget *msg;
+    bool isFile;
     MainWindow *mainWin;
 };
 

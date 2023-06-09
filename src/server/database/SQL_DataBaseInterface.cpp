@@ -724,7 +724,7 @@ Status SQL_BDInterface::get_message_by_id(Message &message) {
     if (Status message_params = check_message_id(message,  "get_message_by_id message"); !message_params.correct()){
         return message_params;
     }
-    std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE id=";
+    std::string sql = "SELECT id, DateTime, Text, File, DialogId, UserId FROM Messages WHERE id=";
     sql += std::to_string(message.m_message_id) + ";";
     char *message_error;
     std::string string_message;
