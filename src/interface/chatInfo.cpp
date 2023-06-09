@@ -31,7 +31,7 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
         }
     }
     else {
-        ui->userNameLabel->setText(mainWin->get_sec_user_name_surname(dialog_id));
+        ui->userNameLabel->setText(mainWin->get_second_user_name_surname(dialog_id));
         close_group_buttons();
         setFixedHeight(75);
     }

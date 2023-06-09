@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "QListWidgetItem"
 #include "mainwindow.h"
+#include "interface/bubble.h"
 
 namespace Ui {
 class MesSetting;
@@ -14,7 +15,7 @@ class MesSetting : public QWidget
     Q_OBJECT
 
 public:
-    explicit MesSetting(QWidget *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
+    explicit MesSetting(Bubble *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
     ~MesSetting();
 
 private slots:
@@ -26,7 +27,7 @@ private slots:
 
 private:
     Ui::MesSetting *ui;
-    QWidget *msg;
+    Bubble *msg;
     bool isFile;
     MainWindow *mainWin;
 };

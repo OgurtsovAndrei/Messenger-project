@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     chat_timer->start(10000);
 
     auto *message_timer = new QTimer(this);
-    connect(message_timer, &QTimer::timeout, this, [&]{on_chatsList_itemClicked();});
+    connect(message_timer, &QTimer::timeout, this, [&]{ update_messages();});
 
     message_timer->start(100);
 }
@@ -64,7 +64,7 @@ void MainWindow::on_sendButton_clicked()
     }
     if (ui->sendButton->text() == "Edit") {
         auto status = client.change_sent_message(change_msg_id, msg.toStdString());
-        on_chatsList_itemClicked(nullptr, true);
+        update_messages(true);
         ui->sendButton->setText("Send");
         ui->newMessageInput->setPlainText("");
         return;
@@ -84,20 +84,15 @@ void MainWindow::update_chats(int n) {
             chat_item->setText(QString::fromStdString(chat.m_name));
         }
         else {
-            chat_item->setText(get_sec_user_name_surname(chat.m_dialog_id));
+            chat_item->setText(get_second_user_name_surname(chat.m_dialog_id));
         }
         ui->chatsList->addItem(chat_item);
     }
 }
 
-void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item, bool wasEdit)
-{
-    if (item != nullptr) {
-        select_chat_id = item->type();
-        ui->chatName->setText(item->text());
-    }
+void MainWindow::update_messages(bool wasEdit) {
     auto [status, messages] = client.get_n_messages(200, select_chat_id);
-    if (!wasEdit && ui->messagesList->count() == messages.size()) {
+    if (ui->messagesList->count() == messages.size() && !wasEdit) {
         return ;
     }
     ui->messagesList->clear();
@@ -111,6 +106,13 @@ void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item, bool wasEdit)
         ClientInfo sec_user_info(user);
         addMessage(QString::fromStdString(msg.m_text), msg.m_message_id, sec_user_info);
     }
+}
+
+void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
+{
+    select_chat_id = item->type();
+    ui->chatName->setText(item->text());
+    update_messages();
 }
 
 void MainWindow::on_findButton_clicked()
@@ -152,7 +154,7 @@ void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const Clien
     ui->messagesList->scrollToBottom();
 }
 
-void MainWindow::change_message(QWidget *msg) {
+void MainWindow::change_message(Bubble *msg) {
     auto bub = dynamic_cast<Bubble*>(msg);
     if (bub->get_owner_id() != get_client_id()) {
         show_popUp("You cannot edit another user's messages\n");
@@ -186,10 +188,6 @@ void MainWindow::set_client_info(const database_interface::User& cl) {
     update_chats();
 }
 
-void MainWindow::set_change_msg_is(int msg_id) {
-    change_msg_id = msg_id;
-}
-
 void MainWindow::on_profileButton_clicked()
 {
     auto *ch_info = new ChatInfo(this);
@@ -198,8 +196,9 @@ void MainWindow::on_profileButton_clicked()
 
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
-    auto *msg = ui->messagesList->itemWidget(item);
-    auto *mess = new MesSetting(msg, this, item->type()); // msg->type() = isFile
+    auto *bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(item));
+    auto *mess = new MesSetting(bub, this, item->type()); // msg->type() = isFile
+    change_msg_id = bub->get_msg_id();
     mess->show();
 }
 
@@ -243,7 +242,7 @@ void MainWindow::on_fileButton_clicked() {
 //    std::cout << "filename=" << filename.toStdString() << "\n";
 }
 
-QString MainWindow::get_sec_user_name_surname(int dialog_id) const {
+QString MainWindow::get_second_user_name_surname(int dialog_id) const {
     auto [status, users] = client.get_users_in_dialog(dialog_id);
     if (!status || users.size() != 2) {
         show_popUp("This dialog is corrupted.\n");

@@ -6,6 +6,7 @@
 #include <QMap>
 #include "clientinfo.h"
 #include "database/User.hpp"
+#include "interface/bubble.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,17 +28,17 @@ public:
 
     void update_chats(int n = 100);
 
-    void change_message(QWidget *msg);
+    void update_messages(bool wasEdit = false);
 
-    void set_change_msg_is(int msg_id);
+    void change_message(Bubble *msg);
 
     [[nodiscard]] QString get_client_name_surname() const;
 
-    [[nodiscard]] QString get_sec_user_name_surname(int dialog_id) const;
+    [[nodiscard]] QString get_second_user_name_surname(int dialog_id) const;
 
 private slots:
 
-    void on_chatsList_itemClicked(QListWidgetItem *item = nullptr, bool wasEdit = false);
+    void on_chatsList_itemClicked(QListWidgetItem *item = nullptr);
 
     void on_findButton_clicked();
 
@@ -47,7 +48,7 @@ private slots:
 
     void on_profileButton_clicked();
 
-    void on_messagesList_itemDoubleClicked(QListWidgetItem *msg);
+    void on_messagesList_itemDoubleClicked(QListWidgetItem *item);
 
     void on_sendButton_clicked();
 
