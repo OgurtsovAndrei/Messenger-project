@@ -677,9 +677,8 @@ Status SQL_BDInterface::change_message(const Message &new_message){
         return message_params;
     }
     std::string sql =
-            "REPLACE INTO Messages (id, DateTime, Text, File, DialogId, UserId) VALUES(";
-    sql += std::to_string(new_message.m_message_id) + ", ";
-    sql += std::to_string(time(NULL)) + ", '";
+            "REPLACE INTO Messages (id, Text, File, DialogId, UserId) VALUES(";
+    sql += std::to_string(new_message.m_message_id) + ", '";
     sql += new_message.m_text + "', '";
     sql += new_message.m_file_path + "', ";
     sql += std::to_string(new_message.m_dialog_id) + ", ";
