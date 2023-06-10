@@ -170,8 +170,15 @@ namespace Cryptographer {
             return *this;
         };
 
-        explicit Decrypter(Botan::AutoSeeded_RNG &rng_) : rng(rng_),
-                                                          key_pair(generate_keypair_DH(1024 /*  bits */, rng_)) {};
+        explicit Decrypter(Botan::AutoSeeded_RNG &rng_, std::string encryption_name = "RSA") : rng(rng_) {
+            if (encryption_name == "RSA"){
+                key_pair = generate_keypair_RSA(1024 /*  bits */, rng_);
+            } else if (encryption_name == "DSA") {
+                key_pair = generate_keypair_DSA(1024 /*  bits */, rng_);
+            } else {
+                key_pair = generate_keypair_DH(1024 /*  bits */, rng_);
+            }
+        };
 
         [[nodiscard]] std::string get_str_publicKey() const {
             return Botan::base64_encode(Botan::X509::BER_encode(*key_pair->public_key()));
