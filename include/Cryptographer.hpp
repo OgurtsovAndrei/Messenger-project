@@ -170,7 +170,7 @@ namespace Cryptographer {
             return *this;
         };
 
-        explicit Decrypter(Botan::AutoSeeded_RNG &rng_, std::string encryption_name = "RSA") : rng(rng_) {
+        explicit Decrypter(Botan::AutoSeeded_RNG &rng_, std::string encryption_name) : rng(rng_) {
             if (encryption_name == "RSA"){
                 key_pair = generate_keypair_RSA(1024 /*  bits */, rng_);
             } else if (encryption_name == "DSA") {

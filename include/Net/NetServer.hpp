@@ -798,16 +798,6 @@ namespace Net::Server {
                 old_user.m_password_hash.clear();
                 user_connection.send_secured_request(DecryptedRequest(CHANGE_USER_SUCCESS, old_user));
                 std::cout << "User with id: " + std::to_string(old_user.m_user_id) + " was changed!\n";
-                if (change_in == "encryption"){
-                    std::string encryption_name;
-                    auto exit = bd_connection.get_encryption_name_by_id(new_user.m_encryption, encryption_name);
-                    if (exit){
-                        std::cout << "Problem in changing encryption on server: \n" << exit.message() << '\n';
-                    } else{
-                        // Добавить изменение шифрования
-                        int tmp_int = 0;
-                    }
-                }
             } else {
                 user_connection.send_secured_exception(CHANGE_USER_FAIL, "Change user exception: " + status.message());
             }

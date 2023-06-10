@@ -39,14 +39,14 @@ namespace Net::Client {
                 io_context(ioContext), server_ip(std::move(server_ip_)), server_port(std::move(port_)) {};
 #endif
 
-        void make_secure_connection() {
+        void make_secure_connection(std::string encryption_name = "RSA") {
             // Establish connection
             boost::asio::ip::tcp::socket client_socket(io_context);
             boost::asio::connect(client_socket,
                                  boost::asio::ip::tcp::resolver(io_context).resolve(server_ip, server_port));
             connection = boost::asio::ip::tcp::iostream(std::move(client_socket));
             // Create decrypter and send public key
-            decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng());
+            decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng(), encryption_name);
             DecryptedRequest request1(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, json{{"public_key", decrypter.value().get_str_publicKey()}});
             send_request(request1.reinterpret_cast_to_encrypted());
             // Get other public key
@@ -402,6 +402,15 @@ namespace Net::Client {
             DecryptedRequest response = get_request();
             if (response.get_type() == LOG_IN_SUCCESS) {
                 user = response.data;
+                auto exit = get_encryption_by_id(user.m_encryption);
+                if (exit.first){
+                    DecryptedRequest close_request(CLOSE_CONNECTION);
+                    send_request(close_request.encrypt(encrypter.value()));
+                    make_secure_connection(exit.second);
+                } else {
+                    assert(response.get_type() == LOG_IN_FAIL);
+                    return {Status(false, response.data["what"]), database_interface::User{}};
+                }
                 return {Status(true, ""), std::move(user)};
             } else {
                 assert(response.get_type() == LOG_IN_FAIL);
