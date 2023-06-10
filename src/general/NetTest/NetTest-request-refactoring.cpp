@@ -26,7 +26,7 @@ int main() {
     json other_msg = message;
     Net::DecryptedRequest decrypted_request1(Net::TEXT_REQUEST, other_msg);
 
-    Cryptographer::Decrypter decrypter(rng);
+    Cryptographer::Decrypter decrypter(rng, "RSA");
     Cryptographer::Encrypter encrypter(decrypter.get_str_publicKey(), rng);
     auto encrypted_request = decrypted_request1.encrypt(encrypter);
     std::cout << encrypted_request.to_text() << std::endl;

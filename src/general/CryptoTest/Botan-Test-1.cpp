@@ -26,7 +26,7 @@ int main()
 {
     Botan::AutoSeeded_RNG rng;
 
-    Decrypter decrypter(rng);
+    Decrypter decrypter(rng, "RSA");
 
     std::string publicKey = decrypter.get_str_publicKey();
 
