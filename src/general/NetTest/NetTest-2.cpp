@@ -17,16 +17,16 @@ int main() {
         std::string surname = "New-Surname-1";
         std::string name = "New-username-1";
         std::cout << "Done0" << std::endl;
-        auto status1 = client.log_in("sdfasdf", "asdf");
+        auto status1 = client.log_in("sdfasdf", "asdf").first;
         assert(!status1);
         std::cout << "Done1" << std::endl;
-        auto status2 = client.log_in("A-login", "asdf");
+        auto status2 = client.log_in("A-login", "asdf").first;
         assert(!status2);
         std::cout << "Done2" << std::endl;
-        auto status3 = client.log_in("asdfadgin", "A-password");
+        auto status3 = client.log_in("asdfadgin", "A-password").first;
         assert(!status3);
         std::cout << "Done3" << std::endl;
-        auto status = client.log_in("A-login", "A-password");
+        auto status = client.log_in("A-login", "A-password").first;
         assert(status);
         std::cout << "Done4" << std::endl;
         if (status) {
@@ -40,9 +40,9 @@ int main() {
         std::string password =  "New-Password-1";
         std::string surname = "New-Surname-1";
         std::string name = "New-username-1";
-        auto status = client.sing_up(name, surname, login, password);
+        auto status = client.sign_up(name, surname, login, password);
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
-        status = client.log_in(login, password);
+        status = client.log_in(login, password).first;
         std::cout << "Log in status is: " << (status ? "success" : "fail") << " with user id = : " << status.message() << std::endl;
     }
     for (int i = 0; i < 3; ++i) {
@@ -147,6 +147,20 @@ int main() {
         } else {
             std::cerr << status.message() << std::endl;
         }
+    }
+    if (false){
+        std::cout << "==================Change dialog==================\n";
+        std::string login = "Z";
+        std::string password =  "Z";
+        std::string surname = "Z";
+        std::string name = "Z";
+        auto status = client.sign_up(name, surname, login, password);
+        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+        // Так ли пишется change_user?
+        status = client.change_user(14, "encryption", "encryption", 2).first;
+        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+
+
     }
     client.close_connection();
 }

@@ -495,6 +495,10 @@ namespace Net::Client {
                 assert(response.get_type() == CHANGE_USER_FAIL);
                 return {Status(false, response.data["what"]), database_interface::User{}};
             }
+            if (changing_param == "encryption") {
+                // Добавить изменение шифрования
+                int tmp_int = 0;
+            }
         }
 
         std::pair<Status, database_interface::User> get_user_id_by_login(const std::string& login) {
