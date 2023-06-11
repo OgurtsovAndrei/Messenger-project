@@ -504,9 +504,49 @@ namespace Net::Server {
                                                        static_cast<std::string>(exception.what()));
             }
 
-//            if (!new_message.m_file_name.empty()) {
+            if (!new_message.m_file_name.empty()) {
 //                send_file(user_connection, new_message);
-//            }
+                std::cout << "try to send message" << "\n";
+                std::vector<database_interface::User> users;
+                FileWorker::File file(FileWorker::empty_file);
+                std::cout << "here-" << 1 << "\n";
+                std::string file_path = "./../bd/Files/users_files/" + user_connection.user_in_db->m_login + "/" + new_message.m_file_name;
+                try {
+                    file = FileWorker::File(file_path);
+                } catch (FileWorker::file_exception &exception) {
+                    send_response_and_return_if_false(false, user_connection, SEND_MESSAGE_FAIL, exception.what());
+                }
+                std::cout << "here-" << 2 << "\n";
+                send_response_and_return_if_false(std::filesystem::exists(file_path), user_connection,
+                                                  SEND_MESSAGE_FAIL, "This file does not exist!");
+
+                std::cout << "here-" << 3 << "\n";
+                Status users_status = bd_connection.get_users_in_dialog(database_interface::Dialog(new_message.m_dialog_id), users);
+                send_response_and_return_if_false(users_status.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                                  "Not able to send file: cannot get users in dialog " + users_status.message());
+                std::cout << "here-" << 4 << "\n";
+                for (auto &user : users) {
+                    Status status_get_login = bd_connection.get_user_log_by_id(user);
+                    std::cout << "here-" << 5 << "\n";
+                    send_response_and_return_if_false(status_get_login.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                                      "Not able to send file: cannot get user login " + status_get_login.message());
+                    std::cout << "here-" << 6 << "\n";
+                    std::cout << "login" <<  user.m_login << "\n";
+                    std::string file_save_path = "./../bd/Files/users_files/" + user.m_login;
+                    if (!std::filesystem::exists(file_save_path)) {
+                        if (!std::filesystem::create_directory(file_save_path)) {
+                            send_response_and_return_if_false(false, user_connection, SEND_MESSAGE_FAIL, "Cannot create directory for save file for this user, probably invalid users login");
+                            std::cout << "here-" << 7 << "\n";
+                        }
+                    }
+                    std::cout << "here-" << 8 << "\n";
+                    std::cout << "file_save_path" << file_save_path << "\n";
+                    Status status = file.save(file_save_path);
+                    std::cout << "here-" << 9 << "\n";
+                    send_response_and_return_if_false(status.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                                      "Send message exception: cannot save file " + status.message());
+                }
+            }
 
             Status current_status = bd_connection.make_message(new_message);
             send_response_and_return_if_false(current_status.correct(), user_connection, SEND_MESSAGE_FAIL,
@@ -524,7 +564,7 @@ namespace Net::Server {
                 nlohmann::from_json(request.data, old_message);
                 nlohmann::from_json(request.data, new_message);
             } catch (std::exception &exception) {
-                user_connection.send_secured_exception(SEND_MESSAGE_FAIL,
+                user_connection.send_secured_exception(CHANGE_MESSAGE_FAIL,
                                                        "Not able to find message to change: cannot parse json message: bad request or invalid message data: " +
                                                        static_cast<std::string>(exception.what()));
             }
@@ -952,14 +992,19 @@ namespace Net::Server {
 
             Status users_status = bd_connection.get_users_in_dialog(database_interface::Dialog(new_message.m_dialog_id), users);
             send_response_and_return_if_false(users_status.correct(), user_connection, SEND_MESSAGE_FAIL,
-                                              "Not able to send message: cannot get users in dialog " + users_status.message());
+                                              "Not able to send file: cannot get users in dialog " + users_status.message());
             for (auto &user : users) {
+                Status status_get_login = bd_connection.get_user_log_by_id(user);
+                send_response_and_return_if_false(status_get_login.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                                  "Not able to send file: cannot get user login " + status_get_login.message());
+                std::cout << "login" <<  user.m_login << "\n";
                 std::string file_save_path = "./../bd/Files/users_files/" + user.m_login;
                 if (!std::filesystem::exists(file_save_path)) {
                     if (!std::filesystem::create_directory(file_save_path)) {
                         send_response_and_return_if_false(false, user_connection, SEND_MESSAGE_FAIL, "Cannot create directory for save file for this user, probably invalid users login");
                     }
                 }
+                std::cout << "file_save_path" << file_save_path << "\n";
                 Status status = file.save(file_save_path);
                 send_response_and_return_if_false(status.correct(), user_connection, SEND_MESSAGE_FAIL,
                                                   "Send message exception: cannot save file " + status.message());

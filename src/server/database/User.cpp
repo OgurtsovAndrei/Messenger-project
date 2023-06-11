@@ -3,9 +3,17 @@
 
 namespace database_interface {
 
+int User::get_login(void *NotUsed, int argc, char **argv, char **azColName) {
+    if (argc < 1) {
+        return 1;
+    }
+    m_edit_user->m_login = argv[0];
+    return 0;
+}
+
 int User::callback(void *NotUsed, int argc, char **argv, char **azColName) {
     if (argc < 3){
-        return 0;
+        return 1;
     }
     m_edit_user->m_user_id = std::stoi(argv[0]);
     m_edit_user->m_name = argv[1];
@@ -34,7 +42,7 @@ int User::get_all_params(void *NotUsed, int argc, char **argv, char **azColName)
 
 int User::callback_for_encryption_name(void *NotUsed, int argc, char **argv, char **azColName) {
     if (argc != 1){
-        return 0;
+        return 1;
     }
     *m_encryption_name = argv[0];
     return 0;

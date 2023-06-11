@@ -49,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::on_sendButton_clicked()
-{
+{   std::cout << "send_edit_mode clicked " << send_edit_mode << "\n";
     if (select_chat_id == -1) {
         show_popUp("Choose a chat please\n");
         return;
@@ -70,6 +70,7 @@ void MainWindow::on_sendButton_clicked()
     if (send_edit_mode) {
         auto status = client.change_sent_message(change_msg_id, msg.toStdString());
         update_messages();
+        send_edit_mode = false;
         ui->sendButton->setText("Send");
         ui->newMessageInput->setPlainText("");
         return;
@@ -104,7 +105,6 @@ void MainWindow::update_messages() {
     if (ui->messagesList->count() == messages.size() && !send_edit_mode) {
         return ;
     }
-    send_edit_mode = false;
     ui->messagesList->clear();
     std::reverse(messages.begin(), messages.end());
     for (const auto &msg : messages) {
@@ -170,8 +170,9 @@ void MainWindow::change_message(Bubble *msg) {
         show_popUp("You cannot edit another user's messages\n");
         return ;
     }
-    ui->sendButton->setText("Edit");
     send_edit_mode = true;
+    ui->sendButton->setText("Edit");
+    std::cout << "send_edit_mode" << send_edit_mode << "\n";
     ui->newMessageInput->setText(bub->get_msg_text());
 }
 

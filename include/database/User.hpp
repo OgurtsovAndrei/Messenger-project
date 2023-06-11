@@ -70,6 +70,8 @@ struct User {
             : m_user_id(id), m_name(std::move(name)), m_surname(std::move(surname)) {
     }
 
+    static int get_login(void *NotUsed, int argc, char **argv, char **azColName);
+
     static int callback(void *NotUsed, int argc, char **argv, char **azColName);
 
     static int get_all_params(void *NotUsed, int argc, char **argv, char **azColName);

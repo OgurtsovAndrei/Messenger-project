@@ -204,6 +204,7 @@ namespace Net::Client {
                     return {Status(false, exception.what()), {}};
                 }
             } else {
+                std::cout << "get type" << response.get_type() << "\n";
                 assert(response.get_type() == GET_100_MESSAGES_FAIL);
                 return {Status(false, response.data["what"]), {}};
             }

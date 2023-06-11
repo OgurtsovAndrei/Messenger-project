@@ -238,6 +238,31 @@ Status SQL_BDInterface::get_user_id_by_log(User &user){
     );
 }
 
+Status SQL_BDInterface::get_user_log_by_id(User &user){
+    if (Status user_params = check_user_id(user,  "get_user_log_by_id user"); !user_params.correct()){
+        return user_params;
+    }
+    std::string sql = "SELECT login FROM Users WHERE id=";
+    sql += std::to_string(user.m_user_id) + ";";
+    char *message_error;
+    std::string string_message;
+    User tmp_user;
+    User::m_edit_user = &tmp_user;
+    int exit =
+        sqlite3_exec(m_bd, sql.c_str(), User::get_login, 0, &message_error);
+    User::m_edit_user = nullptr;
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    if (exit == SQLITE_OK && user.m_user_id != -1) {
+        std::cout << "OK in db" << " ";
+        user.m_login = tmp_user.m_login;
+    }
+    std::cout << user.m_login << "\n";
+    return Status(exit == SQLITE_OK && user.m_user_id != -1, "Problem in GET User login by id.\nMessage: " + string_message +
+                                                                 "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name) {
     std::string sql = "SELECT Encryption FROM Encryptions WHERE id=";
     sql += std::to_string(encryption_id) + ";";

@@ -37,6 +37,8 @@ struct BDInterface {
 
     virtual Status get_user_id_by_log(User &user) = 0;
 
+    virtual Status get_user_log_by_id(User &user) = 0;
+
     virtual Status del_user(const User &user) = 0;
 
     virtual Status
@@ -104,6 +106,8 @@ struct SQL_BDInterface : BDInterface {
     Status get_user_by_log_pas(User &user) override;
 
     Status get_user_id_by_log(User &user) override;
+
+    Status get_user_log_by_id(User &user) override;
 
     Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
 
