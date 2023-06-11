@@ -132,6 +132,8 @@ struct SQL_BDInterface : BDInterface {
 
     Status add_user_to_dialog(const User &user, Dialog &dialog);
 
+    Status del_user_from_dialog(const User &user, Dialog &dialog);
+
     Status get_dialog_by_id(Dialog &dialog) override;
 
     Status add_users_to_dialog(const std::vector<User> &users, Dialog &dialog);

@@ -499,6 +499,31 @@ Status SQL_BDInterface::add_user_to_dialog(const User &user, Dialog &dialog){
     );
 }
 
+Status SQL_BDInterface::del_user_from_dialog(const User &user, Dialog &dialog){
+    if (Status user_params = check_user_id(user,  "del_user_from_dialog user"); !user_params.correct()){
+        return user_params;
+    }
+    if (Status dialog_params = check_dialog_id(dialog,  "del_user_from_dialog user"); !dialog_params.correct()){
+        return dialog_params;
+    }
+    Status update = update_dialog_time(dialog);
+    if (!update.correct()){
+        return Status(false, "Problem in UPDATE in ADD User to Dialog.\nMessage: " + update.message());
+    }
+    std::string sql = "DELETE FROM UsersAndDialogs WHERE ";
+    sql += "UserId=" + std::to_string(user.m_user_id) + " AND ";
+    sql += "DialogId=" + std::to_string(dialog.m_dialog_id) + ";";
+    char *message_error;
+    std::string string_message;
+    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
+    chars_to_string(message_error, string_message);
+    sqlite3_free(message_error);
+    return Status(
+            exit == SQLITE_OK, "Problem in DEL User from Dialog.\nMessage: " + string_message +
+                               "\n SQL command: " + sql + "\n"
+    );
+}
+
 Status SQL_BDInterface::get_dialog_by_id(Dialog &dialog){
     if (Status dialog_params = check_dialog_id(dialog,  "get_dialog_by_id user"); !dialog_params.correct()){
         return dialog_params;

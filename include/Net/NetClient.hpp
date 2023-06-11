@@ -347,6 +347,18 @@ namespace Net::Client {
             }
         }
 
+        Status del_user_from_dialog(int user_id, int dialog_id) {
+            DecryptedRequest request(DEL_USER_FROM_DIALOG, json{{"user_id", user_id},{"dialog_id", dialog_id}});
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == DEL_USER_FROM_DIALOG_SUCCESS) {
+                return Status(true, "");
+            } else {
+                assert(response.get_type() == DEL_USER_FROM_DIALOG_FAIL);
+                return Status(false, response.data["what"]);
+            }
+        }
+
         std::pair<Status, database_interface::Dialog> get_dialog_by_id(int dialog_id) {
             DecryptedRequest request(GET_DIALOG_BY_ID, json{{"dialog_id", dialog_id}});
             send_request(request.encrypt(encrypter.value()));
