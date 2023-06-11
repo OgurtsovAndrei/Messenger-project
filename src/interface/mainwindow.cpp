@@ -48,8 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::on_sendButton_clicked()
-{   std::cout << "send_edit_mode clicked " << send_edit_mode << "\n";
+void MainWindow::on_sendButton_clicked() {
     if (select_chat_id == -1) {
         show_popUp("Choose a chat please\n");
         return;
@@ -164,8 +163,7 @@ void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const Clien
     ui->messagesList->scrollToBottom();
 }
 
-void MainWindow::change_message(Bubble *msg) {
-    auto bub = dynamic_cast<Bubble*>(msg);
+void MainWindow::change_message(Bubble *bub) {
     if (bub->get_owner_id() != get_client_id()) {
         show_popUp("You cannot edit another user's messages\n");
         return ;
@@ -281,6 +279,23 @@ void MainWindow::sendFile() {
     file_cancel_mode = false;
     ui->newMessageInput->clear();
     ui->fileButton->setText("File");
+}
+
+void MainWindow::download_file(const std::string &file_name) {
+    QString file_download_path = QFileDialog::getExistingDirectory(this, "Choose directory");
+    if (file_download_path.isEmpty()) {
+        return;
+    }
+    auto [status, file_to_save] = client.download_file(file_name);
+    if (!status) {
+        show_popUp("We were unable to download file.\n");
+        return ;
+    }
+    Status save_status = file_to_save.save(file_download_path.toStdString());
+    if (!save_status) {
+        show_popUp("We were unable to save file.\n");
+        return ;
+    }
 }
 
 QString extract_file_name(const QString &file_path) {

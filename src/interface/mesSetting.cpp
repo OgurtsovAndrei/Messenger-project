@@ -34,6 +34,7 @@ void MesSetting::on_delButton_clicked()
 
 
 void MesSetting::on_editButton_clicked()
+/// TODO sort
 {
     if (isFile) {
         show_popUp("Sorry, you can't edit files\n");
@@ -49,6 +50,6 @@ void MesSetting::on_downloadButton_clicked()
         show_popUp("There is no file to download.\n");
         return ;
     }
-    mainWin->change_message(msg);
+    mainWin->download_file(msg->get_msg_text().toStdString());
     close();
 }

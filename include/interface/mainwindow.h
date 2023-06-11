@@ -30,7 +30,9 @@ public:
 
     void update_messages();
 
-    void change_message(Bubble *msg);
+    void change_message(Bubble *bub);
+
+    void download_file(const std::string &file_name);
 
     [[nodiscard]] QString get_client_name_surname() const;
 

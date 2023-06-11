@@ -110,7 +110,6 @@ bool Register::sign_up() {
                                  pas.toStdString());
     if (!sign_status) {
         std::string err = "There were problems with sign up.\n";
-        std::cout << sign_status.message() << "\n";
         if (sign_status.message() == "Problem in MAKE User.\nMessage: login is already taken\n") {
             err = "This login is already in use.\nPlease try again.\n";
         }
