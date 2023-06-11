@@ -47,7 +47,8 @@ namespace Net::Client {
             connection = boost::asio::ip::tcp::iostream(std::move(client_socket));
             // Create decrypter and send public key
             decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng(), encryption_name);
-            DecryptedRequest request1(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, json{{"public_key", decrypter.value().get_str_publicKey()}});
+            DecryptedRequest request1(MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY, json{{"public_key", decrypter.value().get_str_publicKey()},
+                                                                                   {"encryption_name", encryption_name}});
             send_request(request1.reinterpret_cast_to_encrypted());
             // Get other public key
             EncryptedRequest response1_not_casted(connection.value());
@@ -372,9 +373,11 @@ namespace Net::Client {
                 user = response.data;
                 auto exit = get_encryption_by_id(user.m_encryption);
                 if (exit.first){
-                    DecryptedRequest close_request(CLOSE_CONNECTION);
-                    send_request(close_request.encrypt(encrypter.value()));
+                    close_connection();
                     make_secure_connection(exit.second);
+                    send_request(request.encrypt(encrypter.value()));
+                    response = get_request();
+                    assert(response.get_type() == LOG_IN_SUCCESS);
                 } else {
                     assert(response.get_type() == LOG_IN_FAIL);
                     return {Status(false, response.data["what"]), database_interface::User{}};
@@ -436,7 +439,7 @@ namespace Net::Client {
             user.m_name = std::move(name);
             user.m_surname = std::move(surname);
             user.m_login = std::move(login);
-            user.m_password_hash = std::move(password);
+            user.m_password_hash = password;
 
             DecryptedRequest request(SIGN_UP_REQUEST, user);
             send_request(request.encrypt(encrypter.value()));
@@ -444,7 +447,13 @@ namespace Net::Client {
             DecryptedRequest response = get_request();
 
             if (response.get_type() == SIGN_UP_SUCCESS) {
+                close_connection();
+                make_secure_connection();
+                DecryptedRequest login_request(LOG_IN_REQUEST, user);
+                send_request(login_request.encrypt(encrypter.value()));
+                response = get_request();
                 user = response.data;
+                assert(response.get_type() == LOG_IN_SUCCESS);
                 return Status(true, std::to_string(user.m_user_id));
             } else {
                 assert(response.get_type() == SIGN_UP_FAIL);
@@ -467,14 +476,16 @@ namespace Net::Client {
             auto response = get_request();
             if (response.get_type() == CHANGE_USER_SUCCESS) {
                 database_interface::User user = response.data;
+                if (changing_param == "encryption") {
+                    DecryptedRequest request(LOG_IN_REQUEST, user);
+                    send_request(request.encrypt(encrypter.value()));
+                    response = get_request();
+                    assert(response.get_type() == LOG_IN_SUCCESS);
+                }
                 return {Status(true), user};
             } else {
                 assert(response.get_type() == CHANGE_USER_FAIL);
                 return {Status(false, response.data["what"]), database_interface::User{}};
-            }
-            if (changing_param == "encryption") {
-                // Добавить изменение шифрования
-                int tmp_int = 0;
             }
         }
 
