@@ -150,15 +150,15 @@ int main() {
     }
     client.close_connection();
     client.make_secure_connection();
-    if (true){
+    if (false){
         std::cout << "==================Change dialog==================\n";
-        std::string login = "C5";
+        std::string login = "C6";
         std::string password =  "C";
         std::string surname = "C";
         std::string name = "C";
         auto status = client.sign_up(name, surname, login, password);
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
-        status = client.change_user(21, "encryption", "encryption", 3).first;
+        status = client.change_user(22, "encryption", "encryption", 3).first;
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
     }
     client.close_connection();
