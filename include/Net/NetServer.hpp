@@ -59,7 +59,7 @@ namespace Net::Server {
 
         UserConnection &operator=(UserConnection &&) = delete;
 
-        void work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection, std::string encryption_name="RSA");
+        void work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection);
 
         void run_connection() {
             session_thread = std::move(std::thread([&, socket = std::move(current_socket), this]() mutable {
@@ -795,7 +795,6 @@ namespace Net::Server {
             Status status = bd_connection.change_user(new_user);
             if (status) {
                 old_user = std::move(new_user);
-                old_user.m_password_hash.clear();
                 user_connection.send_secured_request(DecryptedRequest(CHANGE_USER_SUCCESS, old_user));
                 std::cout << "User with id: " + std::to_string(old_user.m_user_id) + " was changed!\n";
             } else {
@@ -925,7 +924,7 @@ namespace Net::Server {
         connection.server.push_request_to_queue(connection.connection_number, std::move(decrypted_request));
     }
 
-    void UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection, std::string encryption_name) {
+    void UserConnection::work_with_connection(boost::asio::ip::tcp::socket &&socket, UserConnection &connection) {
         auto rem_endpoint = socket.remote_endpoint();
         std::cout << "Accepted connection " << rem_endpoint << " --> "
                   << socket.local_endpoint() << "\n";
@@ -939,7 +938,7 @@ namespace Net::Server {
                 if (request.request_type != MAKE_SECURE_CONNECTION_SEND_PUBLIC_KEY) {
                     continue;
                 }
-                connection.decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng(), encryption_name);
+                connection.decrypter = Cryptographer::Decrypter(Cryptographer::Cryptographer::get_rng(), request.data["encryption_name"]);
                 connection.encrypter = Cryptographer::Encrypter(request.data["public_key"],
                                                                 Cryptographer::Cryptographer::get_rng());
                 DecryptedRequest response_with_key(MAKE_SECURE_CONNECTION_SUCCESS_RETURN_OTHER_KEY);
