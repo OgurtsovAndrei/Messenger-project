@@ -504,9 +504,12 @@ namespace Net::Server {
                                                        static_cast<std::string>(exception.what()));
             }
 
+//            if (!new_message.m_file_name.empty()) {
+//                send_file(user_connection, new_message);
+//            }
+
             Status current_status = bd_connection.make_message(new_message);
-            std::cout << "Sent message id: " << new_message.m_message_id << "\n";
-            send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
+            send_response_and_return_if_false(current_status.correct(), user_connection, SEND_MESSAGE_FAIL,
                                               "Send message exception: " + current_status.message());
             DecryptedRequest response(SEND_MESSAGE_SUCCESS, new_message);
             user_connection.send_secured_request(response);
@@ -875,10 +878,17 @@ namespace Net::Server {
                                               GET_USERS_IN_DIALOG_FAIL, "It is necessary to log in!");
             send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
                                               GET_USERS_IN_DIALOG_FAIL, "Dialog_id should be the integer!!");
-            database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
             std::vector<database_interface::User> users;
-            Status current_status = bd_connection.get_users_in_dialog(current_dialog, users);
-            // AWARE: костыль, надо, чтобы это добавили  в DB
+            int dialog_id;
+            try {
+                nlohmann::from_json(request.data["dialog_id"], dialog_id);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(CHANGE_USER_FAIL,
+                                                       "Not able to get users in dialog: cannot parse json user: bad request or invalid dialog id: " +
+                                                           static_cast<std::string>(exception.what()));
+            }
+            Status current_status = bd_connection.get_users_in_dialog(database_interface::Dialog(dialog_id), users);
+            // AWARE: костыль, надо, чтобы это добавили в DB
             for (auto &user : users) {
                 auto get_user_status = bd_connection.get_user_by_id(user);
                 user.m_password_hash = "";
@@ -894,7 +904,7 @@ namespace Net::Server {
             send_response_and_return_if_false(request.data["encryption_id"].is_number(), user_connection,
                                               GET_ENCRYPTION_FAIL, "Encryption_id should be the integer!!");
             int encryption_id = static_cast<int>(request.data["encryption_id"]);
-            std::string encryption_name = "";
+            std::string encryption_name;
             auto status = bd_connection.get_encryption_name_by_id(encryption_id, encryption_name);
             if (status) {
                 user_connection.send_secured_request(DecryptedRequest(GET_ENCRYPTION_SUCCESS, encryption_name));
@@ -926,6 +936,34 @@ namespace Net::Server {
                 }
             }
             return val;
+        }
+
+        void send_file(UserConnection &user_connection, const database_interface::Message &new_message) {
+            std::vector<database_interface::User> users;
+            FileWorker::File file(FileWorker::empty_file);
+            std::string file_path = "./../bd/Files/users_files/" + user_connection.user_in_db->m_login + "/" + new_message.m_file_name;
+            try {
+                file = FileWorker::File(file_path);
+            } catch (FileWorker::file_exception &exception) {
+                send_response_and_return_if_false(false, user_connection, SEND_MESSAGE_FAIL, exception.what());
+            }
+            send_response_and_return_if_false(std::filesystem::exists(file_path), user_connection,
+                                              SEND_MESSAGE_FAIL, "This file does not exist!");
+
+            Status users_status = bd_connection.get_users_in_dialog(database_interface::Dialog(new_message.m_dialog_id), users);
+            send_response_and_return_if_false(users_status.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                              "Not able to send message: cannot get users in dialog " + users_status.message());
+            for (auto &user : users) {
+                std::string file_save_path = "./../bd/Files/users_files/" + user.m_login;
+                if (!std::filesystem::exists(file_save_path)) {
+                    if (!std::filesystem::create_directory(file_save_path)) {
+                        send_response_and_return_if_false(false, user_connection, SEND_MESSAGE_FAIL, "Cannot create directory for save file for this user, probably invalid users login");
+                    }
+                }
+                Status status = file.save(file_save_path);
+                send_response_and_return_if_false(status.correct(), user_connection, SEND_MESSAGE_FAIL,
+                                                  "Send message exception: cannot save file " + status.message());
+            }
         }
 
     };

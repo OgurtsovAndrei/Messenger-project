@@ -50,7 +50,16 @@ MainWindow::~MainWindow() { delete ui; }
 
 void MainWindow::on_sendButton_clicked()
 {
+    if (select_chat_id == -1) {
+        show_popUp("Choose a chat please\n");
+        return;
+    }
+
     QString msg = ui->newMessageInput->toPlainText();
+    if (file_cancel_mode) {
+        sendFile();
+        return;
+    }
     if (msg.isEmpty() && select_chat_id == -1) {
         return;
     }
@@ -58,21 +67,21 @@ void MainWindow::on_sendButton_clicked()
         show_popUp("Message must not be empty\n");
         return;
     }
-    if (select_chat_id == -1) {
-        show_popUp("Choose a chat please\n");
-        return;
-    }
-    if (ui->sendButton->text() == "Edit") {
+    if (send_edit_mode) {
         auto status = client.change_sent_message(change_msg_id, msg.toStdString());
-        update_messages(true);
+        update_messages();
         ui->sendButton->setText("Send");
         ui->newMessageInput->setPlainText("");
         return;
     }
-    Status send_status = client.send_message_to_another_user(select_chat_id, 100000, msg.toStdString());
+    Status send_status = client.send_message_to_another_user(select_chat_id, "", msg.toStdString());
+    if (!send_status) {
+        show_popUp("We were unable to send your message.\n");
+        return ;
+    }
     json json_data = json::parse(send_status.message());
     addMessage(msg, json_data["m_message_id"], cl_info);
-    ui->newMessageInput->setPlainText("");
+    ui->newMessageInput->clear();
 }
 
 void MainWindow::update_chats(int n) {
@@ -90,11 +99,12 @@ void MainWindow::update_chats(int n) {
     }
 }
 
-void MainWindow::update_messages(bool wasEdit) {
+void MainWindow::update_messages() {
     auto [status, messages] = client.get_n_messages(200, select_chat_id);
-    if (ui->messagesList->count() == messages.size() && !wasEdit) {
+    if (ui->messagesList->count() == messages.size() && !send_edit_mode) {
         return ;
     }
+    send_edit_mode = false;
     ui->messagesList->clear();
     std::reverse(messages.begin(), messages.end());
     for (const auto &msg : messages) {
@@ -104,7 +114,7 @@ void MainWindow::update_messages(bool wasEdit) {
             continue;
         }
         ClientInfo sec_user_info(user);
-        addMessage(QString::fromStdString(msg.m_text), msg.m_message_id, sec_user_info);
+        addMessage(QString::fromStdString(msg.m_text), msg.m_message_id, sec_user_info, (!msg.m_file_name.empty()));
     }
 }
 
@@ -134,19 +144,19 @@ void MainWindow::on_findButton_clicked()
     }
 }
 
-void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const ClientInfo &sec_user_info, bool isFile)
+void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const ClientInfo &send_user_info, bool isFile)
 {
     bool incoming = false;
-    if (sec_user_info.cl_id != get_client_id()) {
+    if (send_user_info.cl_id != get_client_id()) {
         incoming = true;
     }
     auto *item = new QListWidgetItem(nullptr, isFile);
     Bubble *bub;
     if (isFile) {
-        bub = new Bubble(msg, extract_file_name(msg), msg_id, cl_info, incoming);
+        bub = new Bubble(msg, msg_id, send_user_info, incoming, isFile);
     }
     else {
-        bub = new Bubble(msg, msg_id, sec_user_info, incoming);
+        bub = new Bubble(msg, msg_id, send_user_info, incoming);
     }
     ui->messagesList->addItem(item);
     ui->messagesList->setItemWidget(item, bub);
@@ -161,6 +171,7 @@ void MainWindow::change_message(Bubble *msg) {
         return ;
     }
     ui->sendButton->setText("Edit");
+    send_edit_mode = true;
     ui->newMessageInput->setText(bub->get_msg_text());
 }
 
@@ -197,7 +208,7 @@ void MainWindow::on_profileButton_clicked()
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto *bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(item));
-    auto *mess = new MesSetting(bub, this, item->type()); // msg->type() = isFile
+    auto *mess = new MesSetting(bub, this, item->type()); // item->type() = isFile
     change_msg_id = bub->get_msg_id();
     mess->show();
 }
@@ -217,29 +228,27 @@ void MainWindow::on_fileButton_clicked() {
         show_popUp("Choose a chat please\n");
         return;
     }
+    if (file_cancel_mode) {
+        uploaded_file_name = "";
+        file_cancel_mode = false;
+        ui->newMessageInput->clear();
+        ui->fileButton->setText("File");
+        return ;
+    }
     QString file_path = QFileDialog::getOpenFileName(this, "Choose File");
     if (file_path.isEmpty()) {
         return;
     }
-//    ui->newMessageInput->setPlainText("File '" + extract_file_name(file_path) + "' has been selected");
-//    std::cout << "we are upload file correct" << '\n';
     FileWorker::File file(file_path.toStdString());
-    std::cout << "filepath: "<< file_path.toStdString() << "\n";
     auto st = client.upload_file(file);
     if (!st) {
-        show_popUp("We were unable to send the file.\n ");
+        show_popUp("We were unable to upload the file.\n ");
+        return ;
     }
-//    connect(ui->sendButton, &QPushButton::clicked, this, [&]{
-//        std::cout << "we are upload file correct" << '\n';
-//            FileWorker::File file(file_path.toStdString());
-//            auto st = client.upload_file(file);
-//            if (!st) {
-//                show_popUp("We were unable to send the file.\n Don't worry that's on us.");
-//            }
-//        });
-
-
-//    std::cout << "filename=" << filename.toStdString() << "\n";
+    uploaded_file_name = extract_file_name(file_path);
+    ui->newMessageInput->setPlainText("File " + uploaded_file_name + " was upload. For send press Send");
+    ui->fileButton->setText("Cancel");
+    file_cancel_mode = true;
 }
 
 QString MainWindow::get_second_user_name_surname(int dialog_id) const {
@@ -257,6 +266,20 @@ QString MainWindow::get_second_user_name_surname(int dialog_id) const {
 
 int MainWindow::get_cl_encryption_id() const {
     return cl_info.cl_encryption_id;
+}
+
+void MainWindow::sendFile() {
+    Status send_status = client.send_message_to_another_user(select_chat_id, uploaded_file_name.toStdString(), uploaded_file_name.toStdString());
+    if (!send_status) {
+        show_popUp("We were unable to send your file.\n");
+        return ;
+    }
+    json json_data = json::parse(send_status.message());
+    addMessage(uploaded_file_name, json_data["m_message_id"], cl_info, true);
+    uploaded_file_name = "";
+    file_cancel_mode = false;
+    ui->newMessageInput->clear();
+    ui->fileButton->setText("File");
 }
 
 QString extract_file_name(const QString &file_path) {

@@ -661,7 +661,7 @@ Status SQL_BDInterface::make_message(Message &message){
                 "INSERT INTO Messages (DateTime, Text, File, DialogId, UserId) VALUES (";
         sql += std::to_string(time(NULL)) + ", '";
         sql += message.m_text + "', '";
-        sql += message.m_file_path + "', ";
+        sql += message.m_file_name + "', ";
         sql += std::to_string(message.m_dialog_id) + ", ";
         sql += std::to_string(message.m_user_id) + ");";
         char *message_error;
@@ -706,7 +706,7 @@ Status SQL_BDInterface::change_message(const Message &new_message){
     sql += std::to_string(new_message.m_message_id) + ", ";
     sql += std::to_string(new_message.m_date_time) + ", '";
     sql += new_message.m_text + "', '";
-    sql += new_message.m_file_path + "', ";
+    sql += new_message.m_file_name + "', ";
     sql += std::to_string(new_message.m_dialog_id) + ", ";
     sql += std::to_string(new_message.m_user_id) + ");";
     char *message_error;

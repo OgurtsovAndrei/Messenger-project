@@ -72,10 +72,10 @@ namespace Net::Client {
             std::cout << "Got from server: " << true_string << "\n";
         }
 
-        Status send_message_to_another_user(int dialog_id, int current_time, std::string text) {
+        Status send_message_to_another_user(int dialog_id, std::string file_name, std::string text) {
             database_interface::Message new_message;
             new_message.m_dialog_id = dialog_id;
-            new_message.m_date_time = current_time;
+            new_message.m_file_name = std::move(file_name);
             new_message.m_text = std::move(text);
             
             DecryptedRequest request(SEND_MESSAGE, new_message);

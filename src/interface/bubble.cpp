@@ -47,11 +47,11 @@ Bubble::Bubble(
 }
 
 Bubble::Bubble(
-    const QString &file_path_,
     const QString &file_name_,
     unsigned int msg_id_,
     const ClientInfo &cl_info,
-    const bool &incoming_
+    const bool &incoming_,
+    bool isFile_
 ) : Bubble(file_name_, msg_id_, cl_info, incoming_){
     lbl_file = new QLabel;
     QPixmap npm("./../images/fileIcon.png");
@@ -72,10 +72,6 @@ Bubble::Bubble(
 
 QString Bubble::get_msg_text() const {
     return lbl->text();
-}
-
-QString Bubble::get_file_path() const {
-    return filePath;
 }
 
 unsigned int Bubble::get_owner_id() const {

@@ -48,7 +48,7 @@ QPushButton:pressed { background-color: #587E75; }</string>
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Dellete</string>
+      <string>Delete</string>
      </property>
     </widget>
    </item>

@@ -14,10 +14,10 @@ namespace database_interface {
         int m_message_id;
         int m_date_time;
         std::string m_text;
-        std::string m_file_path;
+        std::string m_file_name;
         int m_dialog_id{};
         int m_user_id;
-        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Message, m_message_id, m_date_time, m_text, m_file_path, m_dialog_id, m_user_id);
+        NLOHMANN_DEFINE_TYPE_INTRUSIVE(Message, m_message_id, m_date_time, m_text, m_file_name, m_dialog_id, m_user_id);
 
         static Message *m_edit_message;
         static std::list<Message> *m_message_list;
@@ -38,7 +38,7 @@ namespace database_interface {
                 : m_message_id(message_id),
                   m_date_time(date_time),
                   m_text(std::move(text)),
-                  m_file_path(std::move(file_path)),
+                  m_file_name(std::move(file_path)),
                   m_dialog_id(dialog_id),
                   m_user_id(user_id) {
         }
@@ -53,7 +53,7 @@ namespace database_interface {
                 : m_message_id(message_id),
                   m_date_time(date_time),
                   m_text(std::move(text)),
-                  m_file_path(std::move(file_path)),
+                  m_file_name(std::move(file_path)),
                   m_user_id(user_id) {
         }
 
@@ -66,7 +66,7 @@ namespace database_interface {
         )
                 : m_date_time(date_time),
                   m_text(std::move(text)),
-                  m_file_path(std::move(file_path)),
+                  m_file_name(std::move(file_path)),
                   m_dialog_id(dialog_id),
                   m_user_id(user_id) {
         }
@@ -78,7 +78,7 @@ namespace database_interface {
                 int user_id
         )
                 : m_text(std::move(text)),
-                  m_file_path(std::move(file_path)),
+                  m_file_name(std::move(file_path)),
                   m_dialog_id(dialog_id),
                   m_user_id(user_id) {
         }
@@ -86,12 +86,12 @@ namespace database_interface {
         explicit Message(int message_id) : m_message_id(message_id) {
         }
 
-        [[nodiscard]] std::string to_strint() const {
+        [[nodiscard]] std::string to_string() const {
             // FIXME ужасно не оптимально по трафику данные так гонять, но пока что как есть, другого не дано.
             // В качестве альтернативы вижу конвертацию в reinterpret_cast<unsigned char*>, но тут возникают со стрингами проблемы
             // Если есть предложения, пишите.
             std::vector<std::string> message_data{std::to_string(m_message_id), std::to_string(m_date_time),
-                                                  m_text, m_file_path, std::to_string(m_dialog_id),
+                                                  m_text, m_file_name, std::to_string(m_dialog_id),
                                                   std::to_string(m_user_id)};
             return convert_text_vector_to_text(message_data);
         }
@@ -111,7 +111,7 @@ namespace database_interface {
             ref_to_answer_message.m_message_id = std::stoi(message_data[0]);
             ref_to_answer_message.m_date_time = std::stoi(message_data[1]);
             ref_to_answer_message.m_text = message_data[2];
-            ref_to_answer_message.m_file_path = message_data[3];
+            ref_to_answer_message.m_file_name = message_data[3];
             ref_to_answer_message.m_dialog_id = std::stoi(message_data[4]);
             ref_to_answer_message.m_user_id = std::stoi(message_data[5]);
             return Status(true, "");

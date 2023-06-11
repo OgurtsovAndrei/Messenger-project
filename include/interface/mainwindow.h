@@ -28,7 +28,7 @@ public:
 
     void update_chats(int n = 100);
 
-    void update_messages(bool wasEdit = false);
+    void update_messages();
 
     void change_message(Bubble *msg);
 
@@ -60,13 +60,18 @@ private:
     int select_chat_id = -1;
     int num_submited_mes = 0;
     int change_msg_id = -1;
+    bool send_edit_mode = false;
+    bool file_cancel_mode = false;
+    QString uploaded_file_name;
 
     void addMessage(
         const QString &msg,
         unsigned int msg_id,
-        const ClientInfo &sec_user_info,
+        const ClientInfo &send_user_info,
         bool isFile = false
     );
+
+    void sendFile();
 };
 
 void show_popUp(const std::string &err_msg);
