@@ -158,6 +158,8 @@ int main() {
         std::string name = "C";
         auto status = client.sign_up(name, surname, login, password);
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
+        status = client.log_in(login, password).first;
+        std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
         status = client.change_user(22, "encryption", "encryption", 3).first;
         std::cout << "Signing up status is: " << (status ? "success" : "fail") << " with message: " << status.message() << std::endl;
     }

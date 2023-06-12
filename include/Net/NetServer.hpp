@@ -1076,7 +1076,7 @@ namespace Net::Server {
                     server.sign_up(connection, request);
                 }
             } catch (std::exception &exception) {
-                std::cerr << "Loging in failed with exception: " + static_cast<std::string>(exception.what()) + "\n";
+                std::cerr << "Logging in failed with exception: " + static_cast<std::string>(exception.what()) + "\n";
                 return;
             }
         }

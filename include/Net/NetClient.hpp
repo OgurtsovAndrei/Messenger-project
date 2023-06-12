@@ -385,21 +385,17 @@ namespace Net::Client {
             if (response.get_type() == LOG_IN_SUCCESS) {
                 user = response.data;
                 auto exit = get_encryption_by_id(user.m_encryption);
-                if (exit.first){
+                if (exit.first) {
                     close_connection();
                     make_secure_connection(exit.second);
                     send_request(request.encrypt(encrypter.value()));
                     response = get_request();
                     assert(response.get_type() == LOG_IN_SUCCESS);
-                } else {
-                    assert(response.get_type() == LOG_IN_FAIL);
-                    return {Status(false, response.data["what"]), database_interface::User{}};
+                    return {Status(true, ""), std::move(user)};
                 }
-                return {Status(true, ""), std::move(user)};
-            } else {
-                assert(response.get_type() == LOG_IN_FAIL);
-                return {Status(false, response.data["what"]), database_interface::User{}};
             }
+            assert(response.get_type() == LOG_IN_FAIL);
+            return {Status(false, response.data["what"]), database_interface::User{}};
         }
 
         std::pair<Status, std::string> get_encryption_by_id(int encryption_id) {
@@ -452,26 +448,18 @@ namespace Net::Client {
             user.m_name = std::move(name);
             user.m_surname = std::move(surname);
             user.m_login = std::move(login);
-            user.m_password_hash = password;
+            user.m_password_hash = std::move(password);
 
             DecryptedRequest request(SIGN_UP_REQUEST, user);
             send_request(request.encrypt(encrypter.value()));
 
             DecryptedRequest response = get_request();
-
             if (response.get_type() == SIGN_UP_SUCCESS) {
-                close_connection();
-                make_secure_connection();
-                DecryptedRequest login_request(LOG_IN_REQUEST, user);
-                send_request(login_request.encrypt(encrypter.value()));
-                response = get_request();
                 user = response.data;
-                assert(response.get_type() == LOG_IN_SUCCESS);
                 return Status(true, std::to_string(user.m_user_id));
-            } else {
-                assert(response.get_type() == SIGN_UP_FAIL);
-                return Status(false, response.data["what"]);
             }
+            assert(response.get_type() == SIGN_UP_FAIL);
+            return Status(false, response.data["what"]);
         }
 
         std::pair<Status, database_interface::User> change_user(int old_id, std::string changing_param, std::string new_param, int new_encrypt) {
