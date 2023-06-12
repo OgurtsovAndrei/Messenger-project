@@ -10,7 +10,7 @@
 #include "interface/popUp.h"
 #include "FileWorker.hpp"
 #include <filesystem>
-//#include "User.hpp"
+#include <algorithm>
 
 #include <QStringListModel>
 #include <QListWidget>
@@ -106,6 +106,9 @@ void MainWindow::update_messages() {
     }
     ui->messagesList->clear();
     std::reverse(messages.begin(), messages.end());
+    std::sort(messages.begin(), messages.end(), [](const database_interface::Message& a, const database_interface::Message& b) {
+                  return a.m_message_id < b.m_message_id;
+              });
     for (const auto &msg : messages) {
         auto [st, user] = client.get_user_by_id(msg.m_user_id);
         if (!st) {
