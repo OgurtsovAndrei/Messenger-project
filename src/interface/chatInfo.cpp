@@ -3,7 +3,8 @@
 #include "ui_chatInfo.h"
 #include "database/Dialog.hpp"
 #include "interface/popUp.h"
-#include "algorithm"
+#include <QListWidgetItem>
+#include "interface/chatSetting.h"
 
 ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     dialog_id(dialog_id),
@@ -14,6 +15,8 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     ui->setupUi(this);
     ui->encrLabel->close();
     ui->encrOptions->close();
+    ui->changeLogButton->close();
+    ui->changeNameButton->close();
     this->setWindowTitle("Chat Info");
     auto [status, dialog] = client.get_dialog_by_id(dialog_id);
     if (!status) {
@@ -21,13 +24,15 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
         popUp->show();
         return ;
     }
+    owner_id = dialog.m_owner_id;
     ui->userNameLabel->setWordWrap(true);
     if (dialog.m_is_group) {
         ui->userNameLabel->setText(QString::fromStdString(dialog.m_name));
         auto [st, users] = client.get_users_in_dialog(dialog_id);
         for (const auto &user : users) {
-            auto user_name = new QListWidgetItem(QString::fromStdString(user.m_name + " " + user.m_surname), nullptr);
-            ui->memList->addItem(user_name);
+            auto user_name = QString::fromStdString(user.m_name + " " + user.m_surname);
+            auto mem_item = new QListWidgetItem(user_name, nullptr, user.m_user_id);
+            ui->memList->addItem(mem_item);
         }
     }
     else {
@@ -51,7 +56,7 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
         return ;
     }
     std::sort(all_encr.begin(), all_encr.end());
-    for (auto [i, encr_name] : all_encr) {
+    for (const auto &[i, encr_name] : all_encr) {
         ui->encrOptions->addItem(QString::fromStdString(encr_name));
     }
     int encr_index = mainWin->get_cl_encryption_id() - 1;
@@ -109,5 +114,19 @@ void ChatInfo::on_encrOptions_activated(int index)
         return ;
     }
     mainWin->set_client_info(new_cl_info);
+}
+
+
+void ChatInfo::on_memList_itemDoubleClicked(QListWidgetItem *item)
+{
+    std::string dialog_name = "d_id:" + std::to_string(dialog_id) + " f_id:" + std::to_string(mainWin->get_client_id()) + " s_id:" + std::to_string(item->type());
+    if (mainWin->get_client_id() == owner_id) {
+        auto chat_set = new ChatSetting(owner_id, item->type(), dialog_id, item->text(), dialog_name);
+        chat_set->show();
+    }
+    else {
+        auto chat_set = new ChatSetting(mainWin->get_client_id(), item->type(), dialog_name);
+        chat_set->show();
+    }
 }
 

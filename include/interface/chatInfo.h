@@ -24,9 +24,12 @@ private slots:
 
     void on_encrOptions_activated(int index);
 
+    void on_memList_itemDoubleClicked(QListWidgetItem *item);
+
 private:
     Ui::ChatInfo *ui;
-    int dialog_id;
+    int dialog_id{};
+    int owner_id{};
     MainWindow *mainWin;
 };
 

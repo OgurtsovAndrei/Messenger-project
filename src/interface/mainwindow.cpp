@@ -144,6 +144,9 @@ void MainWindow::on_findButton_clicked()
     if (client.make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
         update_chats();
     }
+    else {
+        show_popUp("We were unable to create new dialog.\n");
+    }
 }
 
 void MainWindow::addMessage(const QString &msg, unsigned int msg_id, const ClientInfo &send_user_info, bool isFile)
