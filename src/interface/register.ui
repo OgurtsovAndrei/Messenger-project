@@ -19,6 +19,13 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget {background: #294d62;}
+QPushButton {background-color : #476e6d;border-width: 2px; border-style: solid; border-radius: 10px; padding: 6px;}
+QPushButton:pressed { background-color: #557373; }
+QLineEdit {border-width: 4px; border-colour: #000000
+border-radius: 2px; padding: 6px;}</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QLabel" name="logLabel">

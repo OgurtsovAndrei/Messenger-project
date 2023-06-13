@@ -19,6 +19,13 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QWidget {background: #294d62;}
+QPushButton {background-color : #476e6d;border-width: 2px; border-style: solid; border-radius: 10px; padding: 6px;}
+QPushButton:pressed { background-color: #557373; }
+QTextEdit {background-color : #23475B; border-width: 4px; 
+border-radius: 6px; padding: 6px;}</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTextEdit" name="welcText">
