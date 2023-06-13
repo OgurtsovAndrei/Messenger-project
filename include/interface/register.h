@@ -2,6 +2,7 @@
 #define REGISTER_H
 
 #include <QWidget>
+#include "interface/mainwindow.h"
 
 namespace Ui {
 class Register;
@@ -12,7 +13,7 @@ class Register : public QWidget
     Q_OBJECT
 
 public:
-    explicit Register(QWidget *parent = nullptr);
+    explicit Register(Net::Client::Client *client_, QWidget *parent = nullptr);
     ~Register();
 
     void delRegInfo();
@@ -27,6 +28,7 @@ private slots:
 private:
     Ui::Register *ui;
     bool regVersion = true;
+    Net::Client::Client *client;
 };
 
 bool incorrect_log_or_pas(const QString &log, const QString &pas);

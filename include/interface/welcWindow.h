@@ -13,7 +13,7 @@ class WelcWindow : public QWidget
     Q_OBJECT
 
 public:
-    explicit WelcWindow(QWidget *parent = nullptr);
+    explicit WelcWindow(Net::Client::Client *client_, QWidget *parent = nullptr);
     ~WelcWindow();
 
 private slots:
@@ -21,8 +21,7 @@ private slots:
 
 private:
     Ui::WelcWindow *ui;
+    Net::Client::Client *client;
 };
-
-extern Net::Client::Client client;
 
 #endif // WELCWINDOW_H

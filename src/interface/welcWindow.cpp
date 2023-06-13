@@ -2,10 +2,12 @@
 #include "./ui_welcWindow.h"
 #include "interface/register.h"
 #include <QDesktopServices>
+#include "Net/NetClient.hpp"
 
-WelcWindow::WelcWindow(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::WelcWindow)
+WelcWindow::WelcWindow(Net::Client::Client *client_, QWidget *parent) :
+      client(client_),
+      QWidget(parent),
+      ui(new Ui::WelcWindow)
 {
     ui->setupUi(this);
 
@@ -27,7 +29,7 @@ WelcWindow::~WelcWindow()
 
 void WelcWindow::on_regButton_clicked()
 {
-    auto *reg = new Register();
+    auto *reg = new Register(client);
     if (ui->logInButton->isDown()) {
         reg->delRegInfo();
     }

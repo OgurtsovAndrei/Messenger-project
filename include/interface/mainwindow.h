@@ -8,6 +8,7 @@
 #include "database/User.hpp"
 #include "interface/bubble.h"
 #include "interface/sureDo.h"
+#include "Net/NetClient.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,7 +19,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(Net::Client::Client *client_, QWidget *parent = nullptr);
     ~MainWindow();
 
     void set_client_info(const database_interface::User& cl);
@@ -26,6 +27,8 @@ public:
     [[nodiscard]] unsigned int get_client_id() const;
 
     [[nodiscard]] int get_cl_encryption_id() const;
+
+    [[nodiscard]] Net::Client::Client *get_client();
 
     void update_chats(int n = 100);
 
@@ -37,7 +40,7 @@ public:
 
     [[nodiscard]] QString get_client_name_surname() const;
 
-    [[nodiscard]] QString get_second_user_name_surname(int dialog_id) const;
+    [[nodiscard]] QString get_second_user_name_surname(int dialog_id);
 
 private slots:
 
@@ -58,10 +61,10 @@ private slots:
     void on_fileButton_clicked();
 
 private:
+    Net::Client::Client *client;
     Ui::MainWindow *ui;
     ClientInfo cl_info;
     int select_chat_id = -1;
-    int num_submited_mes = 0;
     int change_msg_id = -1;
     bool send_edit_mode = false;
     bool file_cancel_mode = false;

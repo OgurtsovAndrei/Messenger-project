@@ -1,11 +1,14 @@
 #include "interface/welcWindow.h"
+#include "Net/NetClient.hpp"
 
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    WelcWindow welc;
-    welc.show();
+    Net::Client::Client client("localhost", "12345");
+    client.make_secure_connection();
+    WelcWindow welcome(&client);
+    welcome.show();
     return QApplication::exec();
 }

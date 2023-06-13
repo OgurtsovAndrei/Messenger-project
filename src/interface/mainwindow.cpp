@@ -21,8 +21,8 @@
 #include <QFileDialog>
 #include <QTextStream>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), sure_add_group(new SureDo()), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(Net::Client::Client *client_, QWidget *parent)
+    : client(client_), QMainWindow(parent), sure_add_group(new SureDo()), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     this->setWindowTitle("ИШО");
@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     auto *chat_timer = new QTimer(this);
     connect(chat_timer, &QTimer::timeout, this, [&]{
-      auto [status, chats] = client.get_last_n_dialogs(100);
+      auto [status, chats] = client->get_last_n_dialogs(100);
       if (chats.size() != ui->chatsList->count()) {
           std::cout << "Chats updates...\n";
           update_chats();
@@ -71,14 +71,14 @@ void MainWindow::on_sendButton_clicked() {
         return;
     }
     if (send_edit_mode) {
-        auto status = client.change_sent_message(change_msg_id, msg.toStdString());
+        auto status = client->change_sent_message(change_msg_id, msg.toStdString());
         update_messages();
         send_edit_mode = false;
         ui->sendButton->setText("Send");
         ui->newMessageInput->setPlainText("");
         return;
     }
-    Status send_status = client.send_message_to_another_user(select_chat_id, "", msg.toStdString());
+    Status send_status = client->send_message_to_another_user(select_chat_id, "", msg.toStdString());
     if (!send_status) {
         show_popUp("We were unable to send your message.\n");
         return ;
@@ -90,7 +90,7 @@ void MainWindow::on_sendButton_clicked() {
 
 void MainWindow::update_chats(int n) {
     ui->chatsList->clear();
-    auto [status, chats] = client.get_last_n_dialogs(n);
+    auto [status, chats] = client->get_last_n_dialogs(n);
     bool select_chat_was_delete = true;
     for (const auto &chat : chats) {
         if (chat.m_dialog_id == select_chat_id) {
@@ -114,7 +114,7 @@ void MainWindow::update_chats(int n) {
 }
 
 void MainWindow::update_messages(bool chat_was_changed) {
-    auto [status, messages] = client.get_n_messages(200, select_chat_id);
+    auto [status, messages] = client->get_n_messages(200, select_chat_id);
     if (ui->messagesList->count() == messages.size() && !chat_was_changed) {
         return ;
     }
@@ -124,7 +124,7 @@ void MainWindow::update_messages(bool chat_was_changed) {
                   return a.m_message_id < b.m_message_id;
               });
     for (const auto &msg : messages) {
-        auto [st, user] = client.get_user_by_id(msg.m_user_id);
+        auto [st, user] = client->get_user_by_id(msg.m_user_id);
         if (!st) {
             show_popUp("Problems displaying messages from some users.\n");
             continue;
@@ -147,7 +147,7 @@ void MainWindow::on_findButton_clicked()
     if (find_chat.empty()) {
         return;
     }
-    auto [status, sec_client] = client.get_user_id_by_login(find_chat);
+    auto [status, sec_client] = client->get_user_id_by_login(find_chat);
     if (!status) {
         auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
         popUp->show();
@@ -155,7 +155,7 @@ void MainWindow::on_findButton_clicked()
     }
     unsigned int sec_id = sec_client.m_user_id;
     std::string dialog_name = cl_info.cl_login + "+" + sec_client.m_login;
-    if (client.make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
+    if (client->make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
         update_chats();
     }
     else {
@@ -196,6 +196,7 @@ void MainWindow::change_message(Bubble *bub) {
 void MainWindow::on_groupButton_clicked()
 {
     sure_add_group->set_text("Enter new surname, please.");
+    sure_add_group->clear_line();
     sure_add_group->show();
 }
 
@@ -203,7 +204,7 @@ void MainWindow::add_group(const std::string &group_name) {
     if (group_name.empty()) {
         return;
     }
-    if (client.make_dialog(group_name, 1000,true, {get_client_id()})) {
+    if (client->make_dialog(group_name, 1000,true, {get_client_id()})) {
         update_chats();
     }
 }
@@ -267,7 +268,7 @@ void MainWindow::on_fileButton_clicked() {
         return;
     }
     FileWorker::File file(file_path.toStdString());
-    auto st = client.upload_file(file);
+    auto st = client->upload_file(file);
     if (!st) {
         show_popUp("We were unable to upload the file.\n ");
         return ;
@@ -278,8 +279,8 @@ void MainWindow::on_fileButton_clicked() {
     file_cancel_mode = true;
 }
 
-QString MainWindow::get_second_user_name_surname(int dialog_id) const {
-    auto [status, users] = client.get_users_in_dialog(dialog_id);
+QString MainWindow::get_second_user_name_surname(int dialog_id) {
+    auto [status, users] = client->get_users_in_dialog(dialog_id);
     if (!status || users.size() != 2) {
         show_popUp("This dialog is corrupted.\n");
     }
@@ -296,7 +297,7 @@ int MainWindow::get_cl_encryption_id() const {
 }
 
 void MainWindow::sendFile() {
-    Status send_status = client.send_message_to_another_user(select_chat_id, uploaded_file_name.toStdString(), uploaded_file_name.toStdString());
+    Status send_status = client->send_message_to_another_user(select_chat_id, uploaded_file_name.toStdString(), uploaded_file_name.toStdString());
     if (!send_status) {
         show_popUp("We were unable to send your file.\n");
         return ;
@@ -314,7 +315,7 @@ void MainWindow::download_file(const std::string &file_name) {
     if (file_download_path.isEmpty()) {
         return;
     }
-    auto [status, file_to_save] = client.download_file(file_name);
+    auto [status, file_to_save] = client->download_file(file_name);
     if (!status) {
         show_popUp("We were unable to download file.\n");
         return ;
@@ -324,6 +325,10 @@ void MainWindow::download_file(const std::string &file_name) {
         show_popUp("We were unable to save file.\n");
         return ;
     }
+}
+
+Net::Client::Client *MainWindow::get_client() {
+    return client;
 }
 
 QString extract_file_name(const QString &file_path) {

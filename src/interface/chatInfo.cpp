@@ -21,7 +21,7 @@ ChatInfo::ChatInfo(int dialog_id_, MainWindow *mainWin, QWidget *parent) :
     ui->changeNameButton->close();
     ui->changeSnameButton->close();
     this->setWindowTitle("Chat Info");
-    auto [status, dialog] = client.get_dialog_by_id(dialog_id);
+    auto [status, dialog] = mainWin->get_client()->get_dialog_by_id(dialog_id);
     if (!status) {
         auto *popUp = new PopUp("This dialog is corrupted.\nFor help, please contact at.\nWe will try to help you");
         popUp->show();
@@ -50,7 +50,7 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
     setMinimumWidth(400);
     QString cl_name_surname = mainWin->get_client_name_surname();
     setWindowTitle(cl_name_surname);
-    auto [status, all_encr] = client.get_all_encryption();
+    auto [status, all_encr] = mainWin->get_client()->get_all_encryption();
     if (!status) {
         show_popUp("There were problems with new type of encryption.\n");
         return ;
@@ -78,17 +78,17 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
         std::pair<Status, database_interface::User> change_res;
         switch (last_mod) {
         case LAST_MODIFIED::NAME:
-            change_res = client.change_user(mainWin->get_client_id(), "name", new_parametr.toStdString(), -1);
+            change_res = mainWin->get_client()->change_user(mainWin->get_client_id(), "name", new_parametr.toStdString(), -1);
             break;
         case LAST_MODIFIED::SURNAME:
-            change_res = client.change_user(mainWin->get_client_id(), "surname", new_parametr.toStdString(), -1);
+            change_res = mainWin->get_client()->change_user(mainWin->get_client_id(), "surname", new_parametr.toStdString(), -1);
             break;
         case LAST_MODIFIED::LOGIN:
             if (new_parametr.contains("\\")) {
                 show_popUp("'\\' and '/' characters are not allowed in the password.\n");
                 return ;
             }
-            change_res = client.change_user(mainWin->get_client_id(), "login", new_parametr.toStdString(), -1);
+            change_res = mainWin->get_client()->change_user(mainWin->get_client_id(), "login", new_parametr.toStdString(), -1);
             break;
         default:
             break;
@@ -117,12 +117,12 @@ void ChatInfo::on_addMemButton_clicked()
     if (add_mem.isEmpty()) {
         return;
     }
-    auto [status, sec_client] = client.get_user_id_by_login(add_mem.toStdString());
+    auto [status, sec_client] = mainWin->get_client()->get_user_id_by_login(add_mem.toStdString());
     if (!status) {
         show_popUp("User with login '" + sec_client.m_login + "' doesn't exist");
         return ;
     }
-    auto add_st = client.add_user_to_dialog(sec_client.m_user_id, dialog_id);
+    auto add_st = mainWin->get_client()->add_user_to_dialog(sec_client.m_user_id, dialog_id);
     if (add_st) {
         ui->memList->addItem(QString::fromStdString(sec_client.m_name + " " + sec_client.m_surname));
     }
@@ -142,7 +142,7 @@ void ChatInfo::close_group_buttons() {
 
 void ChatInfo::on_encrOptions_activated(int index)
 {
-    auto [status, new_cl_info] = client.change_user(mainWin->get_client_id(), "encryption", "", index + 1);
+    auto [status, new_cl_info] = mainWin->get_client()->change_user(mainWin->get_client_id(), "encryption", "", index + 1);
     if (!status) {
         show_popUp("There were problems with changing encryption.\n");
         return ;
@@ -160,11 +160,11 @@ void ChatInfo::on_memList_itemDoubleClicked(QListWidgetItem *item)
 {
     std::string dialog_name = "d_id:" + std::to_string(dialog_id) + " f_id:" + std::to_string(mainWin->get_client_id()) + " s_id:" + std::to_string(item->type());
     if (mainWin->get_client_id() == owner_id) {
-        auto chat_set = new ChatSetting(item->type(), item->text(), dialog_name, this);
+        auto chat_set = new ChatSetting(mainWin->get_client(), item->type(), item->text(), dialog_name, this);
         chat_set->show();
     }
     else {
-        auto chat_set = new ChatSetting(mainWin->get_client_id(), item->type(), dialog_name);
+        auto chat_set = new ChatSetting(mainWin->get_client(), mainWin->get_client_id(), item->type(), dialog_name);
         chat_set->show();
     }
 }
@@ -173,6 +173,7 @@ void ChatInfo::on_changeNameButton_clicked()
 {
     sure_change->set_text("Enter new name, please.");
     last_mod = LAST_MODIFIED::NAME;
+    sure_change->clear_line();
     sure_change->show();
 }
 
@@ -181,6 +182,7 @@ void ChatInfo::on_changeSnameButton_clicked()
 {
     sure_change->set_text("Enter new surname, please.");
     last_mod = LAST_MODIFIED::SURNAME;
+    sure_change->clear_line();
     sure_change->show();
 }
 
@@ -189,6 +191,7 @@ void ChatInfo::on_changeLogButton_clicked()
 {
     sure_change->set_text("Enter new login, please.");
     last_mod = LAST_MODIFIED::LOGIN;
+    sure_change->clear_line();
     sure_change->show();
 }
 
@@ -201,7 +204,7 @@ int ChatInfo::get_dialog_id() const {
 }
 
 void ChatInfo::update_dialog() {
-    auto [st, users] = client.get_users_in_dialog(dialog_id);
+    auto [st, users] = mainWin->get_client()->get_users_in_dialog(dialog_id);
     if (!st) {
         show_popUp("Problems with showing group members.\n");
         return ;

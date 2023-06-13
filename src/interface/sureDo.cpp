@@ -24,3 +24,12 @@ void SureDo::close_line() const {
 QString SureDo::get_line() const {
     return ui->lineEdit->text();
 }
+
+void SureDo::on_buttonBox_rejected()
+{
+    clear_line();
+}
+
+void SureDo::clear_line() {
+    ui->lineEdit->clear();
+}

@@ -19,7 +19,12 @@ public:
 
     void close_line() const;
 
+    void clear_line();
+
     [[nodiscard]] QString get_line() const;
+
+private slots:
+    void on_buttonBox_rejected();
 
 private:
     Ui::SureDo *ui;

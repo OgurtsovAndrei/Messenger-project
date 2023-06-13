@@ -5,13 +5,10 @@
 #include "interface/welcWindow.h"
 #include "interface/popUp.h"
 
-Net::Client::Client client("localhost", "12345");
-
-Register::Register(QWidget *parent) : QWidget(parent), ui(new Ui::Register) {
-  ui->setupUi(this);
-  this->setWindowTitle("Log in");
-  client.make_secure_connection();
-  setMinimumSize(330, 200);
+Register::Register(Net::Client::Client *client_, QWidget *parent) : client(client_), QWidget(parent), ui(new Ui::Register){
+    ui->setupUi(this);
+    this->setWindowTitle("Log in");
+    setMinimumSize(330, 200);
 }
 
 Register::~Register() { delete ui; }
@@ -26,9 +23,8 @@ void Register::delRegInfo() {
 }
 
 void Register::on_cancelButton_clicked() {
-    auto *welc = new WelcWindow();
+    auto *welc = new WelcWindow(client);
     welc->show();
-    client.close_connection();
     this->close();
 }
 
@@ -41,10 +37,10 @@ void Register::on_readyButton_clicked() {
   if (regVersion && !sign_up()) {
       return ;
   }
-  auto [log_status, cl_user] = client.log_in(login.toStdString(), pas.toStdString());
+  auto [log_status, cl_user] = client->log_in(login.toStdString(), pas.toStdString());
   if (log_status) {
     std::cout << "Logged in -->>" + log_status.message() + "\n";
-    auto *win = new MainWindow();
+    auto *win = new MainWindow(client);
     win->set_client_info(cl_user);
     win->show();
     this->close();
@@ -105,7 +101,7 @@ bool Register::sign_up() {
     if (incorrect_name_or_surname(name) || incorrect_name_or_surname(sname)) {
         return false;
     }
-    auto sign_status = client.sign_up(name.toStdString(),
+    auto sign_status = client->sign_up(name.toStdString(),
                                  sname.toStdString(),
                                  login.toStdString(),
                                  pas.toStdString());

@@ -28,7 +28,7 @@ MesSetting::~MesSetting()
 
 void MesSetting::on_delButton_clicked()
 {
-    auto status = client.delete_message(msg->get_msg_id());
+    auto status = mainWin->get_client()->delete_message(msg->get_msg_id());
     close();
 }
 
