@@ -83,7 +83,7 @@ int main() {
                 std::cout << "Message: " << message.m_text << "\n";
             }
             std::cout << "After send: -------------------------------------- \n";
-            Status send_status = client.send_message_to_another_user(1, 1234567, "A-to-B - Test message!");
+            Status send_status = client.send_message_to_another_user(1, "", "A-to-B - Test message!");
             database_interface::Message sent_message = json::parse(send_status.message());
             std::cout << "Sent message id: " << sent_message.m_message_id << std::endl;
             std::cout << "Sent message: " << sent_message.m_text << " " << sent_message.m_user_id << std::endl;
@@ -136,7 +136,7 @@ int main() {
     }
 
     if (true) {
-        std::cout << "========== Det users in dialog section ==========\n";
+        std::cout << "========== Get users in dialog section ==========\n";
         int dialog_id = 3;
         auto [status, users] = client.get_users_in_dialog(dialog_id);
         if (status) {

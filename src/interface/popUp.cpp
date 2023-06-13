@@ -23,3 +23,7 @@ PopUp::~PopUp()
 {
     delete ui;
 }
+
+void PopUp::change_error_on_success() {
+    ui->mainLabel->setText("SUCCESS");
+}

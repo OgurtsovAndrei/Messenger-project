@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QDialog>
 #include <interface/sureDo.h>
+#include "mesSetting.h"
 
 namespace Ui {
 class ChatSetting;

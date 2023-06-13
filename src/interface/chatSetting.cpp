@@ -3,16 +3,16 @@
 #include "interface/welcWindow.h"
 #include "interface/mainwindow.h"
 #include "interface/sureDo.h"
-#include <QComboBox>
 #include <QDialog>
 
 ChatSetting::ChatSetting(unsigned int client_id, unsigned int sec_cl_id, unsigned int dialog_id, QString sec_cl_name, std::string dialog_name, QWidget *parent) :
-    client_id(client_id), sec_cl_id(sec_cl_id), dialog_id(dialog_id), sec_cl_name(std::move(sec_cl_name)), dialog_name(std::move(dialog_name)), sure_del(new SureDo("")),
+    client_id(client_id), sec_cl_id(sec_cl_id), dialog_id(dialog_id), sec_cl_name(std::move(sec_cl_name)), dialog_name(std::move(dialog_name)), sure_del(new SureDo()),
     QWidget(parent),
     ui(new Ui::ChatSetting)
 {
     ui->setupUi(this);
     setFixedHeight(60);
+    sure_del->close_line();
     this->setWindowFlag(Qt::Popup, true);
     auto cursor_point = QWidget::mapFromGlobal(QCursor::pos());
     setGeometry(cursor_point.x(), cursor_point.y(), 130, 60);
@@ -20,7 +20,7 @@ ChatSetting::ChatSetting(unsigned int client_id, unsigned int sec_cl_id, unsigne
     connect(sure_del, &QDialog::accepted, this, [&]() {
         auto status = client.del_user_from_dialog(sec_cl_id, dialog_id);
         if (!status) {
-            show_popUp("We were unable to delite user from dialog.\n");
+            show_popUp("We were unable to delete user from dialog.\n");
         }
     });
 }

@@ -11,6 +11,7 @@ Register::Register(QWidget *parent) : QWidget(parent), ui(new Ui::Register) {
   ui->setupUi(this);
   this->setWindowTitle("Log in");
   client.make_secure_connection();
+  setMinimumSize(330, 200);
 }
 
 Register::~Register() { delete ui; }
@@ -20,7 +21,7 @@ void Register::delRegInfo() {
   ui->nameLabel->close();
   ui->snameInput->close();
   ui->snameLabel->close();
-  setFixedHeight(200);
+  resize(minimumSizeHint());
   regVersion = false;
 }
 
@@ -52,7 +53,7 @@ void Register::on_readyButton_clicked() {
   }
 }
 
-bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
+bool incorrect_log_or_pas(const QString &log, const QString &pas) {
     std::string popUp_msg;
 //    if (0 < pas.size() && pas.size() < 8) {
 //        popUp_msg += "Password must contain at least 8 characters.\n";
@@ -80,12 +81,12 @@ bool Register::incorrect_log_or_pas(const QString &log, const QString &pas) {
     return false;
 }
 
-bool Register::incorrect_name_or_surname(const QString &name, const QString &sname) {
+bool incorrect_name_or_surname(const QString &name) {
     std::string popUp_msg;
-    if (name.isEmpty() || sname.isEmpty()) {
+    if (name.isEmpty()) {
         popUp_msg += "Name and surname are not allowed to be empty.\n";
     }
-    if (name.contains(" ") || sname.contains(" ")) {
+    if (name.contains(" ")) {
         popUp_msg += "Name and Surname can't contain spaces.\n";
     }
     if (!popUp_msg.empty()) {
@@ -101,7 +102,7 @@ bool Register::sign_up() {
     QString sname = ui->snameInput->text();
     QString login = ui->logInput->text();
     QString pas = ui->pasInput->text();
-    if (incorrect_name_or_surname(name, sname)) {
+    if (incorrect_name_or_surname(name) || incorrect_name_or_surname(sname)) {
         return false;
     }
     auto sign_status = client.sign_up(name.toStdString(),

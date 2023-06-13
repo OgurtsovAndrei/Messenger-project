@@ -1,7 +1,7 @@
 #include "interface/sureDo.h"
 #include "ui_sureDo.h"
 
-SureDo::SureDo(QString text, QWidget *parent) :
+SureDo::SureDo(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SureDo)
 {
@@ -13,6 +13,14 @@ SureDo::~SureDo()
     delete ui;
 }
 
-void SureDo::set_text(QString text) {
+void SureDo::set_text(const QString& text) {
     ui->questLabel->setText(text);
+}
+
+void SureDo::close_line() const {
+    ui->lineEdit->close();
+}
+
+QString SureDo::get_line() const {
+    return ui->lineEdit->text();
 }

@@ -5,6 +5,8 @@
 #include "interface/popUp.h"
 #include <QListWidgetItem>
 #include "interface/chatSetting.h"
+#include <QTimer>
+#include "interface/register.h"
 
 ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     dialog_id(dialog_id),
@@ -17,6 +19,7 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     ui->encrOptions->close();
     ui->changeLogButton->close();
     ui->changeNameButton->close();
+    ui->changeSnameButton->close();
     this->setWindowTitle("Chat Info");
     auto [status, dialog] = client.get_dialog_by_id(dialog_id);
     if (!status) {
@@ -38,18 +41,20 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     else {
         ui->userNameLabel->setText(mainWin->get_second_user_name_surname(dialog_id));
         close_group_buttons();
-        setFixedHeight(75);
+        setMinimumSize(400, 46);
+        resize(QDialog::minimumSizeHint());
     }
 }
 
 
 ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
-    mainWin(mainWin),
+    mainWin(mainWin), sure_change(new SureDo()),
     QDialog(parent), ui(new Ui::ChatInfo)
 {
     ui->setupUi(this);
+    setMinimumWidth(400);
     QString cl_name_surname = mainWin->get_client_name_surname();
-    this->setWindowTitle(cl_name_surname);
+    setWindowTitle(cl_name_surname);
     auto [status, all_encr] = client.get_all_encryption();
     if (!status) {
         show_popUp("There were problems with new type of encryption.\n");
@@ -68,7 +73,41 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
     ui->userNameLabel->setText(cl_name_surname);
     ui->userNameLabel->setWordWrap(true);
     close_group_buttons();
-    setFixedHeight(125);
+    resize(QDialog::minimumSizeHint());
+
+    connect(sure_change, &QDialog::accepted, this, [=]() {
+        QString new_parametr = sure_change->get_line();
+        if (incorrect_name_or_surname(new_parametr)) {
+            return ;
+        }
+        std::pair<Status, database_interface::User> change_res;
+        switch (last_mod) {
+        case LAST_MODIFIED::NAME:
+            change_res = client.change_user(mainWin->get_client_id(), "name", new_parametr.toStdString(), -1);
+            break;
+        case LAST_MODIFIED::SURNAME:
+            change_res = client.change_user(mainWin->get_client_id(), "surname", new_parametr.toStdString(), -1);
+            break;
+        case LAST_MODIFIED::LOGIN:
+            if (new_parametr.contains("\\")) {
+                show_popUp("'\\' and '/' characters are not allowed in the password.\n");
+                return ;
+            }
+            change_res = client.change_user(mainWin->get_client_id(), "login", new_parametr.toStdString(), -1);
+            break;
+        default:
+            break;
+        }
+        last_mod = LAST_MODIFIED::NONE;
+        if (!change_res.first) {
+            show_popUp("There were problems with changing user info.\n");
+            return ;
+        }
+        mainWin->set_client_info(change_res.second);
+        QString cl_name_surname = mainWin->get_client_name_surname();
+        setWindowTitle(cl_name_surname);
+        ui->userNameLabel->setText(cl_name_surname);
+    });
 }
 
 
@@ -113,7 +152,12 @@ void ChatInfo::on_encrOptions_activated(int index)
         show_popUp("There were problems with changing encryption.\n");
         return ;
     }
-    mainWin->set_client_info(new_cl_info);
+    ui->encrOptions->setCurrentIndex(mainWin->get_cl_encryption_id() - 1);
+    auto popUp = new PopUp("Your encryption was changed successful!\n For finish, please reopen 'ИШО'.\n");
+    popUp->setStyleSheet("QWidget {background: #386E7C; border-radius: 6px; }");
+    popUp->adjustSize();
+    popUp->change_error_on_success();
+    popUp->show();
 }
 
 
@@ -128,5 +172,28 @@ void ChatInfo::on_memList_itemDoubleClicked(QListWidgetItem *item)
         auto chat_set = new ChatSetting(mainWin->get_client_id(), item->type(), dialog_name);
         chat_set->show();
     }
+}
+
+void ChatInfo::on_changeNameButton_clicked()
+{
+    sure_change->set_text("Enter new name, please.");
+    last_mod = LAST_MODIFIED::NAME;
+    sure_change->show();
+}
+
+
+void ChatInfo::on_changeSnameButton_clicked()
+{
+    sure_change->set_text("Enter new surname, please.");
+    last_mod = LAST_MODIFIED::SURNAME;
+    sure_change->show();
+}
+
+
+void ChatInfo::on_changeLogButton_clicked()
+{
+    sure_change->set_text("Enter new login, please.");
+    last_mod = LAST_MODIFIED::LOGIN;
+    sure_change->show();
 }
 

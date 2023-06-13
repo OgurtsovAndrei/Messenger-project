@@ -7,6 +7,7 @@
 #include "clientinfo.h"
 #include "database/User.hpp"
 #include "interface/bubble.h"
+#include "interface/sureDo.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -65,6 +66,8 @@ private:
     bool send_edit_mode = false;
     bool file_cancel_mode = false;
     QString uploaded_file_name;
+    SureDo* sure_add_group;
+
 
     void addMessage(
         const QString &msg,
@@ -74,6 +77,8 @@ private:
     );
 
     void sendFile();
+
+    void add_group(const std::string &group_name);
 };
 
 void show_popUp(const std::string &err_msg);

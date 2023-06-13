@@ -2,7 +2,7 @@
 #include "./ui_mainwindow.h"
 #include "Net/NetClient.hpp"
 #include "Status.hpp"
-#include "interface/addGroup.h"
+#include "interface/sureDo.h"
 #include "interface/bubble.h"
 #include "interface/welcWindow.h"
 #include "interface/chatInfo.h"
@@ -22,7 +22,7 @@
 #include <QTextStream>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow) {
+    : QMainWindow(parent), sure_add_group(new SureDo()), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
     this->setWindowTitle("ИШО");
@@ -44,6 +44,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(message_timer, &QTimer::timeout, this, [&]{ update_messages();});
 
     message_timer->start(100);
+
+    connect(sure_add_group, &QDialog::accepted, this, [this]() {
+        this->add_group(sure_add_group->get_line().toStdString());
+    });
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -176,14 +180,22 @@ void MainWindow::change_message(Bubble *bub) {
     }
     send_edit_mode = true;
     ui->sendButton->setText("Edit");
-    std::cout << "send_edit_mode" << send_edit_mode << "\n";
     ui->newMessageInput->setText(bub->get_msg_text());
 }
 
 void MainWindow::on_groupButton_clicked()
 {
-   auto *add_gr = new AddGroup(this);
-   add_gr->show();
+    sure_add_group->set_text("Enter new surname, please.");
+    sure_add_group->show();
+}
+
+void MainWindow::add_group(const std::string &group_name) {
+    if (group_name.empty()) {
+        return;
+    }
+    if (client.make_dialog(group_name, 1000,true, {get_client_id()})) {
+        update_chats();
+    }
 }
 
 void MainWindow::on_chatName_clicked()

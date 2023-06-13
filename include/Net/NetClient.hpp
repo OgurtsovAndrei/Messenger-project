@@ -477,12 +477,6 @@ namespace Net::Client {
             auto response = get_request();
             if (response.get_type() == CHANGE_USER_SUCCESS) {
                 database_interface::User user = response.data;
-                if (changing_param == "encryption") {
-                    DecryptedRequest request(LOG_IN_REQUEST, user);
-                    send_request(request.encrypt(encrypter.value()));
-                    response = get_request();
-                    assert(response.get_type() == LOG_IN_SUCCESS);
-                }
                 return {Status(true), user};
             } else {
                 assert(response.get_type() == CHANGE_USER_FAIL);

@@ -24,13 +24,13 @@ private slots:
 
     bool sign_up();
 
-    bool incorrect_log_or_pas(const QString &log, const QString &pas);
-
-    bool incorrect_name_or_surname(const QString &name, const QString &sname);
-
 private:
     Ui::Register *ui;
     bool regVersion = true;
 };
+
+bool incorrect_log_or_pas(const QString &log, const QString &pas);
+
+bool incorrect_name_or_surname(const QString &name);
 
 #endif // REGISTER_H

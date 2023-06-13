@@ -15,6 +15,8 @@ public:
     explicit PopUp(const std::string& error_msg, QWidget *parent = nullptr);
     ~PopUp();
 
+    void change_error_on_success();
+
 private:
     Ui::PopUp *ui;
 };

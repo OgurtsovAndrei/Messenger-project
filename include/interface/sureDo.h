@@ -12,10 +12,14 @@ class SureDo : public QDialog
     Q_OBJECT
 
 public:
-    explicit SureDo(QString text, QWidget *parent = nullptr);
-    ~SureDo();
+    explicit SureDo(QWidget *parent = nullptr);
+    ~SureDo() override;
 
-    void set_text(QString text);
+    void set_text(const QString& text);
+
+    void close_line() const;
+
+    [[nodiscard]] QString get_line() const;
 
 private:
     Ui::SureDo *ui;

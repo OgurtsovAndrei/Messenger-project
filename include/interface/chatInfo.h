@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <interface/mainwindow.h>
+#include "interface/sureDo.h"
 
 namespace Ui {
 class ChatInfo;
@@ -26,11 +27,20 @@ private slots:
 
     void on_memList_itemDoubleClicked(QListWidgetItem *item);
 
+    void on_changeNameButton_clicked();
+
+    void on_changeSnameButton_clicked();
+
+    void on_changeLogButton_clicked();
+
 private:
     Ui::ChatInfo *ui;
     int dialog_id{};
     int owner_id{};
     MainWindow *mainWin;
+    SureDo* sure_change;
+    enum class LAST_MODIFIED{ NAME, SURNAME, LOGIN, NONE };
+    LAST_MODIFIED last_mod = LAST_MODIFIED::NONE;
 };
 
 #endif // CHATINFO_H

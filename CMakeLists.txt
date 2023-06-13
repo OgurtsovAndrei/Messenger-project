@@ -77,9 +77,10 @@ target_include_directories(BD_Test PRIVATE ${SQLite3_INCLUDE_DIRS})
 #link_directories(/opt/homebrew/opt/sqlite/lib)  # -L
 #
 #add_executable(Net1 src/general/NetTest/NetTest-1.cpp src/server/database/SQL_DataBaseInterface.cpp src/server/database/Dialog.cpp src/server/database/Message.cpp src/server/database/Mock_DataBaseInterface.cpp src/server/database/User.cpp)
-#
+#add_executable(Net2 src/general/NetTest/NetTest-2.cpp)
 #
 #target_link_libraries(Net1 botan-3 sqlite3)
+#target_link_libraries(Net2 botan-3 sqlite3)
 #
 #
 ##for qt compiling
@@ -99,28 +100,31 @@ target_include_directories(BD_Test PRIVATE ${SQLite3_INCLUDE_DIRS})
 #        src/interface/welcWindow.cpp
 #        src/interface/register.cpp
 #        src/interface/bubble.cpp
-#        src/interface/addGroup.cpp
 #        src/interface/chatInfo.cpp
 #        src/interface/mesSetting.cpp
 #        src/interface/popUp.cpp
+#        src/interface/sureDo.cpp
+#        src/interface/chatSetting.cpp
 #
 #        include/interface/welcWindow.h
 #        include/interface/mainwindow.h
 #        include/interface/register.h
 #        include/interface/bubble.h
-#        include/interface/addGroup.h
 #        include/interface/chatInfo.h
 #        include/interface/clientinfo.h
 #        include/interface/mesSetting.h
 #        include/interface/popUp.h
+#        include/interface/sureDo.h
+#        include/interface/chatSetting.h
 #
 #        src/interface/mainwindow.ui
 #        src/interface/register.ui
 #        src/interface/welcWindow.ui
-#        src/interface/addGroup.ui
 #        src/interface/chatInfo.ui
 #        src/interface/mesSetting.ui
 #        src/interface/popUp.ui
+#        src/interface/sureDo.ui
+#        src/interface/chatSetting.ui
 #        )
 #
 #add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})

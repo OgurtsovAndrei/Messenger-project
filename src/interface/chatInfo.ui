@@ -161,23 +161,37 @@ QComboBox QAbstractItemView { border: 2px #DDDDDD; border-radius: 6px; backgroun
     </layout>
    </item>
    <item row="3" column="0" colspan="3">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="spacing">
-      <number>2</number>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <property name="horizontalSpacing">
+      <number>1</number>
      </property>
-     <item>
-      <widget class="QPushButton" name="changeLogButton">
+     <property name="verticalSpacing">
+      <number>3</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="changeNameButton">
        <property name="styleSheet">
         <string notr="true">QPushButton {background: #156060; border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}
 QPushButton:pressed { background-color: #206767; }</string>
        </property>
        <property name="text">
-        <string>change name or surname</string>
+        <string>change name</string>
        </property>
       </widget>
      </item>
-     <item>
-      <widget class="QPushButton" name="changeNameButton">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="changeSnameButton">
+       <property name="styleSheet">
+        <string notr="true">QPushButton {background: #156060; border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}
+QPushButton:pressed { background-color: #206767; }</string>
+       </property>
+       <property name="text">
+        <string>change surname</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QPushButton" name="changeLogButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
          <horstretch>0</horstretch>
