@@ -572,6 +572,9 @@ namespace Net::Server {
             Status current_status = bd_connection.get_message_by_id(old_message);
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
                                               "Invalid Message ID: " + current_status.message());
+            send_response_and_return_if_false(user_connection.user_in_db->m_user_id == old_message.m_user_id, user_connection, CHANGE_MESSAGE_FAIL,
+                                              "Change message exception: client id don't matches message owner id");
+
             old_message.m_text = new_message.m_text;
             current_status = bd_connection.change_message(old_message);
             send_response_and_return_if_false(current_status.correct(), user_connection, CHANGE_MESSAGE_FAIL,
@@ -591,6 +594,11 @@ namespace Net::Server {
                                                        "Cannot delete message: cannot parse json message: bad request or invalid message data: " +
                                                        static_cast<std::string>(exception.what()));
             }
+            Status message_get_status = bd_connection.get_message_by_id(message);
+            send_response_and_return_if_false(message_get_status, user_connection, DELETE_MESSAGE_FAIL,
+                                              "Invalid message id: " + message_get_status.message());
+            send_response_and_return_if_false(user_connection.user_in_db->m_user_id == message.m_user_id, user_connection, DELETE_MESSAGE_FAIL,
+                                                                          "Delete message exception: client id don't matches message owner id");
             Status current_status = bd_connection.del_message(message);
             send_response_and_return_if_false(current_status.correct(), user_connection, DELETE_MESSAGE_FAIL,
                                               "Delete message exception: " + current_status.message());

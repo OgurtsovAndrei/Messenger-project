@@ -4,7 +4,6 @@
 #include "Status.hpp"
 #include "interface/sureDo.h"
 #include "interface/bubble.h"
-#include "interface/welcWindow.h"
 #include "interface/chatInfo.h"
 #include "interface/mesSetting.h"
 #include "interface/popUp.h"
@@ -225,6 +224,7 @@ unsigned int MainWindow::get_client_id() const {
 void MainWindow::set_client_info(const database_interface::User& cl) {
     cl_info = ClientInfo(cl);
     update_chats();
+    update_messages();
 }
 
 void MainWindow::on_profileButton_clicked()
@@ -236,9 +236,12 @@ void MainWindow::on_profileButton_clicked()
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto *bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(item));
-    auto *mess = new MesSetting(bub, this, item->type()); // item->type() = isFile
+    auto *mesSet = new MesSetting(bub, this, item->type()); // item->type() = isFile
+    if (bub->get_owner_id() != get_client_id()) {
+        return ;
+    }
     change_msg_id = bub->get_msg_id();
-    mess->show();
+    mesSet->show();
 }
 
 void show_popUp(const std::string &err_msg) {
