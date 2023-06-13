@@ -11,11 +11,14 @@ MesSetting::MesSetting(Bubble *msg, MainWindow *mainWin, bool isFile, QWidget *p
     ui->setupUi(this);
     if (isFile) {
         ui->editButton->close();
+        if (msg->get_owner_id() != mainWin->get_client_id()) {
+            ui->delButton->close();
+            setFixedHeight(30);
+        }
     }
     else {
         ui->downloadButton->close();
     }
-    setFixedHeight(60);
     this->setWindowFlag(Qt::Popup, true);
     auto cursor_point = QWidget::mapFromGlobal(QCursor::pos());
     setGeometry(cursor_point.x(), cursor_point.y(), 130, 60);

@@ -148,11 +148,7 @@ void ChatInfo::on_encrOptions_activated(int index)
         return ;
     }
     ui->encrOptions->setCurrentIndex(mainWin->get_cl_encryption_id() - 1);
-    auto popUp = new PopUp("Your encryption was changed successful!\n For finish, please reopen 'ИШО'.\n");
-    popUp->setStyleSheet("QWidget {background: #386E7C; border-radius: 6px; }");
-    popUp->adjustSize();
-    popUp->change_error_on_success();
-    popUp->show();
+    show_success_popUp("Your encryption was changed successful!\n For finish, please reopen 'ИШО'.\n");
 }
 
 

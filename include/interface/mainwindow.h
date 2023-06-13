@@ -86,6 +86,8 @@ private:
 
 void show_popUp(const std::string &err_msg);
 
+void show_success_popUp(const std::string &suc_msg);
+
 QString extract_file_name(const QString &file_path);
 
 #endif // MAINWINDOW_H

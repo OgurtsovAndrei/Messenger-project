@@ -236,10 +236,10 @@ void MainWindow::on_profileButton_clicked()
 void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 {
     auto *bub = dynamic_cast<Bubble*>(ui->messagesList->itemWidget(item));
-    auto *mesSet = new MesSetting(bub, this, item->type()); // item->type() = isFile
-    if (bub->get_owner_id() != get_client_id()) {
+    if (bub->get_owner_id() != get_client_id() && !item->type()) {
         return ;
     }
+    auto *mesSet = new MesSetting(bub, this, item->type()); // item->type() = isFile
     change_msg_id = bub->get_msg_id();
     mesSet->show();
 }
@@ -247,6 +247,14 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
 void show_popUp(const std::string &err_msg) {
     auto *popUp = new PopUp(err_msg + "For help, please contact us.\nWe will try to solve your problem");
     popUp->adjustSize();
+    popUp->show();
+}
+
+void show_success_popUp(const std::string &suc_msg) {
+    auto popUp = new PopUp(suc_msg);
+    popUp->setStyleSheet("QWidget {background: #386E7C; border-radius: 6px; }");
+    popUp->adjustSize();
+    popUp->change_error_on_success();
     popUp->show();
 }
 
@@ -328,6 +336,7 @@ void MainWindow::download_file(const std::string &file_name) {
         show_popUp("We were unable to save file.\n");
         return ;
     }
+    show_success_popUp("File '" + file_name + "' was successfully saved to directory.\n DIR: " + file_download_path.toStdString() + "\n");
 }
 
 Net::Client::Client *MainWindow::get_client() {
