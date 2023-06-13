@@ -91,7 +91,7 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent) :
             change_res = mainWin->get_client()->change_user(mainWin->get_client_id(), "login", new_parametr.toStdString(), -1);
             break;
         default:
-            break;
+            return ;
         }
         last_mod = LAST_MODIFIED::NONE;
         if (!change_res.first) {

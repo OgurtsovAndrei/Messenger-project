@@ -23,8 +23,7 @@
    <string notr="true">QWidget {background: #294d62;}
 QPushButton {background-color : #476e6d;border-width: 2px; border-style: solid; border-radius: 10px; padding: 6px;}
 QPushButton:pressed { background-color: #557373; }
-QLineEdit {border-width: 4px; border-colour: #000000
-border-radius: 2px; padding: 6px;}</string>
+QLineEdit {background: #1C3A4B; border-width: 1px; border-color: #091B25; border-bottom-style: solid; border-radius: 5px; padding: 6px;}</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -41,6 +40,12 @@ border-radius: 2px; padding: 6px;}</string>
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>5</width>
+       <height>5</height>
+      </size>
      </property>
      <property name="text">
       <string/>
