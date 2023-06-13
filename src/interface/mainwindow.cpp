@@ -38,10 +38,10 @@ MainWindow::MainWindow(QWidget *parent)
       }
     });
 
-    chat_timer->start(10000);
+    chat_timer->start(1000);
 
     auto *message_timer = new QTimer(this);
-    connect(message_timer, &QTimer::timeout, this, [&]{ update_messages();});
+    connect(message_timer, &QTimer::timeout, this, [&]{ update_messages(false);});
 
     message_timer->start(100);
 
@@ -91,7 +91,11 @@ void MainWindow::on_sendButton_clicked() {
 void MainWindow::update_chats(int n) {
     ui->chatsList->clear();
     auto [status, chats] = client.get_last_n_dialogs(n);
+    bool select_chat_was_delete = true;
     for (const auto &chat : chats) {
+        if (chat.m_dialog_id == select_chat_id) {
+            select_chat_was_delete = false;
+        }
         auto chat_item = new QListWidgetItem(nullptr, chat.m_dialog_id);
         if (chat.m_is_group) {
             chat_item->setText(QString::fromStdString(chat.m_name));
@@ -101,11 +105,17 @@ void MainWindow::update_chats(int n) {
         }
         ui->chatsList->addItem(chat_item);
     }
+    if (select_chat_was_delete && !chats.empty()) {
+        auto *null_item = ui->chatsList->item(0);
+        select_chat_id = null_item->type();
+        ui->chatName->setText(null_item->text());
+        update_messages();
+    }
 }
 
-void MainWindow::update_messages() {
+void MainWindow::update_messages(bool chat_was_changed) {
     auto [status, messages] = client.get_n_messages(200, select_chat_id);
-    if (ui->messagesList->count() == messages.size() && !send_edit_mode) {
+    if (ui->messagesList->count() == messages.size() && !chat_was_changed) {
         return ;
     }
     ui->messagesList->clear();

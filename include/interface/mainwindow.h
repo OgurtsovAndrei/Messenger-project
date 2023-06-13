@@ -29,7 +29,7 @@ public:
 
     void update_chats(int n = 100);
 
-    void update_messages();
+    void update_messages(bool chat_was_changed = true);
 
     void change_message(Bubble *bub);
 

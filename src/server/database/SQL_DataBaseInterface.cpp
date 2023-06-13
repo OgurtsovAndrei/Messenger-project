@@ -533,7 +533,7 @@ Status SQL_BDInterface::del_user_from_dialog(const User &user, Dialog &dialog){
     }
     Status update = update_dialog_time(dialog);
     if (!update.correct()){
-        return Status(false, "Problem in UPDATE in ADD User to Dialog.\nMessage: " + update.message());
+        return Status(false, "Problem in UPDATE in DEL User to Dialog.\nMessage: " + update.message());
     }
     std::string sql = "DELETE FROM UsersAndDialogs WHERE ";
     sql += "UserId=" + std::to_string(user.m_user_id) + " AND ";

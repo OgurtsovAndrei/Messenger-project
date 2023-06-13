@@ -14,9 +14,15 @@ class ChatInfo : public QDialog
     Q_OBJECT
 
 public:
-    explicit ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent = nullptr);
+    explicit ChatInfo(int dialog_id_, MainWindow *mainWin, QWidget *parent = nullptr);
     explicit ChatInfo(MainWindow *mainWin, QWidget *parent = nullptr);
     ~ChatInfo();
+
+    [[nodiscard]] int get_owner_id() const;
+
+    [[nodiscard]] int get_dialog_id() const;
+
+    void update_dialog();
 
 private slots:
     void on_addMemButton_clicked();

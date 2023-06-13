@@ -8,8 +8,8 @@
 #include <QTimer>
 #include "interface/register.h"
 
-ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
-    dialog_id(dialog_id),
+ChatInfo::ChatInfo(int dialog_id_, MainWindow *mainWin, QWidget *parent) :
+    dialog_id(dialog_id_),
     mainWin(mainWin),
     QDialog(parent),
     ui(new Ui::ChatInfo)
@@ -31,12 +31,7 @@ ChatInfo::ChatInfo(int dialog_id, MainWindow *mainWin, QWidget *parent) :
     ui->userNameLabel->setWordWrap(true);
     if (dialog.m_is_group) {
         ui->userNameLabel->setText(QString::fromStdString(dialog.m_name));
-        auto [st, users] = client.get_users_in_dialog(dialog_id);
-        for (const auto &user : users) {
-            auto user_name = QString::fromStdString(user.m_name + " " + user.m_surname);
-            auto mem_item = new QListWidgetItem(user_name, nullptr, user.m_user_id);
-            ui->memList->addItem(mem_item);
-        }
+        update_dialog();
     }
     else {
         ui->userNameLabel->setText(mainWin->get_second_user_name_surname(dialog_id));
@@ -165,7 +160,7 @@ void ChatInfo::on_memList_itemDoubleClicked(QListWidgetItem *item)
 {
     std::string dialog_name = "d_id:" + std::to_string(dialog_id) + " f_id:" + std::to_string(mainWin->get_client_id()) + " s_id:" + std::to_string(item->type());
     if (mainWin->get_client_id() == owner_id) {
-        auto chat_set = new ChatSetting(owner_id, item->type(), dialog_id, item->text(), dialog_name);
+        auto chat_set = new ChatSetting(item->type(), item->text(), dialog_name, this);
         chat_set->show();
     }
     else {
@@ -197,3 +192,24 @@ void ChatInfo::on_changeLogButton_clicked()
     sure_change->show();
 }
 
+int ChatInfo::get_owner_id() const {
+    return owner_id;
+}
+
+int ChatInfo::get_dialog_id() const {
+    return dialog_id;
+}
+
+void ChatInfo::update_dialog() {
+    auto [st, users] = client.get_users_in_dialog(dialog_id);
+    if (!st) {
+        show_popUp("Problems with showing group members.\n");
+        return ;
+    }
+    ui->memList->clear();
+    for (const auto &user : users) {
+        auto user_name = QString::fromStdString(user.m_name + " " + user.m_surname);
+        auto mem_item = new QListWidgetItem(user_name, nullptr, user.m_user_id);
+        ui->memList->addItem(mem_item);
+    }
+}

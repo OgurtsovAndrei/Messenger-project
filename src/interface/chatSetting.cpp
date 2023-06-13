@@ -5,11 +5,13 @@
 #include "interface/sureDo.h"
 #include <QDialog>
 
-ChatSetting::ChatSetting(unsigned int client_id, unsigned int sec_cl_id, unsigned int dialog_id, QString sec_cl_name, std::string dialog_name, QWidget *parent) :
-    client_id(client_id), sec_cl_id(sec_cl_id), dialog_id(dialog_id), sec_cl_name(std::move(sec_cl_name)), dialog_name(std::move(dialog_name)), sure_del(new SureDo()),
+ChatSetting::ChatSetting(unsigned int sec_cl_id_, QString sec_cl_name_, std::string dialog_name_, ChatInfo *chat_info_, QWidget *parent) :
+    sec_cl_id(sec_cl_id_), sec_cl_name(std::move(sec_cl_name_)), dialog_name(std::move(dialog_name_)), chat_info(chat_info_), sure_del(new SureDo()),
     QWidget(parent),
     ui(new Ui::ChatSetting)
 {
+    client_id = chat_info->get_owner_id();
+    dialog_id = chat_info->get_dialog_id();
     ui->setupUi(this);
     setFixedHeight(60);
     sure_del->close_line();
@@ -17,16 +19,17 @@ ChatSetting::ChatSetting(unsigned int client_id, unsigned int sec_cl_id, unsigne
     auto cursor_point = QWidget::mapFromGlobal(QCursor::pos());
     setGeometry(cursor_point.x(), cursor_point.y(), 130, 60);
 
-    connect(sure_del, &QDialog::accepted, this, [&]() {
-        auto status = client.del_user_from_dialog(sec_cl_id, dialog_id);
+    connect(sure_del, &QDialog::accepted, this, [=]() {
+        auto status = client.del_user_from_dialog(static_cast<int>(sec_cl_id), static_cast<int>(dialog_id));
         if (!status) {
             show_popUp("We were unable to delete user from dialog.\n");
         }
+        chat_info->update_dialog();
     });
 }
 
-ChatSetting::ChatSetting(unsigned int client_id, unsigned int sec_cl_id, std::string dialog_name, QWidget *parent) :
-    client_id(client_id), sec_cl_id(sec_cl_id), dialog_name(std::move(dialog_name)),
+ChatSetting::ChatSetting(unsigned int client_id_, unsigned int sec_cl_id_, std::string dialog_name_, QWidget *parent) :
+    client_id(client_id_), sec_cl_id(sec_cl_id_), dialog_name(std::move(dialog_name_)),
     QWidget(parent),
     ui(new Ui::ChatSetting)
 {
@@ -54,7 +57,7 @@ void ChatSetting::on_startChatButton_clicked()
 
 void ChatSetting::on_delMemButton_clicked()
 {
-    if (client_id == sec_cl_id) {
+    if (chat_info->get_owner_id() == sec_cl_id) {
         show_popUp("you cannot remove yourself from the dialog.\n");
         return ;
     }

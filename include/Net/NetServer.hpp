@@ -891,12 +891,18 @@ namespace Net::Server {
         void process_del_user_from_dialog_request(UserConnection &user_connection, DecryptedRequest request) {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               DEL_USER_FROM_DIALOG_FAIL, "It is necessary to log in!");
-            send_response_and_return_if_false(request.data["user_id"].is_number(), user_connection,
-                                              DEL_USER_FROM_DIALOG_FAIL, "User_id should be the integer!!");
-            send_response_and_return_if_false(request.data["dialog_id"].is_number(), user_connection,
-                                              DEL_USER_FROM_DIALOG_FAIL, "Dialog_id should be the integer!!");
-            database_interface::User user_to_add(static_cast<int>(request.data["user_id"]));
-            database_interface::Dialog current_dialog(static_cast<int>(request.data["dialog_id"]));
+            int dialog_id;
+            int user_id;
+            try {
+                nlohmann::from_json(request.data["dialog_id"], dialog_id);
+                nlohmann::from_json(request.data["user_id"], user_id);
+            } catch (std::exception &exception) {
+                user_connection.send_secured_exception(DEL_USER_FROM_DIALOG_FAIL,
+                                                       "Not able to del user in dialog: cannot parse json user: bad request or invalid dialog id, user id: " +
+                                                           static_cast<std::string>(exception.what()));
+            }
+            database_interface::User user_to_add(user_id);
+            database_interface::Dialog current_dialog(dialog_id);
             Status current_status = bd_connection.del_user_from_dialog(user_to_add, current_dialog);
             send_response_and_return_if_false(current_status.correct(), user_connection, DEL_USER_FROM_DIALOG_FAIL,
                                               "Del_user_from_dialog exception: " + current_status.message());
