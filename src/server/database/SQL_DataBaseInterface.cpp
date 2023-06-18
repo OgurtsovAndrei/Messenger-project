@@ -21,7 +21,7 @@ int SQL_BDInterface::last_insert_id = -1;
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("./../bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("./bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 
@@ -228,6 +228,7 @@ Status SQL_BDInterface::get_user_id_by_log(User &user){
     char *message_error;
     std::string string_message;
     User::m_edit_user = &user;
+    std::cout << sql <<'\n';
     int exit =
             sqlite3_exec(m_bd, sql.c_str(), User::callback, 0, &message_error);
     User::m_edit_user = nullptr;
@@ -684,25 +685,24 @@ Status SQL_BDInterface::make_message(Message &message){
         }
         std::string sql =
                 "INSERT INTO Messages (DateTime, Text, File, DialogId, UserId) VALUES (";
-        sql += std::to_string(time(NULL)) + ", '";
-        sql += message.m_text + "', '";
-        sql += message.m_file_name + "', ";
+        sql += std::to_string(time(NULL)) + ", ";
+        sql += "?, ?, ";
         sql += std::to_string(message.m_dialog_id) + ", ";
         sql += std::to_string(message.m_user_id) + ");";
-        char *message_error;
-        std::string string_message;
-        int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-        chars_to_string(message_error, string_message);
-        sqlite3_free(message_error);
-        if (exit != SQLITE_OK){
+        sqlite3_stmt* stmt;
+        sqlite3_prepare_v2(m_bd,sql.c_str(),sql.length(), &stmt, nullptr);
+        sqlite3_bind_text(stmt, 1, message.m_text.c_str(), message.m_text.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, message.m_file_name.c_str(), message.m_file_name.length(), SQLITE_STATIC);
+        int exit = sqlite3_step(stmt);
+        sqlite3_finalize(stmt);
+        if (exit != SQLITE_DONE) {
             return Status(
-                    exit == SQLITE_OK, "Problem in MAKE Message.\nMessage: " + string_message +
-                                       "\n SQL command: " + sql + "\n"
+                    exit == SQLITE_DONE, "Problem in MAKE Message.\nMessage: \n SQL command: " + sql + "\n"
             );
         }
         sql = "SELECT last_insert_rowid();";
-        message_error= nullptr;
-        string_message="";
+        char *message_error = nullptr;
+        std::string string_message = "";
         exit = sqlite3_exec(m_bd, sql.c_str(), SQL_BDInterface::get_last_insert_id, 0, &message_error);
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
@@ -729,21 +729,20 @@ Status SQL_BDInterface::change_message(const Message &new_message){
     std::string sql =
         "REPLACE INTO Messages (id, DateTime, Text, File, DialogId, UserId) VALUES(";
     sql += std::to_string(new_message.m_message_id) + ", ";
-    sql += std::to_string(new_message.m_date_time) + ", '";
-    sql += new_message.m_text + "', '";
-    sql += new_message.m_file_name + "', ";
+    sql += std::to_string(new_message.m_date_time) + ", ";
+    sql += "?, ?, ";
     sql += std::to_string(new_message.m_dialog_id) + ", ";
     sql += std::to_string(new_message.m_user_id) + ");";
-    char *message_error;
-    std::string string_message;
-    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_bd,sql.c_str(),sql.length(), &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, new_message.m_text.c_str(), new_message.m_text.length(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, new_message.m_file_name.c_str(), new_message.m_file_name.length(), SQLITE_STATIC);
+    int exit = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
     return Status(
-            exit == SQLITE_OK, "Problem in CHANGE Message.\nMessage: " +
-                               string_message + "\n SQL command: " + sql +
-                               "\n"
+            exit == SQLITE_DONE , "Problem in CHANGE Message.\nMessage: \n SQL command: " + sql + "\n"
     );
+
 }
 
 Status SQL_BDInterface::get_message_by_id(Message &message) {
