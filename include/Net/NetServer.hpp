@@ -818,7 +818,10 @@ namespace Net::Server {
             send_response_and_return_if_false(user_connection.get_user_in_db_ref().has_value(), user_connection,
                                               CHANGE_USER_FAIL, "It is necessary to log in!");
 
-            database_interface::User old_user = *user_connection.user_in_db;
+            database_interface::User old_user(*user_connection.user_in_db);
+            auto old_user_status = bd_connection.get_user_by_id(old_user);
+            send_response_and_return_if_false(old_user_status.correct(), user_connection, CHANGE_USER_FAIL,
+                                              "Change user, problem in getting user by id: " + old_user_status.message());
             database_interface::User new_user = old_user;
             std::string change_in;
             try {

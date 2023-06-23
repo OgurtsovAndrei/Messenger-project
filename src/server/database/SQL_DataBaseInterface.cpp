@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <ctime>
-#include "../../../include/database/DataBaseInterface.hpp"
+#include "database/DataBaseInterface.hpp"
 #include <botan/argon2.h>
 #include <botan/rng.h>
 #include <botan/system_rng.h>
@@ -21,7 +21,7 @@ int SQL_BDInterface::last_insert_id = -1;
 
 Status SQL_BDInterface::open() {
     int exit = 0;
-    exit = sqlite3_open("./bd/ServerDataBase.db", &m_bd);
+    exit = sqlite3_open("./../bd/ServerDataBase.db", &m_bd);
     return Status(exit == SQLITE_OK, "Problem in database open\n");
 }
 

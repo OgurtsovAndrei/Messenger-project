@@ -40,7 +40,7 @@ MainWindow::MainWindow(Net::Client::Client *client_, QWidget *parent)
     chat_timer->start(1000);
 
     auto *message_timer = new QTimer(this);
-    connect(message_timer, &QTimer::timeout, this, [&]{ update_messages(false);});
+    connect(message_timer, &QTimer::timeout, this, [&]{ update_messages(true);});
 
     message_timer->start(100);
 
@@ -112,11 +112,12 @@ void MainWindow::update_chats(int n) {
     }
 }
 
-void MainWindow::update_messages(bool chat_was_changed) {
+void MainWindow::update_messages(bool update_by_timer) {
     auto [status, messages] = client->get_n_messages(200, select_chat_id);
-    if (ui->messagesList->count() == messages.size() && !chat_was_changed) {
+    if (update_by_timer && messages_all_identical(messages)) {
         return ;
     }
+    msg_in_current_chat = messages;
     ui->messagesList->clear();
     std::reverse(messages.begin(), messages.end());
     std::sort(messages.begin(), messages.end(), [](const database_interface::Message& a, const database_interface::Message& b) {
@@ -131,6 +132,27 @@ void MainWindow::update_messages(bool chat_was_changed) {
         ClientInfo sec_user_info(user);
         addMessage(QString::fromStdString(msg.m_text), msg.m_message_id, sec_user_info, (!msg.m_file_name.empty()));
     }
+}
+
+bool MainWindow::messages_all_identical(const std::vector<database_interface::Message> &messages) {
+    if (messages.size() != msg_in_current_chat.size()) {
+        return false;
+    }
+    for (int i = 0; i < messages.size(); ++i) {
+        if (messages[i].m_text != msg_in_current_chat[i].m_text) {
+            return false;
+        }
+    }
+    return true;
+}
+
+QString extract_file_name(const QString &file_path) {
+    QRegularExpression re("(/([^/]*$))");
+    QRegularExpressionMatch match_file_name = re.match(file_path);
+    if (!match_file_name.hasMatch()) {
+        show_popUp("File doesn't contain name.\n");
+    }
+    return match_file_name.captured(2);
 }
 
 void MainWindow::on_chatsList_itemClicked(QListWidgetItem *item)
@@ -148,8 +170,7 @@ void MainWindow::on_findButton_clicked()
     }
     auto [status, sec_client] = client->get_user_id_by_login(find_chat);
     if (!status) {
-        auto *popUp = new PopUp("Sorry, user with login '" + find_chat + "' doesn't exists", this);
-        popUp->show();
+        show_popUp("Sorry, user with login '" + find_chat + "' doesn't exists");
         return;
     }
     unsigned int sec_id = sec_client.m_user_id;
@@ -213,7 +234,7 @@ void MainWindow::on_chatName_clicked()
     if (select_chat_id == -1) {
         return;
     }
-    auto *ch_info = new ChatInfo(select_chat_id, this);
+    auto *ch_info = new ChatInfo(select_chat_id, this, this);
     ch_info->show();
 }
 
@@ -229,7 +250,7 @@ void MainWindow::set_client_info(const database_interface::User& cl) {
 
 void MainWindow::on_profileButton_clicked()
 {
-    auto *ch_info = new ChatInfo(this);
+    auto *ch_info = new ChatInfo(this, this);
     ch_info->show();
 }
 
@@ -239,7 +260,7 @@ void MainWindow::on_messagesList_itemDoubleClicked(QListWidgetItem *item)
     if (bub->get_owner_id() != get_client_id() && !item->type()) {
         return ;
     }
-    auto *mesSet = new MesSetting(bub, this, item->type()); // item->type() = isFile
+    auto *mesSet = new MesSetting(bub, this, item->type(), this); // item->type() = isFile
     change_msg_id = bub->get_msg_id();
     mesSet->show();
 }
@@ -341,13 +362,4 @@ void MainWindow::download_file(const std::string &file_name) {
 
 Net::Client::Client *MainWindow::get_client() {
     return client;
-}
-
-QString extract_file_name(const QString &file_path) {
-    QRegularExpression re("(/([^/]*$))");
-    QRegularExpressionMatch match_file_name = re.match(file_path);
-    if (!match_file_name.hasMatch()) {
-        show_popUp("File doesn't contain name.\n");
-    }
-    return match_file_name.captured(2);
 }

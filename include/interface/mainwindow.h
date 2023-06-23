@@ -32,7 +32,7 @@ public:
 
     void update_chats(int n = 100);
 
-    void update_messages(bool chat_was_changed = true);
+    void update_messages(bool update_by_timer = false);
 
     void change_message(Bubble *bub);
 
@@ -70,6 +70,7 @@ private:
     bool file_cancel_mode = false;
     QString uploaded_file_name;
     SureDo* sure_add_group;
+    std::vector<database_interface::Message> msg_in_current_chat;
 
 
     void addMessage(
@@ -82,12 +83,12 @@ private:
     void sendFile();
 
     void add_group(const std::string &group_name);
+
+    [[nodiscard]] bool messages_all_identical(const std::vector<database_interface::Message> &messages);
 };
 
 void show_popUp(const std::string &err_msg);
 
 void show_success_popUp(const std::string &suc_msg);
-
-QString extract_file_name(const QString &file_path);
 
 #endif // MAINWINDOW_H

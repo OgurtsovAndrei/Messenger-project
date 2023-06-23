@@ -29,7 +29,7 @@ ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int sec_cl_id_, 
 }
 
 ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int client_id_, unsigned int sec_cl_id_, std::string dialog_name_, QWidget *parent) :
-    client_id(client_id_), sec_cl_id(sec_cl_id_), dialog_name(std::move(dialog_name_)),
+    client(client_), client_id(client_id_), sec_cl_id(sec_cl_id_), dialog_name(std::move(dialog_name_)),
     QWidget(parent),
     ui(new Ui::ChatSetting)
 {
