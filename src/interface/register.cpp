@@ -94,10 +94,10 @@ bool incorrect_name_or_surname(const QString &name) {
 }
 
 bool Register::sign_up() {
-    QString name = ui->nameInput->text();
-    QString sname = ui->snameInput->text();
-    QString login = ui->logInput->text();
-    QString pas = ui->pasInput->text();
+    QString name = ui->nameInput->text().trimmed();
+    QString sname = ui->snameInput->text().trimmed();
+    QString login = ui->logInput->text().trimmed();
+    QString pas = ui->pasInput->text().trimmed();
     if (incorrect_name_or_surname(name) || incorrect_name_or_surname(sname)) {
         return false;
     }
@@ -110,6 +110,7 @@ bool Register::sign_up() {
         if (sign_status.message() == "Problem in MAKE User.\nMessage: login is already taken\n") {
             err = "This login is already in use.\nPlease try again.\n";
         }
+        std::cout << sign_status.message() << "\n";
         show_popUp(err);
         return false;
     }
