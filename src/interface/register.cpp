@@ -51,9 +51,9 @@ void Register::on_readyButton_clicked() {
 
 bool incorrect_log_or_pas(const QString &log, const QString &pas) {
     std::string popUp_msg;
-//    if (0 < pas.size() && pas.size() < 8) {
-//        popUp_msg += "Password must contain at least 8 characters.\n";
-//    }
+    if (0 < pas.size() && pas.size() < 8) {
+        popUp_msg += "Password must contain at least 8 characters.\n";
+    }
     if (pas.contains('\\') || pas.contains('/')) {
         popUp_msg += "'\\' and '/' characters are not allowed in the password.\n";
     }
