@@ -21,3 +21,6 @@
 
 
 # Скриншоты
+![image](https://github.com/OgurtsovAndrei/Messenger-project/assets/75212610/c0be8206-75a3-49db-b421-aebd5297fa71)
+![image](https://github.com/OgurtsovAndrei/Messenger-project/assets/75212610/f33ebe6c-6d57-48be-8dd3-aee0d144cf2d)
+![image](https://github.com/OgurtsovAndrei/Messenger-project/assets/75212610/d23a810f-15f9-494e-a8c5-e60d4d95c7ff)
