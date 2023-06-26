@@ -25,15 +25,18 @@ MainWindow::MainWindow(Net::Client::Client *client_, QWidget *parent)
     ui->setupUi(this);
 
     this->setWindowTitle("ИШО");
-    update_chats();
+    std::cout << get_client_name_surname().toStdString() << "\n";
+
+    auto *chat_timer_update_all = new QTimer(this);
+    connect(chat_timer_update_all, &QTimer::timeout, this, [&]{update_chats(); });
+
+    chat_timer_update_all->start(10000);
 
     auto *chat_timer = new QTimer(this);
     connect(chat_timer, &QTimer::timeout, this, [&]{
       auto [status, chats] = client->get_last_n_dialogs(100);
       if (chats.size() != ui->chatsList->count()) {
-          std::cout << "Chats updates...\n";
           update_chats();
-          std::cout << "Finish \n";
       }
     });
 
@@ -88,6 +91,7 @@ void MainWindow::on_sendButton_clicked() {
 }
 
 void MainWindow::update_chats(int n) {
+    std::cout << "Chats updates...\n";
     ui->chatsList->clear();
     auto [status, chats] = client->get_last_n_dialogs(n);
     bool select_chat_was_delete = true;
@@ -110,10 +114,11 @@ void MainWindow::update_chats(int n) {
         ui->chatName->setText(null_item->text());
         update_messages();
     }
+    std::cout << "Finish \n";
 }
 
-void MainWindow::update_messages(bool update_by_timer) {
-    auto [status, messages] = client->get_n_messages(200, select_chat_id);
+void MainWindow::update_messages(bool update_by_timer, int n) {
+    auto [status, messages] = client->get_n_messages(n, select_chat_id);
     if (update_by_timer && messages_all_identical(messages)) {
         return ;
     }
@@ -177,6 +182,7 @@ void MainWindow::on_findButton_clicked()
     std::string dialog_name = cl_info.cl_login + "+" + sec_client.m_login;
     if (client->make_dialog(dialog_name, 1000, false, {get_client_id(), sec_id})) {
         update_chats();
+        ui->findLine->clear();
     }
     else {
         show_popUp("We were unable to create new dialog.\n");
@@ -215,7 +221,7 @@ void MainWindow::change_message(Bubble *bub) {
 
 void MainWindow::on_groupButton_clicked()
 {
-    sure_add_group->set_text("Enter new surname, please.");
+    sure_add_group->set_text("Enter group name, please.");
     sure_add_group->clear_line();
     sure_add_group->show();
 }

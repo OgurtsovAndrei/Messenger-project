@@ -32,7 +32,7 @@ public:
 
     void update_chats(int n = 100);
 
-    void update_messages(bool update_by_timer = false);
+    void update_messages(bool update_by_timer = false, int n = 1000);
 
     void change_message(Bubble *bub);
 

@@ -125,6 +125,7 @@ void ChatInfo::on_addMemButton_clicked()
     auto add_st = mainWin->get_client()->add_user_to_dialog(sec_client.m_user_id, dialog_id);
     if (add_st) {
         ui->memList->addItem(QString::fromStdString(sec_client.m_name + " " + sec_client.m_surname));
+        ui->addMemLine->clear();
     }
     else {
         show_popUp("There were problems with add new member.\n");

@@ -29,7 +29,7 @@ void Register::on_cancelButton_clicked() {
 }
 
 void Register::on_readyButton_clicked() {
-  QString login = ui->logInput->text();
+  QString login = ui->logInput->text().trimmed();
   QString pas = ui->pasInput->text();
   if (incorrect_log_or_pas(login, pas)) {
     return;
@@ -97,7 +97,7 @@ bool Register::sign_up() {
     QString name = ui->nameInput->text().trimmed();
     QString sname = ui->snameInput->text().trimmed();
     QString login = ui->logInput->text().trimmed();
-    QString pas = ui->pasInput->text().trimmed();
+    QString pas = ui->pasInput->text();
     if (incorrect_name_or_surname(name) || incorrect_name_or_surname(sname)) {
         return false;
     }
@@ -110,7 +110,6 @@ bool Register::sign_up() {
         if (sign_status.message() == "Problem in MAKE User.\nMessage: login is already taken\n") {
             err = "This login is already in use.\nPlease try again.\n";
         }
-        std::cout << sign_status.message() << "\n";
         show_popUp(err);
         return false;
     }
