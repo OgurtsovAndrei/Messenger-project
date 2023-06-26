@@ -1,8 +1,8 @@
 # Messenger-project
 Это проект, был реальзован тремя студентами 1-го курса НИУ ВШЭ СПБ:
- * Огурцов Андрей [@OgurtsovAndrei]()
- * Иванова Арина @Arishkamu
- * Шевченко Будимир @BrudLord
+ * Огурцов Андрей [@OgurtsovAndrei](https://github.com/OgurtsovAndrei)
+ * Иванова Арина [@Arishkamu](https://github.com/Arishkamu)
+ * Шевченко Будимир [@BrudLord](https://github.com/BrudLord)
  
  Наш метор: Архаров Андрей
 
@@ -49,22 +49,27 @@
 ## Подробное описание
 ### Создать профиль
 Для начала необходимо создать профиль - придумать уникальный никнейм и пароль. Имя и фимилия могут быть любыми. Если профиль уже создан, можно зайти используя свой логин и пароль.
+
 <img width="420" alt="Register" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/4a9b1cf4-03b5-427b-a8a7-5b2154b4c878">
 
 ### Диалог и переписка
 Введите логин пользователя в поисковую строку, чтобы начать с ним новый диалог или выбирете и прожолжите уже существующий
 Используя кнопки send и file отправляйте сообщения и файлы своим друзьям
+
 <img width="678" alt="mainWindow" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/6569167c-f5ca-414f-a3aa-bb5094803813">
 
 ### Редактирование сообщений
 Дважды нажмите на сообщение, чтоюы получить возможность его редактирования и удаления, а также для загрузки файлов
+
 <img width="382" alt="ChangeMsg" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/121cb8cc-012c-4d1f-9930-ac380f4ccc7f">
 
 ### Профиль
 В левом нижнем углу доступно окно Profile. Нажав на него пользователь получает информацию о своем аккунте а также возможность изменить тип шифрования, имя, фамилию или логин
+
 <img width="797" alt="userProfile" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/81591d3a-e492-40b8-9f22-764cac2f01d2">
 
 ### Группы
 Используя кнопку Add Group можно создать новую группу и добавить туда других пользователей для совместной переписки
+
 <img width="256" alt="AddGroup" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/7eacea3b-15bc-4ab5-843d-bcdbfd58d2ad">
 <img width="418" alt="GropInfo" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/651f75ce-aad0-4c43-9e3b-bbfa6075ca5c">
