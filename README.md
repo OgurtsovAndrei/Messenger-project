@@ -35,6 +35,6 @@
 
 
 # Скриншоты
-![image](![welcome](https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/1c2289b3-3710-4b3b-bfbd-cfe828f5ac53)
-![image](![mainWindow](https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/71a05482-1749-4d4c-87ad-e6392b7bb00c)
-![image](![userProfile](https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/a1be0e88-652f-47f6-8bd9-bde02ceb60bd)
+<img width="420" alt="Register" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/4a9b1cf4-03b5-427b-a8a7-5b2154b4c878">
+<img width="678" alt="mainWindow" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/6569167c-f5ca-414f-a3aa-bb5094803813">
+<img width="797" alt="userProfile" src="https://github.com/OgurtsovAndrei/Messenger-project/assets/22873912/81591d3a-e492-40b8-9f22-764cac2f01d2">
