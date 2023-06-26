@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>791</width>
+    <height>579</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QPushButton {background-color : #486E65;border-width: 2px; border-style: solid; border-radius: 5px; padding: 6px;}
+QPushButton:pressed { background-color: #96a7a1; }
+QTextEdit {background-color : #294d52;border-width: 2px; 
+border-radius: 5px; padding: 6px;}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_3">
+    <property name="leftMargin">
+     <number>2</number>
+    </property>
+    <property name="topMargin">
+     <number>2</number>
+    </property>
+    <property name="rightMargin">
+     <number>2</number>
+    </property>
+    <property name="bottomMargin">
+     <number>2</number>
+    </property>
+    <property name="spacing">
+     <number>3</number>
+    </property>
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item row="1" column="0" colspan="2">
+       <widget class="QListWidget" name="chatsList">
+        <property name="styleSheet">
+         <string notr="true">.QListWidget {background-color : #294d62;border-width: 2px; 
+        border-radius: 5px; padding: 6px;}</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLineEdit" name="findLine">
+        <property name="styleSheet">
+         <string notr="true">QLineEdit {background-color : #396d75; border-width: 1px; 
+border-radius: 5px; padding: 6px;}</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="findButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton:pressed { background-color: #96a7a1; }</string>
+        </property>
+        <property name="text">
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="leftBottomLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="profileButton">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Profile</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="groupButton">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>New Group</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item row="0" column="1">
+     <layout class="QGridLayout" name="messageLayout">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="horizontalSpacing">
+       <number>0</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>1</number>
+      </property>
+      <item row="2" column="1">
+       <widget class="QTextEdit" name="newMessageInput">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Ignored">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">.QTextEdit {background-color : #294d52;border-width: 2px; 
+border-radius: 5px; padding: 6px;}</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <layout class="QHBoxLayout" name="fileLayput">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="fileButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton {margin: 0px}</string>
+          </property>
+          <property name="text">
+           <string>File</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0" colspan="5">
+       <widget class="QPushButton" name="chatName">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {background-color : #3A6476;border-width: 2px; 
+        border-radius: 5px; padding: 6px;}
+QPushButton:pressed { background-color: #96a7a1; }</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <layout class="QHBoxLayout" name="sendButtonLayout">
+        <item>
+         <widget class="QPushButton" name="sendButton">
+          <property name="styleSheet">
+           <string notr="true">QPushButton {margin: 0px}</string>
+          </property>
+          <property name="text">
+           <string>Send</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" colspan="5">
+       <widget class="QListWidget" name="messagesList">
+        <property name="styleSheet">
+         <string notr="true">.QListWidget {background-color : #294d72;border-width: 2px; 
+        border-radius: 5px; padding: 6px;}</string>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>10</width>
+          <height>10</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>791</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
