@@ -1,10 +1,10 @@
-#ifndef BUBBLE_H
-#define BUBBLE_H
+#ifndef BUBBLE_HPP
+#define BUBBLE_HPP
 
 #include <QGridLayout>
+#include <QLabel>
 #include <QString>
 #include <QWidget>
-#include <QLabel>
 #include "clientinfo.h"
 
 class Bubble : public QWidget {
@@ -16,11 +16,23 @@ private:
     unsigned int owner_id;
     unsigned int msg_id;
 
-//    void set_settings_layout_name(const QString &cl_name_sur, const bool &incoming);
+    //    void set_settings_layout_name(const QString &cl_name_sur, const bool
+    //    &incoming);
 public:
-    explicit Bubble(const QString &msg_, unsigned int msg_id_, const ClientInfo &cl_info, const bool &incoming_);
+    explicit Bubble(
+        const QString &msg_,
+        unsigned int msg_id_,
+        const ClientInfo &cl_info,
+        const bool &incoming_
+    );
 
-    explicit Bubble(const QString &file_name_, unsigned int msg_id_, const ClientInfo &cl_info, const bool &incoming_, bool isFile_);
+    explicit Bubble(
+        const QString &file_name_,
+        unsigned int msg_id_,
+        const ClientInfo &cl_info,
+        const bool &incoming_,
+        bool isFile_
+    );
 
     [[nodiscard]] QString get_msg_text() const;
 
@@ -29,4 +41,4 @@ public:
     [[nodiscard]] unsigned int get_msg_id() const;
 };
 
-#endif // BUBBLE_H
+#endif  // BUBBLE_HPP

@@ -1,15 +1,26 @@
 #include "interface/chatSetting.h"
-#include "ui_chatSetting.h"
-#include "interface/welcWindow.h"
+#include <QDialog>
 #include "interface/mainwindow.h"
 #include "interface/sureDo.h"
-#include <QDialog>
+#include "interface/welcWindow.h"
+#include "ui_chatSetting.h"
 
-ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int sec_cl_id_, QString sec_cl_name_, std::string dialog_name_, ChatInfo *chat_info_, QWidget *parent) :
-    client(client_), sec_cl_id(sec_cl_id_), sec_cl_name(std::move(sec_cl_name_)), dialog_name(std::move(dialog_name_)), chat_info(chat_info_), sure_del(new SureDo()),
-    QWidget(parent),
-    ui(new Ui::ChatSetting)
-{
+ChatSetting::ChatSetting(
+    Net::Client::Client *client_,
+    unsigned int sec_cl_id_,
+    QString sec_cl_name_,
+    std::string dialog_name_,
+    ChatInfo *chat_info_,
+    QWidget *parent
+)
+    : client(client_),
+      sec_cl_id(sec_cl_id_),
+      sec_cl_name(std::move(sec_cl_name_)),
+      dialog_name(std::move(dialog_name_)),
+      chat_info(chat_info_),
+      sure_del(new SureDo()),
+      QWidget(parent),
+      ui(new Ui::ChatSetting) {
     client_id = chat_info->get_owner_id();
     dialog_id = chat_info->get_dialog_id();
     ui->setupUi(this);
@@ -20,7 +31,9 @@ ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int sec_cl_id_, 
     setGeometry(cursor_point.x(), cursor_point.y(), 130, 60);
 
     connect(sure_del, &QDialog::accepted, this, [=]() {
-        auto status = client->del_user_from_dialog(static_cast<int>(sec_cl_id), static_cast<int>(dialog_id));
+        auto status = client->del_user_from_dialog(
+            static_cast<int>(sec_cl_id), static_cast<int>(dialog_id)
+        );
         if (!status) {
             show_popUp("We were unable to delete user from dialog.\n");
         }
@@ -28,11 +41,19 @@ ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int sec_cl_id_, 
     });
 }
 
-ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int client_id_, unsigned int sec_cl_id_, std::string dialog_name_, QWidget *parent) :
-    client(client_), client_id(client_id_), sec_cl_id(sec_cl_id_), dialog_name(std::move(dialog_name_)),
-    QWidget(parent),
-    ui(new Ui::ChatSetting)
-{
+ChatSetting::ChatSetting(
+    Net::Client::Client *client_,
+    unsigned int client_id_,
+    unsigned int sec_cl_id_,
+    std::string dialog_name_,
+    QWidget *parent
+)
+    : client(client_),
+      client_id(client_id_),
+      sec_cl_id(sec_cl_id_),
+      dialog_name(std::move(dialog_name_)),
+      QWidget(parent),
+      ui(new Ui::ChatSetting) {
     ui->setupUi(this);
     ui->delMemButton->close();
     setFixedHeight(30);
@@ -41,28 +62,25 @@ ChatSetting::ChatSetting(Net::Client::Client *client_, unsigned int client_id_, 
     setGeometry(cursor_point.x(), cursor_point.y(), 130, 30);
 }
 
-ChatSetting::~ChatSetting()
-{
-    delete ui;
-}
+ChatSetting::~ChatSetting() { delete ui; }
 
-void ChatSetting::on_startChatButton_clicked()
-{
-    if (!client->make_dialog(dialog_name, 1000, false, {client_id, sec_cl_id})) {
+void ChatSetting::on_startChatButton_clicked() {
+    if (!client->make_dialog(
+            dialog_name, 1000, false, {client_id, sec_cl_id}
+        )) {
         show_popUp("We were unable to create new dialog.\n");
     }
     close();
 }
 
-
-void ChatSetting::on_delMemButton_clicked()
-{
+void ChatSetting::on_delMemButton_clicked() {
     if (chat_info->get_owner_id() == sec_cl_id) {
         show_popUp("you cannot remove yourself from the dialog.\n");
-        return ;
+        return;
     }
-    sure_del->set_text("Are you sure you want to remove '" + sec_cl_name + "' from dialog?");
+    sure_del->set_text(
+        "Are you sure you want to remove '" + sec_cl_name + "' from dialog?"
+    );
     sure_del->clear_line();
     sure_del->show();
 }
-

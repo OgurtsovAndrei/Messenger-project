@@ -1,28 +1,34 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAINWINDOW_HPP
+#define MAINWINDOW_HPP
 
-#include <QMainWindow>
 #include <QListWidgetItem>
+#include <QMainWindow>
 #include <QMap>
+#include "Net/NetClient.hpp"
 #include "clientinfo.h"
 #include "database/User.hpp"
 #include "interface/bubble.h"
 #include "interface/sureDo.h"
-#include "Net/NetClient.hpp"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+
+namespace Ui {
+class MainWindow;
+}
+
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(Net::Client::Client *client_, QWidget *parent = nullptr);
+    explicit MainWindow(
+        Net::Client::Client *client_,
+        QWidget *parent = nullptr
+    );
     ~MainWindow();
 
-    void set_client_info(const database_interface::User& cl);
+    void set_client_info(const database_interface::User &cl);
 
     [[nodiscard]] unsigned int get_client_id() const;
 
@@ -69,9 +75,8 @@ private:
     bool send_edit_mode = false;
     bool file_cancel_mode = false;
     QString uploaded_file_name;
-    SureDo* sure_add_group;
+    SureDo *sure_add_group;
     std::vector<database_interface::Message> msg_in_current_chat;
-
 
     void addMessage(
         const QString &msg,
@@ -84,11 +89,13 @@ private:
 
     void add_group(const std::string &group_name);
 
-    [[nodiscard]] bool messages_all_identical(const std::vector<database_interface::Message> &messages);
+    [[nodiscard]] bool messages_all_identical(
+        const std::vector<database_interface::Message> &messages
+    );
 };
 
 void show_popUp(const std::string &err_msg);
 
 void show_success_popUp(const std::string &suc_msg);
 
-#endif // MAINWINDOW_H
+#endif  // MAINWINDOW_HPP

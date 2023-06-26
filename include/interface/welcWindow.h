@@ -1,5 +1,5 @@
-#ifndef WELCWINDOW_H
-#define WELCWINDOW_H
+#ifndef WELCWINDOW_HPP
+#define WELCWINDOW_HPP
 
 #include <QWidget>
 #include "Net/NetClient.hpp"
@@ -8,12 +8,14 @@ namespace Ui {
 class WelcWindow;
 }
 
-class WelcWindow : public QWidget
-{
+class WelcWindow : public QWidget {
     Q_OBJECT
 
 public:
-    explicit WelcWindow(Net::Client::Client *client_, QWidget *parent = nullptr);
+    explicit WelcWindow(
+        Net::Client::Client *client_,
+        QWidget *parent = nullptr
+    );
     ~WelcWindow();
 
 private slots:
@@ -24,4 +26,4 @@ private:
     Net::Client::Client *client;
 };
 
-#endif // WELCWINDOW_H
+#endif  // WELCWINDOW_HPP

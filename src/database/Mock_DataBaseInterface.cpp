@@ -26,7 +26,7 @@ Status Mock_BDInterface::get_user_by_log_pas(User &user) {
     return Status(false, "Can not get user in mock_bd");
 }
 
-Status Mock_BDInterface::get_user_id_by_log(User &user){
+Status Mock_BDInterface::get_user_id_by_log(User &user) {
     if (users[user.m_login].m_user_id != -1) {
         user.m_user_id = users[user.m_login].m_user_id;
         return Status(true, "Get user id in mock_bd");
@@ -55,7 +55,10 @@ Status Mock_BDInterface::make_dialog_request(
     return Status(true, "Make dialog request in mock_bd");
 }
 
-Status Mock_BDInterface::get_user_dialog_requests(const User &user, std::vector<User> &requests) {
+Status Mock_BDInterface::get_user_dialog_requests(
+    const User &user,
+    std::vector<User> &requests
+) {
     requests.clear();
     for (auto it = all_requests[user.m_login].begin();
          it != all_requests[user.m_login].end(); it++) {
@@ -78,11 +81,13 @@ Status Mock_BDInterface::close_dialog_request(
     return Status(false, "Can not find request in mock_bd");
 }
 
-
-Status Mock_BDInterface::get_encryption_name_by_id(int encryption_id, std::string &encryption_name){
+Status Mock_BDInterface::get_encryption_name_by_id(
+    int encryption_id,
+    std::string &encryption_name
+) {
     if (encryption_id == 1) {
         encryption_name = "RSA";
-    } else if (encryption_id == 2){
+    } else if (encryption_id == 2) {
         encryption_name = "DSA";
     } else {
         encryption_name = "DH";

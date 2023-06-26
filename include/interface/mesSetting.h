@@ -1,21 +1,25 @@
-#ifndef MESSETTING_H
-#define MESSETTING_H
+#ifndef MESSETTING_HPP
+#define MESSETTING_HPP
 
 #include <QWidget>
 #include "QListWidgetItem"
-#include "mainwindow.h"
 #include "interface/bubble.h"
+#include "mainwindow.h"
 
 namespace Ui {
 class MesSetting;
 }
 
-class MesSetting : public QWidget
-{
+class MesSetting : public QWidget {
     Q_OBJECT
 
 public:
-    explicit MesSetting(Bubble *msg, MainWindow *mainWin, bool isFile, QWidget *parent = nullptr);
+    explicit MesSetting(
+        Bubble *msg,
+        MainWindow *mainWin,
+        bool isFile,
+        QWidget *parent = nullptr
+    );
     ~MesSetting();
 
 private slots:
@@ -32,4 +36,4 @@ private:
     MainWindow *mainWin;
 };
 
-#endif // MESSETTING_H
+#endif  // MESSETTING_HPP

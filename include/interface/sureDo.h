@@ -1,5 +1,5 @@
-#ifndef SUREDO_H
-#define SUREDO_H
+#ifndef SUREDO_HPP
+#define SUREDO_HPP
 
 #include <QDialog>
 
@@ -7,15 +7,14 @@ namespace Ui {
 class SureDo;
 }
 
-class SureDo : public QDialog
-{
+class SureDo : public QDialog {
     Q_OBJECT
 
 public:
     explicit SureDo(QWidget *parent = nullptr);
     ~SureDo() override;
 
-    void set_text(const QString& text);
+    void set_text(const QString &text);
 
     void close_line() const;
 
@@ -30,4 +29,4 @@ private:
     Ui::SureDo *ui;
 };
 
-#endif // SUREDO_H
+#endif  // SUREDO_HPP

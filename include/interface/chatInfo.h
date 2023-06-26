@@ -1,20 +1,23 @@
-#ifndef CHATINFO_H
-#define CHATINFO_H
+#ifndef CHATINFO_HPP
+#define CHATINFO_HPP
 
-#include <QDialog>
 #include <interface/mainwindow.h>
+#include <QDialog>
 #include "interface/sureDo.h"
 
 namespace Ui {
 class ChatInfo;
 }
 
-class ChatInfo : public QDialog
-{
+class ChatInfo : public QDialog {
     Q_OBJECT
 
 public:
-    explicit ChatInfo(int dialog_id_, MainWindow *mainWin, QWidget *parent = nullptr);
+    explicit ChatInfo(
+        int dialog_id_,
+        MainWindow *mainWin,
+        QWidget *parent = nullptr
+    );
     explicit ChatInfo(MainWindow *mainWin, QWidget *parent = nullptr);
     ~ChatInfo();
 
@@ -44,9 +47,9 @@ private:
     int dialog_id{};
     int owner_id{};
     MainWindow *mainWin;
-    SureDo* sure_change;
-    enum class LAST_MODIFIED{ NAME, SURNAME, LOGIN, NONE };
+    SureDo *sure_change;
+    enum class LAST_MODIFIED { NAME, SURNAME, LOGIN, NONE };
     LAST_MODIFIED last_mod = LAST_MODIFIED::NONE;
 };
 
-#endif // CHATINFO_H
+#endif  // CHATINFO_HPP
