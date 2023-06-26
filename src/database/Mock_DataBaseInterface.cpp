@@ -39,48 +39,6 @@ Status Mock_BDInterface::del_user(const User &user) {
     return Status(true, "Delete user in mock_bd");
 }
 
-Status Mock_BDInterface::make_dialog_request(
-    const User &from_user,
-    const User &to_user
-) {
-    for (auto it = all_requests[to_user.m_login].begin();
-         it != all_requests[to_user.m_login].end(); it++) {
-        if (it->m_user_id == from_user.m_user_id) {
-            return Status(true, "Make dialog request in mock_bd");
-        }
-    }
-    all_requests[to_user.m_login].insert(
-        all_requests[to_user.m_login].end(), from_user
-    );
-    return Status(true, "Make dialog request in mock_bd");
-}
-
-Status Mock_BDInterface::get_user_dialog_requests(
-    const User &user,
-    std::vector<User> &requests
-) {
-    requests.clear();
-    for (auto it = all_requests[user.m_login].begin();
-         it != all_requests[user.m_login].end(); it++) {
-        requests.push_back(*it);
-    }
-    return Status(true, "Get dialog request in mock_bd");
-}
-
-Status Mock_BDInterface::close_dialog_request(
-    const User &from_user,
-    const User &to_user
-) {
-    for (auto it = all_requests[to_user.m_login].begin();
-         it != all_requests[to_user.m_login].end(); it++) {
-        if (it->m_user_id == from_user.m_user_id) {
-            all_requests[to_user.m_login].erase(it);
-            return Status(true, "Close dialog request in mock_bd");
-        }
-    }
-    return Status(false, "Can not find request in mock_bd");
-}
-
 Status Mock_BDInterface::get_encryption_name_by_id(
     int encryption_id,
     std::string &encryption_name

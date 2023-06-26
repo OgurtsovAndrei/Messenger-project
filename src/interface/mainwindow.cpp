@@ -17,7 +17,7 @@
 MainWindow::MainWindow(Net::Client::Client *client_, QWidget *parent)
     : client(client_),
       QMainWindow(parent),
-      sure_add_group(new SureDo()),
+      sure_add_group(new SureDo(this)),
       ui(new Ui::MainWindow) {
     ui->setupUi(this);
 

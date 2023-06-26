@@ -56,15 +56,16 @@ bool incorrect_log_or_pas(const QString &log, const QString &pas) {
     if (0 < pas.size() && pas.size() < 8) {
         popUp_msg += "Password must contain at least 8 characters.\n";
     }
-    if (pas.contains('\\') || pas.contains('/')) {
+    if (pas.contains('\\') || pas.contains('/') || pas.contains('\'')) {
         popUp_msg +=
-            "'\\' and '/' characters are not allowed in the password.\n";
+            "'\\', '/' and '\'' characters are not allowed in the password.\n";
     }
     if (pas.contains(" ")) {
         popUp_msg += "Password can't contain spaces.\n";
     }
-    if (log.contains('\\') || log.contains('/')) {
-        popUp_msg += "'\\' and '/' characters are not allowed in the login.\n";
+    if (log.contains('\\') || log.contains('/') || log.contains('\'')) {
+        popUp_msg +=
+            "'\\', '/' and '\'' characters are not allowed in the login.\n";
     }
     if (log.contains(" ")) {
         popUp_msg += "Login can't contain spaces.\n";
@@ -85,8 +86,8 @@ bool incorrect_name_or_surname(const QString &name) {
     if (name.isEmpty()) {
         popUp_msg += "Name and surname are not allowed to be empty.\n";
     }
-    if (name.contains(" ")) {
-        popUp_msg += "Name and Surname can't contain spaces.\n";
+    if (name.contains(" ") || name.contains("\'")) {
+        popUp_msg += "Name and Surname can't contain spaces and '\''.\n";
     }
     if (!popUp_msg.empty()) {
         popUp_msg += "Please try again.\n";
