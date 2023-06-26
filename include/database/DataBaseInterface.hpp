@@ -127,8 +127,6 @@ struct SQL_BDInterface : BDInterface {
 
     Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
 
-    Status close_dialog_request(const User &from_user, const User &to_user);
-
     // Dialog
     Status make_dialog(Dialog &dialog) override;
 
@@ -180,9 +178,9 @@ struct SQL_BDInterface : BDInterface {
     // Message
     Status make_message(Message &message) override;
 
-    Status get_message_by_id(Message &new_message);
+    Status change_message(const Message &new_message) override;
 
-    Status change_message(const Message &new_message);
+    Status get_message_by_id(Message &new_message);
 
     Status get_n_dialogs_messages_by_time(
         const Dialog &dialog,

@@ -311,7 +311,39 @@ namespace Net::Client {
             }
         }
 
-        Status change_dialog(std::string dialog_name, int current_time, int is_group) {
+        Status upload_file(const FileWorker::File& file) {
+            DecryptedRequest request(FILE_UPLOAD, file.operator nlohmann::json());
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            return Status(response.get_type() == FILE_UPLOAD_SUCCESS, response.get_type() == FILE_UPLOAD_SUCCESS ? response.data["file_name"] : response.data["what"]);
+        }
+
+        std::pair<Status, FileWorker::File> download_file(const std::string& file_name) {
+            DecryptedRequest request(FILE_DOWNLOAD, json{{"file_name", file_name}});
+            send_request(request.encrypt(encrypter.value()));
+            DecryptedRequest response = get_request();
+            if (response.get_type() == FILE_DOWNLOAD_SUCCESS) {
+                std::optional<FileWorker::File> file;
+                try {
+                    file = FileWorker::File(response.data, FileWorker::parse_JSON);
+                } catch (FileWorker::file_exception &exception) {
+                    return {Status(false, "Cannot parse file: " + std::string(exception.what())),
+                            FileWorker::File(FileWorker::empty_file)};
+                }
+                return {Status(true, ""), *file};
+            } else {
+                if (response.get_type() != FILE_DOWNLOAD_FAIL) {
+                    std::cerr << "Expected FILE_DOWNLOAD_FAIL with json problem message, but got instead:" << std::endl;
+                    std::cerr << response.get_type() << std::endl;
+                    std::cerr << response.data.dump(4) << std::endl;
+                    assert(response.get_type() == FILE_DOWNLOAD_FAIL);
+                }
+                return {Status(false, response.data["what"]),
+                        FileWorker::File(FileWorker::empty_file)};
+            }
+        }
+
+        [[maybe_unused]] Status change_dialog(const std::string& dialog_name, const std::string& encryption, int current_time, int is_group) {
             // TODO: реализовать
             // Сделаю, когда попросите
             return Status(false);
