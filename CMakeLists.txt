@@ -10,20 +10,22 @@ find_package(Boost REQUIRED system)
 find_package(SQLite3 REQUIRED)
 add_definitions(-DCMAKE_EXPECTED_SQLite3_VERSION="${SQLite3_VERSION}")
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(BOTAN REQUIRED botan-3)
+pkg_check_modules(JSON REQUIRED nlohmann_json)
+
 include_directories(${Boost_INCLUDE_DIRS}) #boost
 link_directories(${Boost_LIBRARY_DIRS})
 
 include_directories(${SQLite3_INCLUDE_DIRS}) #sqlite
 
-include_directories(/usr/local/include/botan-3) #botan
-link_directories(/usr/local/lib)
+include_directories(${BOTAN_INCLUDE_DIRS}) #botan
+link_directories(${BOTAN_LIBRARY_DIRS})
+
+include_directories(${JSON_INCLUDE_DIRS}) #nlohmann json
 
 
 include_directories(include)
-include_directories(/usr/local/include/botan-3)
-include_directories(src/install-lib/botan-install)
-include_directories(/usr/local/include/nlohmann)
-include_directories(nlohmann/include)
 
 set(SERVER_SOURCES
         src/RunServer.cpp
@@ -32,7 +34,6 @@ set(SERVER_SOURCES
         src/database/Message.cpp
         src/database/Mock_DataBaseInterface.cpp
         src/database/User.cpp)
-
 
 
 set(CMAKE_AUTOUIC ON)
@@ -76,8 +77,8 @@ set(PROJECT_QT_SOURCES
         )
 
 add_executable(server ${SERVER_SOURCES})
-target_link_libraries(server ${SQLite3_LIBRARIES} botan-3)
+target_link_libraries(server ${SQLite3_LIBRARIES} ${BOTAN_LIBRARIES})
 
 add_executable(${PROJECT_NAME} ${PROJECT_QT_SOURCES})
-target_link_libraries(${PROJECT_NAME} Qt${QT_VERSION_MAJOR}::Widgets)
-target_link_libraries(${PROJECT_NAME} botan-3)
+target_link_libraries(${PROJECT_NAME} Qt${QT_VERSION_MAJOR}::Widgets )
+target_link_libraries(${PROJECT_NAME} ${BOTAN_LIBRARIES})
