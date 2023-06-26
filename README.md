@@ -19,12 +19,12 @@
 
 # Инсптрукция по сборке
 * В Messenger-project/Crypto-libs/botan-master лежат исходники библиотеки Botan. Её можно собрать следуя инструкции:
- * [`./Crypto-libs/botan-master/configure.py`](..%2F..%2FCrypto-libs%2Fbotan-master%2Fconfigure.py) (Сначала запускаем python скрипт, который сгенерирует файлы для сборки)
- * `make` (Собственно начинаем сборку)
- * `make check`
- * `sudo make install` (можно без sudo, но тогда надо дать права)
+  * [`./Crypto-libs/botan-master/configure.py`](..%2F..%2FCrypto-libs%2Fbotan-master%2Fconfigure.py) (Сначала запускаем python скрипт, который сгенерирует файлы для сборки)
+  * `make` (Собственно начинаем сборку)
+  * `make check`
+  * `sudo make install` (можно без sudo, но тогда надо дать права)
 * Для работы части с БД необходимо также установить sqlite3.
- * Это можно сделать используя команду `sudo apt-get install sqlite3 libsqlite3-dev`
+  * Это можно сделать используя команду `sudo apt-get install sqlite3 libsqlite3-dev`
 * Для работы UI нужно...
 
 
