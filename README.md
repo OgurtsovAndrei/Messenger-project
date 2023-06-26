@@ -23,7 +23,8 @@
  * `make` (Собственно начинаем сборку)
  * `make check`
  * `sudo make install` (можно без sudo, но тогда надо дать права)
-* Для работы части с БД необходимо также установить sqlite3. это можно сделать используя команду `sudo apt-get install sqlite3 libsqlite3-dev`
+* Для работы части с БД необходимо также установить sqlite3.
+ * Это можно сделать используя команду `sudo apt-get install sqlite3 libsqlite3-dev`
 * Для работы UI нужно...
 
 
