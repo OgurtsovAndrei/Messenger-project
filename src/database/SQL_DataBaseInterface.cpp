@@ -349,12 +349,6 @@ Status SQL_BDInterface::del_user(const User &user) {
             false, "Can not DEL User Dialogs. It return:\n" + res.message()
         );
     }
-    res = del_user_requests(user);
-    if (!res.correct()) {
-        return Status(
-            false, "Can not DEL User Requests. It return:\n" + res.message()
-        );
-    }
     res = del_user_messages(user);
     if (!res.correct()) {
         return Status(
@@ -406,111 +400,6 @@ Status SQL_BDInterface::del_user_messages(const User &user) {
     sqlite3_free(message_error);
     return Status(
         exit == SQLITE_OK, "Problem in DEL User Messages.\nMessage: " +
-                               string_message + "\n SQL command: " + sql + "\n"
-    );
-}
-
-Status SQL_BDInterface::del_user_requests(const User &user) {
-    if (Status user_params = check_user_id(user, "del_user_requests user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    std::string sql = "DELETE FROM RequestForDialog WHERE ";
-    sql += "FromUserId=" + std::to_string(user.m_user_id) + " OR ";
-    sql += "ToUserId=" + std::to_string(user.m_user_id) + ";";
-    char *message_error;
-    std::string string_message;
-    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
-    return Status(
-        exit == SQLITE_OK, "Problem in DEL User Requests.\nMessage: " +
-                               string_message + "\n SQL command: " + sql + "\n"
-    );
-}
-
-Status SQL_BDInterface::make_dialog_request(
-    const User &from_user,
-    const User &to_user
-) {
-    if (Status user_params =
-            check_user_id(from_user, "make_dialog_request from_user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    if (Status user_params =
-            check_user_id(to_user, "make_dialog_request to_user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    std::string sql =
-        "INSERT INTO RequestForDialog (FromUserId, ToUserId) VALUES (";
-    sql += std::to_string(from_user.m_user_id) + ", ";
-    sql += std::to_string(to_user.m_user_id) + ");";
-    char *message_error;
-    std::string string_message;
-    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
-    return Status(
-        exit == SQLITE_OK, "Problem in MAKE DIALOG REQUEST.\nMessage: " +
-                               string_message + "\n SQL command: " + sql + "\n"
-    );
-}
-
-Status SQL_BDInterface::get_user_dialog_requests(
-    const User &user,
-    std::vector<User> &requests
-) {
-    if (Status user_params =
-            check_user_id(user, "get_user_dialog_requests user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    std::string sql =
-        "SELECT Users.id, Users.Name, Users.Surname FROM RequestForDialog "
-        "INNER JOIN Users ON FromUserId = Users.id WHERE ToUserId=";
-    sql += std::to_string(user.m_user_id) + ";";
-    char *message_error;
-    std::string string_message;
-    requests.clear();
-    User::m_requests = &requests;
-    int exit = sqlite3_exec(
-        m_bd, sql.c_str(), User::request_callback, 0, &message_error
-    );
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
-    User::m_requests = nullptr;
-    return Status(
-        exit == SQLITE_OK, "Problem in GET n user requests.\nMessage: " +
-                               string_message + "\n SQL command: " + sql + "\n"
-    );
-}
-
-Status SQL_BDInterface::close_dialog_request(
-    const User &from_user,
-    const User &to_user
-) {
-    if (Status user_params =
-            check_user_id(from_user, "close_dialog_request from_user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    if (Status user_params =
-            check_user_id(to_user, "close_dialog_request to_user");
-        !user_params.correct()) {
-        return user_params;
-    }
-    std::string sql = "DELETE FROM Users WHERE ";
-    sql += "FromUserId=" + std::to_string(from_user.m_user_id) + " AND ";
-    sql += "ToUserId=" + std::to_string(to_user.m_user_id) + ";";
-    char *message_error;
-    std::string string_message;
-    int exit = sqlite3_exec(m_bd, sql.c_str(), NULL, 0, &message_error);
-    chars_to_string(message_error, string_message);
-    sqlite3_free(message_error);
-    return Status(
-        exit == SQLITE_OK, "Problem in DEL DIALOG REQUEST.\nMessage: " +
                                string_message + "\n SQL command: " + sql + "\n"
     );
 }

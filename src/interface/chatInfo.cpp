@@ -93,9 +93,10 @@ ChatInfo::ChatInfo(MainWindow *mainWin, QWidget *parent)
                 );
                 break;
             case LAST_MODIFIED::LOGIN:
-                if (new_parametr.contains("\\")) {
+                if (new_parametr.contains("\\") || new_parametr.contains("/") ||
+                    new_parametr.contains("\'")) {
                     show_popUp(
-                        "'\\' and '/' characters are not allowed in the "
+                        "'\\', '/' and '\'' characters are not allowed in the "
                         "password.\n"
                     );
                     return;
