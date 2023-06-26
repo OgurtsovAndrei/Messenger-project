@@ -26,6 +26,9 @@
 * Для работы части с БД необходимо также установить sqlite3.
   * Это можно сделать используя команду `sudo apt-get install sqlite3 libsqlite3-dev`
 * Для работы UI нужно...
+* Для работы сервера нужены boost и nlohman.
+  * Boost можно установить используя команду `sudo apt install cmake libboost-all-dev`
+  * Nlohman можно установить используя команду `sudo apt install nlohmann-json-dev`
 * Для тестирования нужна библиотека CxxTest:
   * Можно установить используя `sudo apt-get install cxxtest`
 
