@@ -26,7 +26,7 @@
 #include "TextWorker.hpp"
 #include "Cryptographer.hpp"
 #include "database/User.hpp"
-#include "DataBaseInterface.hpp"
+#include "database/DataBaseInterface.hpp"
 #include "FileWorker.hpp"
 
 #define send_response_and_return_if_false(expr, user, assert_request_type, message) if (!(expr)) \
@@ -123,16 +123,6 @@ namespace Net::Server {
 
         static void accept_client_request(const std::string &rem_endpoint_str,
                                           UserConnection &connection);
-
-        Status
-        decrypt_request(EncryptedRequest request_to_decrypt, DecryptedRequest &back_ref) { //NOLINT [static_method]
-            require(decrypter.has_value(), "Connections should be secured!");
-            try {
-                back_ref = request_to_decrypt.decrypt(decrypter.value());
-            } catch (std::exception &exception) {
-                return Status(false, exception.what());
-            }
-        }
     };
 
     struct RequestQueue {
