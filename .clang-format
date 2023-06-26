@@ -3,8 +3,8 @@ IndentWidth: 4
 AccessModifierOffset: -4
 PointerAlignment: Right
 IncludeBlocks: Merge
-AllowShortBlocksOnASingleLine: false
-AllowShortFunctionsOnASingleLine: false
+AllowShortBlocksOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 

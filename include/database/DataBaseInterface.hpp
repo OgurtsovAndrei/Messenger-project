@@ -4,12 +4,12 @@
 #include <sqlite3.h>
 #include <iostream>
 #include <list>
-#include <vector>
 #include <map>
 #include <set>
+#include <vector>
+#include "Status.hpp"
 #include "database/Dialog.hpp"
 #include "database/Message.hpp"
-#include "Status.hpp"
 #include "database/User.hpp"
 
 namespace database_interface {
@@ -31,9 +31,14 @@ struct BDInterface {
 
     virtual Status get_user_by_log_pas(User &user) = 0;
 
-    virtual Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) = 0;
+    virtual Status get_encryption_name_by_id(
+        int encryption_id,
+        std::string &encryption_name
+    ) = 0;
 
-    virtual Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) = 0;
+    virtual Status get_encryption_pairs_id_name(
+        std::vector<std::pair<int, std::string>> &encryption_pair_id_name
+    ) = 0;
 
     virtual Status get_user_id_by_log(User &user) = 0;
 
@@ -84,7 +89,8 @@ struct BDInterface {
 struct SQL_BDInterface : BDInterface {
     static int last_insert_id;
 
-    static int get_last_insert_id(void *NotUsed, int argc, char **argv, char **azColName){
+    static int
+    get_last_insert_id(void *NotUsed, int argc, char **argv, char **azColName) {
         assert(argc != 0);
         last_insert_id = std::stoi(argv[0]);
         return 0;
@@ -109,9 +115,14 @@ struct SQL_BDInterface : BDInterface {
 
     Status get_user_log_by_id(User &user) override;
 
-    Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
+    Status get_encryption_name_by_id(
+        int encryption_id,
+        std::string &encryption_name
+    ) override;
 
-    Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) override;
+    Status get_encryption_pairs_id_name(
+        std::vector<std::pair<int, std::string>> &encryption_pair_id_name
+    ) override;
 
     Status del_user(const User &user) override;
 
@@ -121,11 +132,16 @@ struct SQL_BDInterface : BDInterface {
 
     Status del_user_requests(const User &user);
 
-    Status make_dialog_request(const User &from_user, const User &to_user) override;
+    Status make_dialog_request(const User &from_user, const User &to_user)
+        override;
 
-    Status close_dialog_request(const User &from_user, const User &to_user) override;
+    Status close_dialog_request(const User &from_user, const User &to_user)
+        override;
 
-    Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
+    Status get_user_dialog_requests(
+        const User &user,
+        std::vector<User> &requests
+    ) override;
 
     // Dialog
     Status make_dialog(Dialog &dialog) override;
@@ -148,22 +164,28 @@ struct SQL_BDInterface : BDInterface {
         int n = 10,
         int last_dialog_date_time = 2121283574
     ) override {
-        std::string sql = "SELECT Dialogs.id, Name, DateTime, OwnerId, IsGroup FROM UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE UserId=";
+        std::string sql =
+            "SELECT Dialogs.id, Name, DateTime, OwnerId, IsGroup FROM "
+            "UsersAndDialogs INNER JOIN Dialogs ON DialogId = Dialogs.id WHERE "
+            "UserId=";
         sql += std::to_string(user.m_user_id) + " AND DateTime < ";
-        sql += std::to_string(last_dialog_date_time) + " ORDER BY DateTime DESC LIMIT ";
+        sql += std::to_string(last_dialog_date_time) +
+               " ORDER BY DateTime DESC LIMIT ";
         sql += std::to_string(n) + ";";
         char *message_error;
         std::string string_message;
         next_dialogs.clear();
         Dialog::m_dialogs = &next_dialogs;
-        int exit =
-                sqlite3_exec(m_bd, sql.c_str(), Dialog::callback_get_dialogs, 0, &message_error);
+        int exit = sqlite3_exec(
+            m_bd, sql.c_str(), Dialog::callback_get_dialogs, 0, &message_error
+        );
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
         Dialog::m_dialogs = nullptr;
         return Status(
-                exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
-                                   "\n SQL command: " + sql + "\n"
+            exit == SQLITE_OK,
+            "Problem in GET n users dialogs by time.\nMessage: " +
+                string_message + "\n SQL command: " + sql + "\n"
         );
     }
 
@@ -188,25 +210,31 @@ struct SQL_BDInterface : BDInterface {
         int n = 10,
         int last_message_date_time = 2121283574
     ) override {
-        std::string sql = "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE DialogId=";
+        std::string sql =
+            "SELECT id, DateTime, Text, File, UserId FROM Messages WHERE "
+            "DialogId=";
         sql += std::to_string(dialog.m_dialog_id) + " AND DateTime<";
-        sql += std::to_string(last_message_date_time) + " ORDER BY DateTime DESC LIMIT ";
+        sql += std::to_string(last_message_date_time) +
+               " ORDER BY DateTime DESC LIMIT ";
         sql += std::to_string(n) + ";";
         char *message_error;
         std::string string_message;
         next_messages.clear();
         Message::m_message_list = &next_messages;
-        int exit =
-                sqlite3_exec(m_bd, sql.c_str(), Message::callback_get_message_list, 0, &message_error);
+        int exit = sqlite3_exec(
+            m_bd, sql.c_str(), Message::callback_get_message_list, 0,
+            &message_error
+        );
         chars_to_string(message_error, string_message);
         sqlite3_free(message_error);
         Message::m_message_list = nullptr;
-        for (auto it = next_messages.begin(); it != next_messages.end(); it++){
+        for (auto it = next_messages.begin(); it != next_messages.end(); it++) {
             it->m_dialog_id = dialog.m_dialog_id;
         }
         return Status(
-                exit == SQLITE_OK, "Problem in GET n users dialogs by time.\nMessage: " + string_message +
-                                   "\n SQL command: " + sql + "\n"
+            exit == SQLITE_OK,
+            "Problem in GET n users dialogs by time.\nMessage: " +
+                string_message + "\n SQL command: " + sql + "\n"
         );
     }
 
@@ -224,13 +252,9 @@ struct Mock_BDInterface : BDInterface {
     std::list<Message> messages;
 
     // Work with bd connection
-    Status open() override {
-        return Status(true, "Open mock_bd");
-    }
+    Status open() override { return Status(true, "Open mock_bd"); }
 
-    Status close() override {
-        return Status(true, "Close mock_bd");
-    }
+    Status close() override { return Status(true, "Close mock_bd"); }
 
     // User
     Status make_user(User &user) override;
@@ -243,15 +267,25 @@ struct Mock_BDInterface : BDInterface {
 
     Status del_user(const User &user) override;
 
-    Status make_dialog_request(const User &from_user, const User &to_user) override;
+    Status make_dialog_request(const User &from_user, const User &to_user)
+        override;
 
-    Status get_user_dialog_requests(const User &user, std::vector<User> &requests) override;
+    Status get_user_dialog_requests(
+        const User &user,
+        std::vector<User> &requests
+    ) override;
 
-    Status close_dialog_request(const User &from_user, const User &to_user) override;
+    Status close_dialog_request(const User &from_user, const User &to_user)
+        override;
 
-    Status get_encryption_name_by_id(int encryption_id, std::string &encryption_name) override;
+    Status get_encryption_name_by_id(
+        int encryption_id,
+        std::string &encryption_name
+    ) override;
 
-    Status get_encryption_pairs_id_name(std::vector<std::pair<int, std::string>> &encryption_pair_id_name) override{
+    Status get_encryption_pairs_id_name(
+        std::vector<std::pair<int, std::string>> &encryption_pair_id_name
+    ) override {
         return Status(true, "");
     }
 
@@ -269,8 +303,9 @@ struct Mock_BDInterface : BDInterface {
         for (auto it = dialogs.begin(); it != dialogs.end(); it++) {
             next_dialogs.clear();
             bool fnd = false;
-            for (auto ptr = dialog_users[it->m_dialog_id].begin(); ptr != dialog_users[it->m_dialog_id].end(); ptr++){
-                if (ptr->m_user_id == user.m_user_id){
+            for (auto ptr = dialog_users[it->m_dialog_id].begin();
+                 ptr != dialog_users[it->m_dialog_id].end(); ptr++) {
+                if (ptr->m_user_id == user.m_user_id) {
                     fnd = true;
                     break;
                 }
@@ -291,7 +326,7 @@ struct Mock_BDInterface : BDInterface {
         return Status(true, "Get n dialogs in mock_bd");
     }
 
-    Status get_dialog_by_id(Dialog &dialog) override{
+    Status get_dialog_by_id(Dialog &dialog) override {
         return Status(true, "");
     }
 

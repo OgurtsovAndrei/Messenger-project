@@ -1,5 +1,5 @@
-#ifndef REGISTER_H
-#define REGISTER_H
+#ifndef REGISTER_HPP
+#define REGISTER_HPP
 
 #include <QWidget>
 #include "interface/mainwindow.h"
@@ -8,8 +8,7 @@ namespace Ui {
 class Register;
 }
 
-class Register : public QWidget
-{
+class Register : public QWidget {
     Q_OBJECT
 
 public:
@@ -35,4 +34,4 @@ bool incorrect_log_or_pas(const QString &log, const QString &pas);
 
 bool incorrect_name_or_surname(const QString &name);
 
-#endif // REGISTER_H
+#endif  // REGISTER_HPP

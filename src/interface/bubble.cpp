@@ -1,43 +1,46 @@
 #include "interface/bubble.h"
 #include <QLabel>
-#include <QVBoxLayout>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPixmap>
+#include <QVBoxLayout>
 #include <iostream>
 #include <utility>
-#include <QPixmap>
-
-
 
 Bubble::Bubble(
     const QString &msg_,
     unsigned int msg_id_,
     const ClientInfo &cl_info,
     const bool &incoming_
-) : bubLayout(new QGridLayout),
+)
+    : bubLayout(new QGridLayout),
       lbl(new QLabel),
       lbl_name(new QLabel),
       owner_id(cl_info.cl_id),
-      msg_id(msg_id_)
-{
+      msg_id(msg_id_) {
     lbl->setStyleSheet(
-        "QLabel { background-color : #357d50; color : white; border-width: 2px; border-radius: 10px; padding: 6px;}");
+        "QLabel { background-color : #357d50; color : white; border-width: "
+        "2px; border-radius: 10px; padding: 6px;}"
+    );
     lbl->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
     lbl->setWordWrap(true);
     lbl->setText(msg_);
 
-    lbl_name->setStyleSheet("QLabel { color : white; font : 9pt; padding: 6px; }");
+    lbl_name->setStyleSheet(
+        "QLabel { color : white; font : 9pt; padding: 6px; }"
+    );
     lbl_name->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
     lbl_name->setWordWrap(true);
-    lbl_name->setText(QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname));
+    lbl_name->setText(
+        QString::fromStdString(cl_info.cl_name + " " + cl_info.cl_surname)
+    );
 
     bubLayout->addWidget(lbl_name, 1, 0, 1, 2);
     if (incoming_) {
         bubLayout->addWidget(lbl, 0, 0);
         lbl_name->setAlignment(Qt::AlignLeft);
         bubLayout->setAlignment(Qt::AlignLeft);
-    }
-    else {
+    } else {
         bubLayout->addWidget(lbl, 0, 1);
         lbl_name->setAlignment(Qt::AlignRight);
         bubLayout->setAlignment(Qt::AlignRight);
@@ -52,7 +55,8 @@ Bubble::Bubble(
     const ClientInfo &cl_info,
     const bool &incoming_,
     bool isFile_
-) : Bubble(file_name_, msg_id_, cl_info, incoming_){
+)
+    : Bubble(file_name_, msg_id_, cl_info, incoming_) {
     lbl_file = new QLabel;
     QPixmap npm("./../images/fileIcon.png");
     QPixmap pm = npm.scaled(QSize(70, 70));
@@ -63,21 +67,13 @@ Bubble::Bubble(
     lbl_file->setAlignment(Qt::AlignBottom);
     if (incoming_) {
         bubLayout->addWidget(lbl_file, 0, 1);
-    }
-    else {
+    } else {
         bubLayout->addWidget(lbl_file, 0, 0);
     }
-
 }
 
-QString Bubble::get_msg_text() const {
-    return lbl->text();
-}
+QString Bubble::get_msg_text() const { return lbl->text(); }
 
-unsigned int Bubble::get_owner_id() const {
-    return owner_id;
-}
+unsigned int Bubble::get_owner_id() const { return owner_id; }
 
-unsigned int Bubble::get_msg_id() const {
-    return msg_id;
-}
+unsigned int Bubble::get_msg_id() const { return msg_id; }
